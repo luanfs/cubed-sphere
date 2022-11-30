@@ -1,0 +1,26 @@
+!Grid parameters 
+!Number of cells N along a coordinates axis (total number of cells is 6*N*N)
+10
+!Kind of mesh use: equiangular, equiedge, read
+equiangular
+!Midpoint position: geo, local
+local
+!Loadable grid? 0-No; 1-Yes
+0
+!Show ongoing process details on screen? 0-No; 1-Yes
+1
+!Test case to be done - uncomment method to be used in imodel.f90
+1
+!If mesh read from file give filename (Extensions: .xyz)
+icos_pol_scvt_h1_3.xyz
+
+!-----------Description of parameters -------------------------------------!
+!Mesh kind
+!   equiangular
+
+!Midpoint position
+! geo   - midpoints on geodesics
+! local - midpoints on local coordinate system
+
+!Possible test cases
+!  case(1) ! Grid generation and storage
