@@ -1,6 +1,6 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-10
+1024
 !Kind of mesh use: equiangular, equiedge, read
 equiangular
 !Midpoint position: geo, local
@@ -10,7 +10,7 @@ local
 !Show ongoing process details on screen? 0-No; 1-Yes
 1
 !Test case to be done - uncomment method to be used in imodel.f90
-1
+2
 !If mesh read from file give filename (Extensions: .xyz)
 icos_pol_scvt_h1_3.xyz
 
