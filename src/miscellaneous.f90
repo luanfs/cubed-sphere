@@ -1,6 +1,6 @@
 module miscellaneous
   !===============================================================================================
-  !   This module contains all the output routines
+  !   This module contains all the miscellaneous routines
   !===============================================================================================
 
   !Global constants
