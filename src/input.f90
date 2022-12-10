@@ -17,7 +17,8 @@ module input
 
   !Data structures
   use datastruct, only: &
-      cubedsphere
+      cubedsphere, &
+      simulation
 
   ! Spherical geometry
   use sphgeo, only: &
@@ -37,7 +38,7 @@ module input
     !    Reads mesh parameters from file named "mesh.par"
     !    Saves parameters on mesh structure
     !--------------------------------------------------
-    type(cubedsphere):: mesh
+    type(cubedsphere), intent(inout):: mesh
     character (len=60):: filename
     character (len=300):: buffer
     integer (i4):: fileunit
@@ -169,6 +170,41 @@ module input
     print*
     stop
   end subroutine
+
+  subroutine getadvparameters(advsimul)
+    !---------------------------------------------------
+    ! GETADVPARAMETERS
+    !    Reads mesh parameters from file named "mesh.par"
+    !    Saves parameters on mesh structure
+    !--------------------------------------------------
+    type(simulation), intent(inout):: advsimul
+    character (len=60):: filename
+    character (len=300):: buffer
+    integer (i4):: fileunit
+    integer:: i
+    integer:: n
+
+    !Standard advection parameters file
+    filename=trim(pardir)//"advection.par"
+
+    print*,"Advection parameters: ", trim(filename)
+    print*
+    call getunit(fileunit)
+
+    !A parameters file must exist 
+    open(fileunit,file=filename,status='old')
+
+    read(fileunit,*)  buffer
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%ic
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%vf
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%recon1d
+    close(fileunit)
+    return
+  end subroutine getadvparameters
+
 
 end module input 
 

@@ -39,28 +39,38 @@ module sphgeo
 
   contains 
 
-
+    !---------------------------------------------------------------------
+    ! panel indexes distribution
+    !      +---+
+    !      | 5 |
+    !  +---+---+---+---+
+    !  | 4 | 1 | 2 | 3 |
+    !  +---+---+---+---+
+    !      | 6 |
+    !      +---+
+    !---------------------------------------------------------------------
+ 
   subroutine equidistant_gnomonic_map(x, y, p, panel)
       !---------------------------------------------------------------
-      ! This routine computes the Gnomonic mapping based on the equidistant projection
-      ! defined by Rancic et al (96) for each panel
+      ! this routine computes the gnomonic mapping based on the equidistant projection
+      ! defined by rancic et al (96) for each panel
       ! - x, y are the variables defined in [-a, a].
-      ! - The projection is applied on the points (x,y)
-      ! - Returns the Cartesian coordinates of the
+      ! - the projection is applied on the points (x,y)
+      ! - returns the cartesian coordinates of the
       ! projected point p.
       !
-      ! References: 
-      ! - Rancic, M., Purser, R.J. and Mesinger, F. (1996), A global shallow-water model using an expanded
-      !  spherical cube: Gnomonic versus conformal coordinates. Q.J.R. Meteorol. Soc., 122: 959-982. 
+      ! references: 
+      ! - rancic, m., purser, r.j. and mesinger, f. (1996), a global shallow-water model using an expanded
+      !  spherical cube: gnomonic versus conformal coordinates. q.j.r. meteorol. soc., 122: 959-982. 
       !  https://doi.org/10.1002/qj.49712253209
-      ! - Nair, R. D., Thomas, S. J., & Loft, R. D. (2005). A Discontinuous Galerkin Transport Scheme on the
-      ! Cubed Sphere, Monthly Weather Review, 133(4), 814-828. Retrieved Feb 7, 2022, 
+      ! - nair, r. d., thomas, s. j., & loft, r. d. (2005). a discontinuous galerkin transport scheme on the
+      ! cubed sphere, monthly weather review, 133(4), 814-828. retrieved feb 7, 2022, 
       ! from https://journals.ametsoc.org/view/journals/mwre/133/4/mwr2890.1.xml
       !
       !---------------------------------------------------------------
-      real(r8), intent(in) :: x ! Local coordinates
-      real(r8), intent(in) :: y ! Local coordinates
-      real(r8), intent(out) :: p(1:3) ! Projected point
+      real(r8), intent(in) :: x ! local coordinates
+      real(r8), intent(in) :: y ! local coordinates
+      real(r8), intent(out) :: p(1:3) ! projected point
 
       ! aux vars
       real(r8) :: r, r2, invr,  xor, yor, aor
@@ -69,7 +79,7 @@ module sphgeo
       integer(i4), intent(in) :: panel
 
 
-      ! Auxiliary variables
+      ! auxiliary variables
       r2   = acube**2 + x**2 + y**2
       r    = dsqrt(r2)
       invr = 1._r8/r
@@ -77,7 +87,7 @@ module sphgeo
       yor  = invr*y
       aor  = invr*acube
 
-      ! Compute the Cartesian coordinates for each panel
+      ! compute the cartesian coordinates for each panel
       ! with the aid of the auxiliary variables  
       select case(panel)
          case(1)
@@ -111,36 +121,225 @@ module sphgeo
             p(3) = -aor
 
          case default
-            print*, 'ERROR on equidistant_gnomonic_map: invalid panel, ', panel
+            print*, 'error on equidistant_gnomonic_map: invalid panel, ', panel
          end select
          return
    end subroutine equidistant_gnomonic_map
 
-   subroutine inverse_equidistant_gnomonic_map(x, y, p, mesh)
+  subroutine derivative_xdir_equidistant_gnomonic_map(x, y, p, panel)
       !---------------------------------------------------------------
-      ! This routine computes the inverse of the Gnomonic mapping based on the equidistant projection
-      ! defined by Rancic et al (96) for each panel
-      ! - Returns the cube coordinates of the
+      ! this routine computes the derivative in x direction of the
+      ! gnomonic mapping based on the equidistant projection
+      !---------------------------------------------------------------
+      real(r8), intent(in) :: x ! local coordinates
+      real(r8), intent(in) :: y ! local coordinates
+      real(r8), intent(out) :: p(1:3) ! projected point
+
+      ! aux vars
+      real(r8) :: r2, r32, invr, ax, xy, y2, a, a2
+
+      ! panel
+      integer(i4), intent(in) :: panel
+
+      a = acube
+
+      !auxiliary variables
+      r2   = a**2 + x**2 + y**2
+      r32  = dsqrt(r2)**3
+      invr = 1._r8/r32
+      ax = a*x
+      xy = x*y
+      y2 = y*y
+      a2 = a*a
+
+      ! compute the cartesian coordinates for each panel
+      ! with the aid of the auxiliary variables  
+      select case(panel)
+         case(1)
+            p(1) = -ax*invr
+            p(2) =  (a2 + y2)*invr
+            p(3) = -xy*invr
+
+         case(2)
+            p(1) = -(a2 + y2)*invr
+            p(2) = -ax*invr
+            p(3) = -xy*invr
+
+        case(3)
+            p(1) =  ax*invr
+            p(2) = -(a2 + y2)*invr
+            p(3) = -xy*invr
+         
+         case(4)
+            p(1) =  (a2 + y2)*invr
+            p(2) =  ax*invr
+            p(3) = -xy*invr 
+
+         case(5)
+            p(1) =  xy*invr
+            p(2) =  (a2 + y2)*invr
+            p(3) = -ax*invr
+
+         case(6)
+            p(1) = -xy*invr
+            p(2) =  (a2 + y2)*invr
+            p(3) =  ax*invr
+
+         case default
+            print*, 'error on derivative_xdir_equidistant_gnomonic_map: invalid panel, ', panel
+         end select
+         return
+   end subroutine derivative_xdir_equidistant_gnomonic_map
+
+
+  subroutine derivative_ydir_equidistant_gnomonic_map(x, y, p, panel)
+      !---------------------------------------------------------------
+      ! this routine computes the derivative in y direction of the
+      ! gnomonic mapping based on the equidistant projection
+      !---------------------------------------------------------------
+      real(r8), intent(in) :: x ! local coordinates
+      real(r8), intent(in) :: y ! local coordinates
+      real(r8), intent(out) :: p(1:3) ! projected point
+
+      ! aux vars
+      real(r8) :: r2, r32, invr, ay, xy, x2, a, a2
+
+      ! panel
+      integer(i4), intent(in) :: panel
+
+      a = acube
+
+      !auxiliary variables
+      r2   = a**2 + x**2 + y**2
+      r32  = dsqrt(r2)**3
+      invr = 1._r8/r32
+      ay = a*y
+      xy = x*y
+      x2 = x*x
+      a2 = a*a
+
+      ! compute the cartesian coordinates for each panel
+      ! with the aid of the auxiliary variables  
+      select case(panel)
+         case(1)
+            p(1) = -ay*invr
+            p(2) = -xy*invr
+            p(3) = (a2 + x2)*invr
+
+         case(2)
+            p(1) =  xy*invr
+            p(2) = -ay*invr
+            p(3) =  (a2 + x2)*invr
+
+        case(3)
+            p(1) =  ay*invr
+            p(2) =  xy*invr
+            p(3) = (a2 + x2)*invr
+   
+         case(4)
+            p(1) = -xy*invr
+            p(2) =  ay*invr
+            p(3) = (a2 + x2)*invr 
+
+         case(5)
+            p(1) = -(a2 + x2)*invr
+            p(2) = -xy*invr
+            p(3) = -ay*invr
+         case(6)
+            p(1) =  (a2 + x2)*invr
+            p(2) = -xy*invr
+            p(3) =  ay*invr
+         case default
+            print*, 'error on derivative_ydir_equidistant_gnomonic_map: invalid panel, ', panel
+         end select
+         return
+   end subroutine derivative_ydir_equidistant_gnomonic_map
+
+    subroutine derivative_xdir_equiangular_gnomonic_map(x, y, p, panel)
+      !---------------------------------------------------------------
+      ! this routine computes the derivative in x direction of the
+      ! gnomonic mapping based on the equiangular projection
+      !---------------------------------------------------------------
+      real(r8), intent(in) :: x ! angular coordinates
+      real(r8), intent(in) :: y ! angular coordinates
+      real(r8), intent(out) :: p(1:3) ! tangent vector
+      real(r8) :: a, cos2x, cos2y, tanx, tany
+
+      ! panel
+      integer(i4), intent(in) :: panel
+
+      a = acube
+      tanx = a*dtan(x)
+      tany = a*dtan(y)
+      cos2x = dcos(x)**2
+      cos2y = dcos(y)**2
+
+      call derivative_xdir_equidistant_gnomonic_map(tanx, tany, p, panel)
+    
+      p = p/cos2x
+      !p = p/cos2y
+      p = a*p
+    end subroutine derivative_xdir_equiangular_gnomonic_map
+
+
+    subroutine derivative_ydir_equiangular_gnomonic_map(x, y, p, panel)
+      !---------------------------------------------------------------
+      ! this routine computes the derivative in y direction of the
+      ! gnomonic mapping based on the equiangular projection
+      !---------------------------------------------------------------
+      real(r8), intent(in) :: x ! angular coordinates
+      real(r8), intent(in) :: y ! angular coordinates
+      real(r8), intent(out) :: p(1:3) ! tangent vector
+      real(r8) :: a, cos2x, cos2y, tanx, tany
+
+      ! panel
+      integer(i4), intent(in) :: panel
+
+      a = acube
+      tanx = a*dtan(x)
+      tany = a*dtan(y)
+      cos2x = dcos(x)**2
+      cos2y = dcos(y)**2
+
+      call derivative_ydir_equidistant_gnomonic_map(tanx, tany, p, panel)
+    
+      !p = p/cos2x
+      p = p/cos2y
+      p = a*p
+      return
+    end subroutine derivative_ydir_equiangular_gnomonic_map
+
+
+   subroutine inverse_equidistant_gnomonic_map(x, y, p, mesh, panel0)
+      !---------------------------------------------------------------
+      ! this routine computes the inverse of the gnomonic mapping based on the equidistant projection
+      ! defined by rancic et al (96) for each panel
+      ! - returns the cube coordinates of the
       ! projected points.
       !
       !---------------------------------------------------------------
       type(cubedsphere), intent(inout) :: mesh
 
-      real(r8), intent(out) :: x ! Local coordinates
-      real(r8), intent(out) :: y ! Local coordinates
-      real(r8), intent(inout) :: p(1:3) ! Projected point
+      real(r8), intent(out) :: x ! local coordinates
+      real(r8), intent(out) :: y ! local coordinates
+      real(r8), intent(in) :: p(1:3) ! projected point
 
       ! aux vars
       real(r8) :: r
 
       ! panel
+      integer(i4), intent(in), optional :: panel0
       integer(i4) :: panel
 
-      ! Get the panel
-      call get_cubedsphere_panel(p, panel, mesh)
+      ! get the panel
+      if(.not. present(panel0))then
+        call get_cubedsphere_panel(p, panel, mesh)
+      else
+        panel = panel0
+      end if
       print*, panel
       print*
-      ! Compute the local coordinates for each panel
+      ! compute the local coordinates for each panel
       select case(panel)
          case(1)
             r = acube/p(1)
@@ -173,7 +372,7 @@ module sphgeo
             y =  p(1)*r
 
          case default
-            print*, 'ERROR on inverse_equidistant_gnomonic_map: invalid panel, ', panel
+            print*, 'error on inverse_equidistant_gnomonic_map: invalid panel, ', panel
             stop
          end select
          return
@@ -182,15 +381,15 @@ module sphgeo
 
    subroutine get_cubedsphere_panel(p, panel, mesh)
       !---------------------------------------------------------------
-      ! GET_CUBEDSPHERE_PANEL
+      ! get_cubedsphere_panel
       !
-      ! Given a point on the sphere, this routine finds the panel
+      ! given a point on the sphere, this routine finds the panel
       ! where p is located
       !
       !---------------------------------------------------------------
       type(cubedsphere), intent(inout) :: mesh
 
-      real(r8), intent(in) :: p(1:3) ! Given point
+      real(r8), intent(in) :: p(1:3) ! given point
       real(r8)  :: p1(1:3), p2(1:3), p3(1:3), p4(1:3) ! aux vars
 
       integer(i4), intent(inout):: panel
@@ -199,9 +398,9 @@ module sphgeo
       logical :: insidepanel
 
       !----------------------------------------------------------------------------------
-      ! Reference: Lauritzen, P. H., Bacmeister, J. T., Callaghan, P. F., and Taylor,
-      !   M. A.: NCAR_Topo (v1.0): NCAR global model topography generation software
-      !   for unstructured grids, Geosci. Model Dev., 8, 3975–3986,
+      ! reference: lauritzen, p. h., bacmeister, j. t., callaghan, p. f., and taylor,
+      !   m. a.: ncar_topo (v1.0): ncar global model topography generation software
+      !   for unstructured grids, geosci. model dev., 8, 3975–3986,
       !   https://doi.org/10.5194/gmd-8-3975-2015, 2015.
       !----------------------------------------------------------------------------------
       !panel = -1
@@ -226,11 +425,11 @@ module sphgeo
       !end if
 
       !if(panel == -1)then
-      !  print*, 'ERROR on get_cubedsphere_panel: couldnt find the panel.'
+      !  print*, 'error on get_cubedsphere_panel: couldnt find the panel.'
       !  stop
       !end if
 
-      ! Check if p in inside the panel quadrilateral
+      ! check if p in inside the panel quadrilateral
       i0   = mesh%i0
       iend = mesh%iend
       j0   = mesh%j0
@@ -258,7 +457,7 @@ module sphgeo
       end do
 
       if(panel2 == 7)then
-         print*, 'ERROR on get_cubedsphere_panel: couldnt find the panel.'
+         print*, 'error on get_cubedsphere_panel: couldnt find the panel.'
          stop
       end if
 
@@ -267,31 +466,31 @@ module sphgeo
 
   subroutine binary_search(p, mesh, ix, jy, panel)
       !---------------------------------------------------------------
-      ! BINARY_SEARCH 
+      ! binary_search 
       !
-      ! Given a point p on the sphere and the panel where the point is located, 
+      ! given a point p on the sphere and the panel where the point is located, 
       ! this routine finds quadrilateral that contains p perfoming
       ! a binary search
       !
       !---------------------------------------------------------------
       type(cubedsphere), intent(inout) :: mesh
 
-      real(r8), intent(in) :: p(1:3) ! Given point
+      real(r8), intent(in) :: p(1:3) ! given point
       real(r8) :: p1(1:3), p2(1:3), p3(1:3), p4(1:3), p5(1:3)  ! aux vars
       real(r8) :: p6(1:3), p7(1:3), p8(1:3), p9(1:3)
 
       integer(i4), intent(inout) :: ix, jy, panel
       
-      ! Aux vars
+      ! aux vars
       integer(i4) :: i, j, i0, j0, iend, jend, imid, jmid, panel2
 
-      ! Logical vars
+      ! logical vars
       logical :: insidequad1
       logical :: insidequad2
       logical :: insidequad3
       logical :: insidequad4
 
-      ! Get the panel
+      ! get the panel
       call get_cubedsphere_panel(p, panel, mesh)
 
       i0   = mesh%i0-1
@@ -304,7 +503,7 @@ module sphgeo
          imid = (i0+iend)/2
          jmid = (j0+jend)/2
 
-         ! Get the points
+         ! get the points
          p1 = mesh%po(i0  , j0  , panel)%p
          p2 = mesh%po(imid, j0  , panel)%p
          p3 = mesh%po(iend, j0  , panel)%p
@@ -333,7 +532,7 @@ module sphgeo
                   insidequad4 = insidequad(p, p4, p5, p8, p7)
 
                   if (.not. insidequad4)then
-                     print*, 'ERROR on binary_search: point is not contained in any quadrilateral. '
+                     print*, 'error on binary_search: point is not contained in any quadrilateral. '
                      stop
 
                   else
@@ -370,24 +569,64 @@ module sphgeo
       ! save indexes
       ix = iend
       jy = jend
-  end subroutine
+  end subroutine binary_search
 
 
+    subroutine ll2contra(u, v, ucontra, vcontra, M)
+      !---------------------------------------------------------------
+      ! LL2CONTRA
+      !
+      ! Given the components (u,v) (u-east, v-north) a vector in the
+      ! geographical coordinates system and conversion
+      ! matrix between latlon and the cubedsphere coordinates system,
+      ! this routine computes the contravariant components of the vector
+      !---------------------------------------------------------------
+        real(r8), intent(in):: M(1:2,1:2)
+        real(r8), intent(in):: u, v
+        real(r8), intent(out):: ucontra, vcontra
+
+        ucontra = M(1,1)*u + M(1,2)*v
+        vcontra = M(2,1)*u + M(2,2)*v
+
+        return
+
+    end subroutine
+
+    subroutine contra2ll(u, v, ucontra, vcontra, M)
+      !---------------------------------------------------------------
+      ! CONTRA2LL
+      !
+      ! Given the contravariant components of  a vector in the
+      ! cubedsphere coordinates system and the conversion
+      ! matrix between the cubedsphere coordinates and lalot coordinates,
+      ! this routine computes the geographical components of the vector
+      ! (u,v) (u-east, v-north)
+      !---------------------------------------------------------------
+        real(r8), intent(in):: M(1:2,1:2)
+        real(r8), intent(in):: ucontra, vcontra
+        real(r8), intent(out):: u, v
+
+        u = M(1,1)*ucontra + M(1,2)*vcontra
+        v = M(2,1)*ucontra + M(2,2)*vcontra
+
+        return
+
+    end subroutine
 
 
   function midpoint(p1, p2) 
     !--------------------------------------------------------------
-    ! MIDPOINT 
-    !  Calculates the midpoint of a geodesic arc
-    !  Returns a 'point_structure' kind
+    ! midpoint 
+    !  calculates the midpoint of a geodesic arc
+    !  returns a 'point_structure' kind
     !-------------------------------------------------------------
     real(r8), intent(in) :: p1(1:3), p2(1:3)
     real(r8):: midpoint(1:3)
 
-    ! Aux var
+    ! aux var
     real(r8):: p(1:3)
 
-    !Position
+    !position
     p = (p1 + p2)*0.5_r8
     p = p/norm(p)
     midpoint = p
@@ -395,23 +634,52 @@ module sphgeo
   end function midpoint
 
 
+    subroutine tangent_ll_lon (lon, e_lon)
+        !------------------------------------------------------------------------------------
+        !
+        ! generate the unit tangent (r^3) vector in the geographic coordinates in longitude direction
+        !
+        !------------------------------------------------------------------------------------
+        real (r8), intent(in)  :: lon
+        real (r8), intent(out) :: e_lon(1:3)
+ 
+        e_lon(1) = -dsin(lon)
+        e_lon(2) =  dcos(lon)
+        e_lon(3) =  0._r8
+        return
+    end subroutine tangent_ll_lon
+
+    subroutine tangent_ll_lat (lon, lat, e_lat)
+        !------------------------------------------------------------------------------------
+        !
+        ! generate the unit tangent (r^3) vector in the geographic coordinates in latitude direction
+        !
+        !------------------------------------------------------------------------------------
+        real (r8), intent(in)  :: lat, lon
+        real (r8), intent(out) :: e_lat(1:3)
+        e_lat(1) = -dsin(lat)*dcos(lon)
+        e_lat(2) = -dsin(lat)*dsin(lon)
+        e_lat(3) =  dcos(lat)
+        return
+    end subroutine tangent_ll_lat
+
 
   !===============================================================================================
-  !   The following routines were taken from iModel  https://github.com/pedrospeixoto/iModel
+  !   the following routines were taken from imodel  https://github.com/pedrospeixoto/imodel
   !===============================================================================================
 
    subroutine sph2cart (lon, lat, x, y, z )
       !------------------------------------------------------------------------------------
-      ! SPH2CART 
+      ! sph2cart 
       !
-      !     Transforms geographical coordinates (lat,lon) to Cartesian coordinates.
-      !     Similar to stripack's TRANS
+      !     transforms geographical coordinates (lat,lon) to cartesian coordinates.
+      !     similar to stripack's trans
       !
-      !    Input: LAT, latitudes of the node in radians [-pi/2,pi/2]
-      !           LON, longitudes of the nodes in radians [-pi,pi]
+      !    input: lat, latitudes of the node in radians [-pi/2,pi/2]
+      !           lon, longitudes of the nodes in radians [-pi,pi]
       !
-      !    Output:  X, Y, Z, the coordinates in the range -1 to 1. 
-      !                    X**2 + Y**2 + Z**2 = 1 
+      !    output:  x, y, z, the coordinates in the range -1 to 1. 
+      !                    x**2 + y**2 + z**2 = 1 
       !---------------------------------------------------------------------
       real (r8), intent(in) :: lon
       real (r8), intent(in) :: lat
@@ -430,16 +698,16 @@ module sphgeo
 
    subroutine cart2sph ( x, y, z, lon, lat )
       !---------------------------------------------------------------------
-      ! CART2SPH 
-      !     Transforms  Cartesian coordinates to geographical (lat,lon) coordinates .
-      !     Similar to stripack's SCOORD
+      ! cart2sph 
+      !     transforms  cartesian coordinates to geographical (lat,lon) coordinates .
+      !     similar to stripack's scoord
       !
-      !    Input:  X, Y, Z, the coordinates in the range -1 to 1. 
+      !    input:  x, y, z, the coordinates in the range -1 to 1. 
       !
-      !    Output, LON, longitude of the node in radians [-pi,pi].
-      !                       LON=0 if point lies on the Z-axis.  
-      !    Output, LAT, latitude of the node in radians [-pi/2,pi/2].
-      !                       LAT=0 if   X**2 + Y**2 + Z**2 = 0.
+      !    output, lon, longitude of the node in radians [-pi,pi].
+      !                       lon=0 if point lies on the z-axis.  
+      !    output, lat, latitude of the node in radians [-pi/2,pi/2].
+      !                       lat=0 if   x**2 + y**2 + z**2 = 0.
       !------------------------------------------------------------------------------------
       real    (r8), intent(in) :: x
       real    (r8), intent(in) :: y
@@ -449,17 +717,17 @@ module sphgeo
       real    (r8):: pnrm
 
       pnrm = dsqrt ( x **2 + y**2 + z**2 )
-      if ( x /= 0.0D+00 .or. y /= 0.0D+00 ) then
+      if ( x /= 0.0d+00 .or. y /= 0.0d+00 ) then
          lon = datan2 ( y, x )
       else
-         lon = 0.0D+00
+         lon = 0.0d+00
       end if
 
-      if ( pnrm /= 0.0D+00 ) then
+      if ( pnrm /= 0.0d+00 ) then
          lat = dasin ( z / pnrm )
       else
-         print*, "CART2SPH Warning: Point not in the unit sphere. Norm= ", pnrm
-         lat = 0.0D+00
+         print*, "cart2sph warning: point not in the unit sphere. norm= ", pnrm
+         lat = 0.0d+00
       end if
 
       return
@@ -467,24 +735,24 @@ module sphgeo
 
     subroutine convert_vec_cart2sph(p, v , vlon, vlat)
       !---------------------------------------------------------------------
-      !	CONVERT_VEC_CART2SPH
+      !	convert_vec_cart2sph
       !
-      !   Recieves a point p=(x,y,z) and a vector (v) at this point
-      !   Returns the vector at this point in (lon,lat) reference
-      !      vlon=West-East direction
-      !      vlat=South-North direction
+      !   recieves a point p=(x,y,z) and a vector (v) at this point
+      !   returns the vector at this point in (lon,lat) reference
+      !      vlon=west-east direction
+      !      vlat=south-north direction
     !
-    !   The vector must be tangent to the sphere, that is, v.(x,y,z)=0
-    !   This is done in order to plot the vectorfield on GMT
+    !   the vector must be tangent to the sphere, that is, v.(x,y,z)=0
+    !   this is done in order to plot the vectorfield on gmt
     !---------------------------------------------------------------------
-    !Point cartesian coords
+    !point cartesian coords
     real(r8), intent(in) :: p(1:3)
-    !Cartesian vector on point
+    !cartesian vector on point
     real(r8), intent(in) :: v(1:3)
-    !Spherical coord vector on point
+    !spherical coord vector on point
     real(r8), intent(out) :: vlat
     real(r8), intent(out) :: vlon
-    !Auxiliar variables
+    !auxiliar variables
     real(r8):: r
     real(r8):: rho
     real(r8):: rvec(1:3)
@@ -497,9 +765,9 @@ module sphgeo
     r=dsqrt(p(1)**2+p(2)**2+p(3)**2)
     rho=dsqrt(p(1)**2+p(2)**2)
 
-    !Case where the point is in the north or south pole
+    !case where the point is in the north or south pole
     if(rho<10*eps)then
-       !print*, "Pole:", v
+       !print*, "pole:", v
        vlon=v(2)
        vlat=v(1)
        return

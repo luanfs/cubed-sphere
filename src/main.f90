@@ -28,6 +28,17 @@ program main
   use input, only: &
        getparameters
 
+  !Simulation routines
+  use simulpack, only: &
+       grid_quality, &
+       div_test
+
+  !Deallocation routines
+  use deallocation, only: &
+       meshdeallocation
+
+
+
   !Variable declaration
   implicit none
 
@@ -46,11 +57,20 @@ program main
 
   !Do a simulation/test with the mesh loaded
   select case(simulcase)
-  case(1) !Grid generation and storage
-    print*
+  case(1) ! Grid generation, storage and quality
+    call grid_quality(mesh)
+
+  case(2) ! Divergence test
+    call div_test(mesh)
+
+
   case default
     print*, "Please select a proper simulation case ...:", simulcase
   end select
+
+  ! Deallocation
+  call meshdeallocation(mesh)
+
   !Print finishing line
   call printending()
 

@@ -25,6 +25,8 @@ module cubed_sphere
 
   !Data structures
   use datastruct, only: &
+      vector, &
+      matrix, &
       cubedsphere
 
   !Input routines
@@ -34,12 +36,17 @@ module cubed_sphere
 
   !Output routines
   use output, only: &
-      meshstore
+      meshstore, &
+      printmesh
  
   !Data allocation
   use allocation, only: &
       meshallocation, &
       r8_1darray_allocation
+
+  !Data deallocation
+  use deallocation, only: &
+      tgvectors_deallocation 
 
   !Spherical geometry
   use sphgeo, only: &
@@ -50,7 +57,15 @@ module cubed_sphere
       inverse_equidistant_gnomonic_map, &
       sph2cart, &
       cart2sph, &
-      binary_search
+      binary_search, &
+      arcintersec, &
+      arclen, &
+      proj_vec_sphere, &
+      tangent_ll_lat, &
+      tangent_ll_lon, &
+      derivative_ydir_equiangular_gnomonic_map, &
+      derivative_xdir_equiangular_gnomonic_map, &
+      cross_product
 
   implicit none
 
@@ -120,7 +135,7 @@ module cubed_sphere
       case("equiangular") !Equiangular grid
         call equiangular_cubedsphere_generation(mesh)
 
-      case("read") !Read nodes from file
+      case("read") !Read vertices from file
          call meshread(mesh)
 
       case default
@@ -132,12 +147,18 @@ module cubed_sphere
       ! Generate the grid properties
       call cubedsphere_properties(mesh)
 
+      ! Deallocate tg vectors and local coordinates
+      !call tgvectors_deallocation(mesh)
+
       ! Create lat/lon grid
       call latlon_grid(mesh)
 
       ! Store the grid
       call meshstore(mesh, header)
   end if
+
+    ! Print grid features on screen
+    call printmesh(mesh)
 
     print*
     print*, "Mesh created or loaded: ", mesh%name
@@ -197,7 +218,16 @@ module cubed_sphere
 
   end subroutine
 
-
+    !---------------------------------------------------------------------
+    ! Panel indexes distribution
+    !      +---+
+    !      | 5 |
+    !  +---+---+---+---+
+    !  | 4 | 1 | 2 | 3 |
+    !  +---+---+---+---+
+    !      | 6 |
+    !      +---+
+    !---------------------------------------------------------------------
   subroutine equiangular_cubedsphere_generation(mesh)
     !---------------------------------------------------------------------
     !
@@ -225,6 +255,9 @@ module cubed_sphere
 
     ! Number of cells along a coordinate axis
     n = mesh%n
+
+    !Total number of cells (ignoring ghost cells)
+    mesh%nbcells = 6*n*n
  
     ! Number of cells along a coordinate axis + number of ghost cells
     ntotal = mesh%ntotal
@@ -279,7 +312,7 @@ module cubed_sphere
     ! Integer auxs
     integer(i4) :: ntotal, n
     integer(i4) :: i, j ! 2D grid counters
-    integer(i4) :: p, panel    ! Panel counter
+    integer(i4) :: p! Panel counter
     integer(i4) :: i0, j0, iend, jend ! 2D grid interior indexes
 
     ! Number of cells along a coordinate axis
@@ -294,30 +327,49 @@ module cubed_sphere
     ! Compute the local coordinates
     call compute_localcoords(mesh)
 
-    if(mesh%resolution=="unif")then
-      panel = 1 ! In this case, we only need to compute areas, metric tensor and etc in a single panel
-    else
-      panel = nbfaces
-      print*, 'ERROR on meshallocation: invalid mesh resolution', mesh%resolution
-      stop
-    end if
+    ! Compute tangent vectors
+    call compute_tgvectors(mesh)
 
-    print*, 'Computing cubed-sphere areas...'
+    ! Compute angles
+    call compute_angles(mesh)
 
-    ! Compute the quadrilateral areas
-    do p = 1, panel
+    ! Compute conversions between contravariant and latlon representation of vectors
+    call compute_ll2contra(mesh)
+
+
+    print*, 'Computing cubed-sphere areas, lenghts...'
+
+    do p = 1, nbfaces
       do i = 1, ntotal
         do j = 1, ntotal
+          ! Compute the quadrilateral areas
           mesh%area(i,j,p) = sphquadarea(mesh%po(i-1,j-1,1)%p, mesh%po(i-1,j,1)%p, mesh%po(i,j-1,1)%p, mesh%po(i,j,1)%p)
+
+          ! Compute lenghts in x direction
+          mesh%lx(i,j,p) = arclen(mesh%pu(i-1,j,1)%p, mesh%pu(i,j,1)%p)
+
+          ! Compute lenghts in y direction
+          mesh%ly(i,j,p) = arclen(mesh%pv(i,j-1,1)%p, mesh%pv(i,j,1)%p)
+ 
         end do
       end do
     end do
 
-    !i0 = mesh%i0
-    !j0 = mesh%j0
-    !iend = mesh%iend
-    !jend = mesh%jend
-    !print*, n ,(6._r8*sum(mesh%area(i0:iend,j0:jend,1))-unitspharea)/unitspharea
+
+    ! save some stats
+    i0 = mesh%i0
+    j0 = mesh%j0
+    iend = mesh%iend
+    jend = mesh%jend
+
+    mesh%minarea  = minval(mesh%area(i0:iend,j0:jend,:))
+    mesh%maxarea  = maxval(mesh%area(i0:iend,j0:jend,:))
+    mesh%meanarea = sum(mesh%area(i0:iend,j0:jend,:))/mesh%nbcells
+
+    mesh%mindist  = minval(mesh%lx(i0-1:iend,j0:jend,:))
+    mesh%maxdist  = maxval(mesh%lx(i0-1:iend,j0:jend,:))
+    mesh%meandist = sum(mesh%lx(i0-1:iend,j0:jend,:))/mesh%nbcells
+   !print*, n ,(6._r8*sum(mesh%area(i0:iend,j0:jend,1))-unitspharea)/unitspharea
 
   end subroutine cubedsphere_properties
 
@@ -356,7 +408,10 @@ module cubed_sphere
     real(r8), allocatable :: y(:) ! Local coordinates (angular)
     real(r8), allocatable :: tanx(:)
     real(r8), allocatable :: tany(:)
-    real(r8) :: pc(1:3), pc1(1:3), pc2(1:3)
+    real(r8) :: pc(1:3), p1(1:3), p2(1:3), q1(1:3), q2(1:3)
+
+    !logical 
+    logical :: intersection_existence
 
     ! Number of cells along a coordinate axis
     n = mesh%n
@@ -439,12 +494,17 @@ module cubed_sphere
         do panel = 1, nbfaces
           do i = 1, ntotal
             do j = 1, ntotal
-              pc1 = midpoint(mesh%pu(i-1,j,panel)%p, mesh%pu(i,j,panel)%p)
-              pc2 = midpoint(mesh%pv(i,j-1,panel)%p, mesh%pv(i,j,panel)%p)
-              pc  = midpoint(pc1, pc2)
-              mesh%pc(i,j,panel)%p = pc
-              call cart2sph(mesh%pc(i,j,panel)%p(1), mesh%pc(i,j,panel)%p(2), mesh%pc(i,j,panel)%p(3), &
-                            mesh%pc(i,j,panel)%lat ,mesh%pc(i,j,panel)%lon)
+              p1 = mesh%pu(i-1,j  , panel)%p
+              p2 = mesh%pu(i  ,j  , panel)%p
+              q1 = mesh%pv(i  ,j-1, panel)%p
+              q2 = mesh%pv(i  ,j  , panel)%p
+              intersection_existence = arcintersec(p1, p2, q1, q2, pc)
+              if (intersection_existence)then
+                mesh%pc(i,j,panel)%p = pc
+              else
+                print*, 'ERROR on compute_midpoints: geodesics do not intersect.'
+                stop
+              end if
             end do
           end do
         end do
@@ -503,8 +563,49 @@ module cubed_sphere
     !
     ! COMPUTE_LOCALCOORDS
     !
-    ! Given the cell points po, pc, pu and pv, this routines compute
-    ! their local coordinates
+    ! Given the vertices pv, this routines compute
+    ! their local coordinates using the inverse of the gnomonic mapping
+    !
+    !---------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+
+    ! Integer auxs
+    integer(i4) :: ntotal, n
+    integer(i4) :: i, j ! 2D grid counters
+    integer(i4) :: p ! Panel counter
+
+    ! Real aux vars
+    real(r8) :: x ! Local coordinates
+    real(r8) :: y ! Local coordinates
+    real(r8) :: q(1:3) ! sphere point
+
+    ntotal = mesh%ntotal
+
+    print*, 'Computing cubed-sphere local coordinates...'
+
+    ! Compute po
+    do p = 1, nbfaces
+      do i = 0, ntotal
+        do j = 0, ntotal
+          q =  mesh%po(i,j,p)%p
+          !call inverse_equidistant_gnomonic_map(x, y, q, mesh, p)
+          !mesh%x_po(i,j,p) = datan2(x)
+          !mesh%y_po(i,j,p) = datan2(y)
+          !print*,mesh%x_po(i,j,p)*rad2deg, mesh%y_po(i,j,p)*rad2deg, mesh%dy*rad2deg
+        end do
+        !stop
+      end do
+    end do
+
+  end subroutine compute_localcoords 
+
+  subroutine compute_tgvectors(mesh)
+    !---------------------------------------------------------------------
+    !
+    ! COMPUTE_TGVECTORS
+    !
+    ! This routine computes the tangent vector in x and y direction
+    ! at pu and pv points
     !
     !---------------------------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
@@ -515,58 +616,185 @@ module cubed_sphere
     integer(i4) :: panel    ! Panel counter
 
     ! Real aux vars
-    real(r8) :: x ! Local coordinates
-    real(r8) :: y ! Local coordinates
     real(r8) :: p(1:3) ! sphere point
+    real(r8) :: v(1:3) ! vector point
+    real(r8) :: v1(1:3) ! vector point
+    real(r8) :: v2(1:3) ! vector point
+    real(r8) :: projv_p(1:3) ! vector point
+
+    real(r8), allocatable :: x(:), y(:)
+    real(r8) :: error, error1
 
     ntotal = mesh%ntotal
 
-    print*, 'Computing cubed-sphere local coordinates...'
+    ! Allocation
+    call r8_1darray_allocation(x, 0, ntotal)
+    call r8_1darray_allocation(y, 1, ntotal)
 
-    ! Compute po
+    ! Init local coordinates grid
+    x(0) = -pio4 - mesh%nbgl*mesh%dx
+    do i = 1, ntotal
+      x(i) = x(i-1) + mesh%dx
+    end do
+    y = (x(0:ntotal-1)+x(1:ntotal))*0.5d0
+
+    print*, 'Computing cubed-sphere tg vectors...'
+
+    error = 0._r8
+
+    ! Compute tgx at pu
     do panel = 1, nbfaces
-      do i = 1, ntotal
+      do i = 0, ntotal-1
         do j = 1, ntotal
-         ! print*,panel
-          p =  mesh%pc(i,j,panel)%p
-        !  call inverse_equidistant_gnomonic_map(x, y, p, mesh)
-        !  mesh%po(i,j,panel)%x = datan2(x)
-        !  mesh%po(i,j,panel)%y = datan2(y)
-        !  print*,x*rad2deg,y*rad2deg
+          v = mesh%pu(i+1,j,panel)%p - mesh%pu(i,j,panel)%p
+          p = mesh%pu(i,j,panel)%p
+          projv_p = proj_vec_sphere(v, p)
+          v1 = projv_p/norm(projv_p)
+
+          call derivative_xdir_equiangular_gnomonic_map(x(i), y(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgx_pu(i,j,panel)%v = v2 
         end do
       end do
     end do
-!stop
 
-    ! Compute pu
     do panel = 1, nbfaces
+      do j = 1, ntotal
+        v = mesh%pu(ntotal-1,j,panel)%p - mesh%pu(ntotal,j,panel)%p
+        p = mesh%pu(ntotal,j,panel)%p
+        projv_p = proj_vec_sphere(v, p)
+        v1 = -projv_p/norm(projv_p)
+
+        call derivative_xdir_equiangular_gnomonic_map(x(i), y(j), v2, panel)
+        !v2 = v2/norm(v2)
+        !error1 = norm(v1-v2)
+        !error = max(error, error1)
+
+        mesh%tgx_pu(ntotal,j,panel)%v = v2
+     end do
+    end do
+
+    ! Compute tgy at pu
+     do panel = 1, nbfaces
       do i = 0, ntotal
         do j = 1, ntotal
-          !mesh%pu(i,j,panel)%x
+          v = mesh%po(i,j,panel)%p - mesh%pu(i,j,panel)%p
+          p = mesh%pu(i,j,panel)%p
+          projv_p = proj_vec_sphere(v, p) 
+          v1 = projv_p/norm(projv_p) 
+
+          call derivative_ydir_equiangular_gnomonic_map(x(i), y(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgy_pu(i,j,panel)%v = v2
+       end do
+      end do
+    end do
+
+   ! Compute tgy at pv
+    do panel = 1, nbfaces
+      do i = 1, ntotal
+        do j = 0, ntotal-1
+          v = mesh%pv(i,j+1,panel)%p - mesh%pv(i,j,panel)%p
+          p = mesh%pv(i,j,panel)%p 
+          projv_p = proj_vec_sphere(v, p)
+          v1 = projv_p/norm(projv_p)
+
+          call derivative_ydir_equiangular_gnomonic_map(y(i), x(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgy_pv(i,j,panel)%v = v2
         end do
       end do
     end do
 
-    ! Compute pv
+    do panel = 1, nbfaces
+      do i = 1, ntotal
+        v = mesh%pv(i,ntotal-1,panel)%p - mesh%pv(i,ntotal,panel)%p
+        p = mesh%pv(i,ntotal,panel)%p 
+        projv_p = proj_vec_sphere(v, p)
+        v1 = -projv_p/norm(projv_p)
+
+        call derivative_ydir_equiangular_gnomonic_map(y(i), x(j), v2, panel)
+        !v2 = v2/norm(v2)
+        !error1 = norm(v1-v2)
+        !error = max(error, error1)
+
+        mesh%tgy_pv(i,j,panel)%v = v2
+ 
+     end do
+    end do
+
+
+
+   ! Compute tgx at pv
     do panel = 1, nbfaces
       do i = 1, ntotal
         do j = 0, ntotal
-          !mesh%pv(i,j,panel)%x
-        end do
+          v = mesh%po(i,j,panel)%p - mesh%pv(i,j,panel)%p
+          p = mesh%pv(i,j,panel)%p 
+          projv_p = proj_vec_sphere(v, p)
+          v1 = projv_p/norm(projv_p)
+
+          call derivative_xdir_equiangular_gnomonic_map(y(i), x(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgx_pv(i,j,panel)%v = v2
+       end do
       end do
     end do
-
-    ! Compute pc
+    
+    ! Compute tgx at pc
     do panel = 1, nbfaces
       do i = 1, ntotal
         do j = 1, ntotal
-          !mesh%pc(i,j,panel)%p
-        end do
+          v = mesh%pu(i,j,panel)%p - mesh%pc(i,j,panel)%p
+          p = mesh%pc(i,j,panel)%p 
+          projv_p = proj_vec_sphere(v, p)
+          v1 = projv_p/norm(projv_p)
+
+          call derivative_xdir_equiangular_gnomonic_map(y(i), y(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgx_pc(i,j,panel)%v = v2
+       end do
       end do
     end do
 
 
-  end subroutine compute_localcoords 
+   ! Compute tgy at pc
+    do panel = 1, nbfaces
+      do i = 1, ntotal
+        do j = 1, ntotal
+          v = mesh%pv(i,j,panel)%p - mesh%pc(i,j,panel)%p
+          p = mesh%pc(i,j,panel)%p 
+          projv_p = proj_vec_sphere(v, p)
+          v1 = projv_p/norm(projv_p)
+
+          call derivative_ydir_equiangular_gnomonic_map(y(i), y(j), v2, panel)
+          !v2 = v2/norm(v2)
+          !error1 = norm(v1-v2)
+          !error = max(error, error1)
+
+          mesh%tgy_pc(i,j,panel)%v = v2
+        end do
+      end do
+    end do
+
+  end subroutine compute_tgvectors 
+
+ 
 
   subroutine latlon_grid(mesh)
     !---------------------------------------------------------------------
@@ -608,6 +836,176 @@ module cubed_sphere
     ! Deallocation
     deallocate(mesh%ll)
   end subroutine
+
+  subroutine compute_angles(mesh)
+    !---------------------------------------------------------------------
+    !
+    ! COMPUTE_ANGLES
+    !
+    ! This routine computes the angles at pc, pu, pv points
+    ! by calculating the tangent vector cross products
+    ! and dot produts
+    !
+    !---------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+
+    ! Integer auxs
+    integer(i4) :: ntotal, n
+    integer(i4) :: i, j ! 2D grid counters
+    integer(i4) :: p! Panel counter
+
+    ! Real aux vars
+    real(r8) :: v1(1:3), v2(1:3), v3(1:3)  ! vectors
+
+    ntotal = mesh%ntotal
+
+    print*, 'Computing cubed-sphere angles...'
+
+    ! Compute angles at pc
+    do p = 1, nbfaces 
+      do i = 1, ntotal
+        do j = 1, ntotal
+          ! Cross product
+          v1 = mesh%tgx_pc(i,j,p)%v
+          v2 = mesh%tgy_pc(i,j,p)%v
+          v3 = cross_product(v1,v2)
+          mesh%sinc(i,j,p) = norm(v3)
+       end do
+      end do
+    end do
+
+    ! Compute angles a pu
+    do p = 1, nbfaces
+      do i = 0, ntotal
+        do j = 1, ntotal
+          ! Cross product
+          v1 = mesh%tgx_pu(i,j,p)%v
+          v2 = mesh%tgy_pu(i,j,p)%v
+          v3 = cross_product(v1,v2)
+          mesh%sinu(i,j,p) = norm(v3)
+
+          ! Dot product
+          mesh%cosu(i,j,p) = dot_product(v1,v2)
+       end do
+      end do
+    end do
+
+   ! Compute angles at pv
+    do p = 1, nbfaces
+      do i = 1, ntotal
+        do j = 0, ntotal
+          ! Cross product
+          v1 = mesh%tgx_pv(i,j,p)%v
+          v2 = mesh%tgy_pv(i,j,p)%v
+          v3 = cross_product(v1,v2)
+          mesh%sinv(i,j,p) = norm(v3)
+
+          ! Dot product
+          mesh%cosv(i,j,p) = dot_product(v1,v2)
+       end do
+      end do
+    end do
+
+    end subroutine compute_angles
+
+    subroutine compute_ll2contra(mesh)
+    !---------------------------------------------------------------------
+    !
+    ! COMPUTE_ll2contra
+    !
+    ! This routine computes the matrices that performs
+    ! the conversions between contravariant and latlon representation
+    ! of tangent vectors on the sphere
+    !---------------------------------------------------------------------
+      type(cubedsphere), intent(inout) :: mesh
+
+      ! Integer auxs
+      integer(i4) :: ntotal
+      integer(i4) :: i, j ! 2D grid counters
+      integer(i4) :: p ! Panel counter
+
+      ! Real aux vars
+      real(r8) :: elon(1:3), elat(1:3), ex(1:3), ey(1:3) ! vectors
+      real(r8) :: lat, lon
+      real(r8) :: a11, a12, a21, a22, det
+
+      ntotal = mesh%ntotal
+
+      print*, 'Computing conversion matrices...'
+
+      ! Compute at pu
+      do p = 1, nbfaces
+        do i = 0, ntotal
+          do j = 1, ntotal
+            ex = mesh%tgx_pu(i,j,p)%v
+            ey = mesh%tgy_pu(i,j,p)%v
+
+            lat = mesh%pu(i,j,p)%lat
+            lon = mesh%pu(i,j,p)%lon
+
+            call tangent_ll_lon(lon, elon)
+            call tangent_ll_lat(lon, lat, elat)
+
+            a11 = dot_product(ex, elon)  
+            a12 = dot_product(ey, elon)  
+            a21 = dot_product(ex, elat)  
+            a22 = dot_product(ey, elat) 
+            det = a11*a22 - a21*a12
+
+            ! Contra to latlon matrix
+            mesh%contra2ll_pu(i,j,p)%M(1,1) = a11
+            mesh%contra2ll_pu(i,j,p)%M(1,2) = a12
+            mesh%contra2ll_pu(i,j,p)%M(2,1) = a21
+            mesh%contra2ll_pu(i,j,p)%M(2,2) = a22
+
+            ! latlon to contra matrix
+            mesh%ll2contra_pu(i,j,p)%M(1,1) =  a22
+            mesh%ll2contra_pu(i,j,p)%M(1,2) = -a12
+            mesh%ll2contra_pu(i,j,p)%M(2,1) = -a21
+            mesh%ll2contra_pu(i,j,p)%M(2,2) =  a11
+            mesh%ll2contra_pu(i,j,p)%M(:,:) = mesh%ll2contra_pu(i,j,p)%M(:,:)/det
+ 
+         end do
+        end do
+      end do
+
+      ! Compute at pv
+      do p = 1, nbfaces
+        do i = 1, ntotal
+          do j = 0, ntotal
+            ex = mesh%tgx_pv(i,j,p)%v
+            ey = mesh%tgy_pv(i,j,p)%v
+
+            lat = mesh%pv(i,j,p)%lat
+            lon = mesh%pv(i,j,p)%lon
+
+            call tangent_ll_lon(lon, elon)
+            call tangent_ll_lat(lon, lat, elat)
+
+            a11 = dot_product(ex, elon)  
+            a12 = dot_product(ey, elon)  
+            a21 = dot_product(ex, elat)  
+            a22 = dot_product(ey, elat) 
+            det = a11*a22 - a21*a12
+
+            ! Contra to latlon matrix
+            mesh%contra2ll_pv(i,j,p)%M(1,1) = a11
+            mesh%contra2ll_pv(i,j,p)%M(1,2) = a12
+            mesh%contra2ll_pv(i,j,p)%M(2,1) = a21
+            mesh%contra2ll_pv(i,j,p)%M(2,2) = a22
+
+            ! latlon to contra matrix
+            mesh%ll2contra_pv(i,j,p)%M(1,1) =  a22
+            mesh%ll2contra_pv(i,j,p)%M(1,2) = -a12
+            mesh%ll2contra_pv(i,j,p)%M(2,1) = -a21
+            mesh%ll2contra_pv(i,j,p)%M(2,2) =  a11
+            mesh%ll2contra_pv(i,j,p)%M(:,:) = mesh%ll2contra_pv(i,j,p)%M(:,:)/det
+         end do
+        end do
+      end do
+
+      end subroutine compute_ll2contra
+
 
 end module cubed_sphere 
 
