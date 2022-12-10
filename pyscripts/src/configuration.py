@@ -50,6 +50,39 @@ def get_parameters():
 
    return N, kind, midpoint, resolution
 
+def get_adv_parameters():
+   # The standard adv file advection.par must exist in par/ directory
+   file_path = pardir+"advection.par"
+
+   if os.path.exists(file_path): # The file exists
+      # Open the grid file
+      confpar = open(file_path, "r")
+
+      # Read the grid file lines
+      confpar.readline()
+      confpar.readline()
+      ic = confpar.readline()
+      confpar.readline()
+      vf = confpar.readline()
+      confpar.readline()
+      flux = confpar.readline()
+
+      # Close the file
+      confpar.close()
+
+      # rm \n
+      ic = rmspace(ic)
+      vf = rmspace(vf)
+      flux = rmspace(flux)
+
+   else:   # The file does not exist
+      print("ERROR in get_adv_parameters: file advection.par not found in /par.")
+      exit()
+
+   return ic, vf, flux
+
+
+
 '''-----------------------------------
  Give a name to the grid
 -------------------------------------'''
@@ -97,3 +130,27 @@ def loadgrid(filename, N):
 
     return vert_lat, vert_lon, center_lat, center_lon, \
               midu_lat, midu_lon, midv_lat, midv_lon
+
+
+def replace_line(filename, content, line_number):
+    import re
+    if os.path.exists(filename): # The file exists
+        # Open the grid file
+        file  = open(filename, "r")
+        lines = file.readlines()
+
+        # new content
+        lines[line_number-1] = content+'\n'
+
+        # Close the file
+        file.close()
+
+        # Write new file
+        with open(filename, 'w') as file:
+            for line in lines:
+                file.write(line)
+
+    else:   # The file does not exist
+        print("ERROR in edit_file_line: file"+filename+" not found in /par.")
+        exit()
+

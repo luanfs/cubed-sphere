@@ -85,3 +85,73 @@ def plot_grid(vert_lat, vert_lon, centers_lat, centers_lon, \
    print('Figure has been saved in ../graphs/'+filename+'_'+map_projection+'.'+fig_format)
    print("--------------------------------------------------------\n")
    plt.close()
+
+
+
+def plot_scalar_field(data, lat, lon, \
+                      colormap, map_projection, name):
+    # Figure format
+    fig_format = 'png'
+
+    # Get the data to plot
+    val = data
+
+    # Figure quality
+    dpi = 100
+
+    # Map projection
+    if map_projection == "mercator":
+        plateCr = ccrs.PlateCarree()
+        plt.figure(figsize=(1832/dpi, 977/dpi), dpi=dpi)
+    elif map_projection == "sphere":
+        plateCr = ccrs.Orthographic(central_longitude=-60.0, central_latitude=0.0)
+        plt.figure(figsize=(800/dpi, 800/dpi), dpi=dpi)
+    elif map_projection == "north_pole":
+        #plateCr = ccrs.Orthographic(central_longitude=-60.0, central_latitude=0.0)
+        plateCr = ccrs.NorthPolarStereo(central_longitude=0.0, globe=None)
+        plt.figure(figsize=(800/dpi, 800/dpi), dpi=dpi)
+
+
+    plateCr._threshold = plateCr._threshold/10.
+    ax = plt.axes(projection=plateCr)
+    ax.stock_img()
+
+    #if map_projection == 'mercator':
+    #    ax.gridlines(draw_labels=True)
+
+    # Plot the scalar field
+    plt.contourf(lon, lat, val, levels = 100, cmap=colormap, transform=ccrs.PlateCarree())
+
+    # Add coastlines
+    #ax.coastlines()
+
+    # Plot colorbar
+    plt.colorbar(orientation='vertical',fraction=0.046, pad=0.04)
+
+    # Save the figure
+    plt.savefig(graphdir+name+'_'+map_projection+'.'+fig_format, format=fig_format)
+
+    plt.close()
+    print('Figure has been saved in '+graphdir+name+'.'+fig_format)
+
+def plot_fields_list(fields, grid_name, colormap, map_projection):
+    # Lat/lon aux vars
+    lats = np.linspace(-90.0, 90.0, Nlat+1)
+    lons = np.linspace(-180.0, 180.0, Nlon+1)
+    lats, lons = np.meshgrid(lats, lons)
+
+
+    for field in fields:
+        name = field+'_'+grid_name
+        filename = datadir+name+'.dat'
+        print(filename)
+
+        # Open the file and reshape
+        f = open(filename, 'rb')
+        data = np.fromfile(f, dtype=np.float64)
+        data = np.reshape(data, (Nlat+1, Nlon+1))
+        data = np.transpose(data)
+        plot_scalar_field(data, lats, lons, \
+                         colormap, map_projection, name)
+
+

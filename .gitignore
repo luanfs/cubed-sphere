@@ -1,0 +1,7 @@
+/graphs/*
+/data/*
+/bin/*
+/grid/*
+main
+pyscripts/src/__pycache__/
+
