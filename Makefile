@@ -15,10 +15,19 @@ bin/datastruct.obj \
 bin/miscellaneous.obj \
 bin/linear_algebra.obj \
 bin/sphgeo.obj \
+bin/ppm_reconstruction.obj \
+bin/ppm_flux.obj \
+bin/advection_vars.obj \
+bin/discrete_operators.obj \
+bin/allocation.obj \
+bin/deallocation.obj \
 bin/output.obj \
 bin/input.obj \
-bin/allocation.obj \
 bin/cubed_sphere.obj \
+bin/diagnostics.obj \
+bin/advection_ic.obj \
+bin/advection_timestep.obj \
+bin/simulpack.obj \
 
 #Compile and build all
 all: header config bin/main ending
@@ -65,6 +74,16 @@ bin/sphgeo.obj: src/sphgeo.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv sphgeo.mod bin/.
 
+#Data allocation
+bin/allocation.obj: src/allocation.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv allocation.mod bin/.
+
+#Data deallocation
+bin/deallocation.obj: src/deallocation.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv deallocation.mod bin/.
+
 #Output
 bin/output.obj: src/output.f90
 	$(F90) $(FFLAG) $(NFFLAG) -c  $^ -o $@ $(IMOD)
@@ -75,15 +94,50 @@ bin/input.obj: src/input.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv input.mod bin/.
 
-#Data allocation
-bin/allocation.obj: src/allocation.f90
-	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
-	mv allocation.mod bin/.
-
 #Cubed-sphere generation
 bin/cubed_sphere.obj: src/cubed_sphere.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv cubed_sphere.mod bin/.
+
+#Diagnostics
+bin/diagnostics.obj: src/diagnostics.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv diagnostics.mod bin/.
+
+#PPM flux
+bin/ppm_flux.obj: src/ppm_flux.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv ppm_flux.mod bin/.
+
+#PPM reconstruction
+bin/ppm_reconstruction.obj: src/ppm_reconstruction.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv ppm_reconstruction.mod bin/.
+
+#Discrete operators
+bin/discrete_operators.obj: src/discrete_operators.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv discrete_operators.mod bin/.
+
+#Advection vars
+bin/advection_vars.obj: src/advection_vars.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv advection_vars.mod bin/.
+
+#Advection initial condition
+bin/advection_ic.obj: src/advection_ic.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv advection_ic.mod bin/.
+
+#Advection timestep
+bin/advection_timestep.obj: src/advection_timestep.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv advection_timestep.mod bin/.
+
+# Simulation package
+bin/simulpack.obj: src/simulpack.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv simulpack.mod bin/.
 
 #Main executable
 bin/main: src/main.f90 $(OBJ)
@@ -98,6 +152,13 @@ ending:
 	@echo "Set parameter files (pars / *.par )" 
 	@echo "   and then run 'main'"
 	@echo "------------------------------------------------------------------"
+
+
+# Create tarball and backup
+archive: 
+        #Backup all important files
+	chmod +x sh/backup.sh
+	./sh/backup.sh
 
 #Clean targets
 clean: 
@@ -116,13 +177,3 @@ cleangrids: clean
 	rm -rf grids/
 
 cleanall: clean cleandata cleangrids
-
-# Create a tar.bz2 file with all important files
-#archive: 
-#	chmod +x sh/tarfiles.sh
-#	./sh/tarfiles.sh
-
-#Backup all important files
-#backup: 
-#	chmod +x sh/backup.sh
-#	./sh/backup.sh
