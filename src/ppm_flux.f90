@@ -25,7 +25,10 @@ module ppm_flux
   use constants, only: &
       i4, &
       r8, &
-      nbfaces
+      nbfaces, &
+      i0, iend, &
+      j0, jend, &
+      nghost
 
   !Data structures
   use datastruct, only: &
@@ -55,6 +58,7 @@ contains
     type(scalar_field), intent(in) :: ucontra_pu  ! u contravariant velocity at pu points 
     type(scalar_field), intent(inout) :: cx_pu       ! CFL in x direction at pu points 
 
+    integer(i4)::N
     select case(px%recon)
       case('ppm', 'hyppm')
         ! Reconstructs the values of Q using a piecewise parabolic polynomial
@@ -65,7 +69,7 @@ contains
 
         ! Get upwind flux
         call upwind_flux_pu(px, ucontra_pu)
-
+ 
      case default
       print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
       stop
@@ -119,18 +123,16 @@ contains
     type(scalar_field), intent(inout) :: cx_pu    ! CFL in x direction at pu points 
     integer(i4) :: N
 
-    N = px%n
-
     ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
     ! Flux at left edges
-    px%f_L(3:N+3,:,:) = px%q_R(3:N+3,:,:) - cx_pu%f(3:N+3,:,:)*0.5*(px%dq(3:N+3,:,:) - &
-                       (1.0-(2.0/3.0)*cx_pu%f(3:N+3,:,:))*px%q6(3:N+3,:,:))
+    px%f_L(i0-1:iend,:,:) = px%q_R(i0-1:iend,:,:) - cx_pu%f(i0-1:iend,:,:)*0.5*&
+                       (px%dq(i0-1:iend,:,:) - (1.0-(2.0/3.0)*cx_pu%f(i0-1:iend,:,:))*px%q6(i0-1:iend,:,:))
 
     ! Flux at right edges
-    px%f_R(3:N+3,:,:) = px%q_L(4:N+4,:,:) - cx_pu%f(3:N+3,:,:)*0.5*(px%dq(4:N+4,:,:) - &
-                       (1.0-(2.0/3.0)*cx_pu%f(3:N+3,:,:))*px%q6(4:N+4,:,:))
+    px%f_R(i0-1:iend,:,:) = px%q_L(i0:iend+1,:,:) - cx_pu%f(i0-1:iend,:,:)*0.5*&
+                       (px%dq(i0:iend+1,:,:) + (1.0+(2.0/3.0)*cx_pu%f(i0-1:iend,:,:) )*px%q6(i0:iend+1,:,:))
 
-  end subroutine numerical_flux_ppm_pu
+ end subroutine numerical_flux_ppm_pu
 
   subroutine numerical_flux_ppm_pv(py, cy_pv)
     !---------------------------------------------------------------------------------
@@ -141,18 +143,15 @@ contains
     !--------------------------------------------------------------------------------
     type(ppm_parabola), intent(inout) :: py ! parabola
     type(scalar_field), intent(inout) :: cy_pv    ! CFL in y direction at pv points 
-    integer(i4) :: N
-
-    N = py%n
 
     ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
     ! Flux at left edges
-    py%f_L(:,3:N+3,:) = py%q_R(:,3:N+3,:) - cy_pv%f(:,3:N+3,:)*0.5*(py%dq(:,3:N+3,:) - &
-                       (1.0-(2.0/3.0)*cy_pv%f(:,3:N+3,:))*py%q6(:,3:N+3,:))
+    py%f_L(:,i0-1:iend,:) = py%q_R(:,i0-1:iend,:) - cy_pv%f(:,i0-1:iend,:)*0.5*(py%dq(:,i0-1:iend,:) - &
+                       (1.0-(2.0/3.0)*cy_pv%f(:,i0-1:iend,:))*py%q6(:,i0-1:iend,:))
 
     ! Flux at right edges
-    py%f_R(:,3:N+3,:) = py%q_L(:,4:N+4,:) - cy_pv%f(:,3:N+3,:)*0.5*(py%dq(:,4:N+4,:) - &
-                       (1.0-(2.0/3.0)*cy_pv%f(:,3:N+3,:))*py%q6(:,4:N+4,:))
+    py%f_R(:,i0-1:iend,:) = py%q_L(:,i0:iend+1,:) - cy_pv%f(:,i0-1:iend,:)*0.5*(py%dq(:,i0:iend+1,:) + &
+                       (1.0+(2.0/3.0)*cy_pv%f(:,i0-1:iend,:))*py%q6(:,i0:iend+1,:))
 
  end subroutine numerical_flux_ppm_pv
 
@@ -172,8 +171,8 @@ contains
     N = px%n
 
     do p = 1, nbfaces
-      do i = 3, N+3
-        do j = 0, N+6
+      do i = i0-1, iend
+        do j = 0, N+nghost
           ! Upwind flux
           if(ucontra_pu%f(i,j,p) > 0._r8)then
             px%f_upw(i,j,p) = px%f_L(i,j,p)
@@ -199,8 +198,8 @@ contains
 
     N = py%n
     do p = 1, nbfaces
-      do i = 0, N+6
-        do j = 3, N+3
+      do i = 0, N+nghost
+        do j = j0-1, jend
           ! Upwind flux
           if(vcontra_pv%f(i,j,p) >= 0._r8)then
             py%f_upw(i,j,p) = py%f_L(i,j,p)

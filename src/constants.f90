@@ -119,6 +119,13 @@ module constants
   !Number of faces on a cube
   integer (i4) :: nbfaces = 6
 
+  !Interior grid indexes
+  integer (i4) :: i0, iend
+  integer (i4) :: j0, jend
+
+  ! Number of ghost cells in a direction
+  integer(i4) :: nghost
+
   !Lat/lon grid size (for ploting)
   integer (i4) :: n_lon = 2500
   integer (i4) :: n_lat = 1250

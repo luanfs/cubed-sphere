@@ -21,7 +21,10 @@ module cubed_sphere
        acube, &
        rad2deg, &
        r8, &
-       showonscreen
+       showonscreen, &
+       i0, iend, &
+       j0, jend, &
+       nghost
 
   !Data structures
   use datastruct, only: &
@@ -203,8 +206,8 @@ module cubed_sphere
     type(cubedsphere), intent(inout) :: mesh
 
     ! Number of ghost cells
-    mesh%nbgl = 3
-    mesh%nbgr = 3
+    mesh%nbgl = 4
+    mesh%nbgr = 4
     mesh%nbg  = mesh%nbgl + mesh%nbgr
  
     ! Interior indexes
@@ -216,6 +219,11 @@ module cubed_sphere
     ! Total number of cells along a coordinate axis including ghost cells
     mesh%ntotal = mesh%n + mesh%nbg
 
+    i0 = mesh%i0
+    j0 = mesh%j0
+    iend = mesh%iend
+    jend = mesh%jend
+    nghost = mesh%nbg
   end subroutine
 
     !---------------------------------------------------------------------

@@ -1,10 +1,10 @@
 #Advection test case parameters 
 #Initial condition field 
 1
-#Vector field 
-2
+#Vector field
+4
 #1D Flux (ppm or hyppm)
-hyppm
+ppm
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
@@ -18,4 +18,4 @@ hyppm
 #  case(5) - Divergent field 3 from Nair and Lauritzen 2010
 #Possible flux methods
 #  case(1) - ppm
-#  case(2) - hyppm   (Hybrid PPM from Putman and Lin 2007(PL07)
+#  case(2) - hyppm   (Hybrid PPM from Putman and Lin 2007(PL07))

@@ -13,7 +13,9 @@ module advection_ic
         i4, &
         r8, &
         pi, &
-        nbfaces
+        nbfaces, &
+        i0, iend, &
+        j0, jend
 
   ! Spherical geometry
   use sphgeo, only: &
@@ -251,7 +253,7 @@ contains
     type(vector_field), intent(inout) :: V_pu, V_pv
 
     ! aux
-    integer(i4) :: i0, iend, j0, jend, nt
+    integer(i4) :: nt
     integer(i4) :: i, j, p, N
 
     !aux
@@ -263,10 +265,6 @@ contains
     error = 0._r8
 
     ! interior grid indexes
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
     nt = mesh%ntotal
     N = mesh%n
 
@@ -283,7 +281,8 @@ contains
 
     ! Vector field at pu
     do p = 1 , nbfaces
-      do i = i0-1, iend
+      !do i = i0-1, iend
+      do i = 0, nt
         do j = 1, nt
           lat  = mesh%pu(i,j,p)%lat
           lon  = mesh%pu(i,j,p)%lon
@@ -306,6 +305,7 @@ contains
     do p = 1 , nbfaces
       do i = 1, nt
         do j = j0-1, jend
+        !do j = 0, nt
           lat  = mesh%pv(i,j,p)%lat
           lon  = mesh%pv(i,j,p)%lon
 
@@ -324,11 +324,6 @@ contains
       end do
     end do
  
-    !print*, N
-    !print*, V_pu%ucontra%f(3:N+3,6,6)
-    !print*, shape(V_pu%ucontra%f)
-    !stop   !print*, error
-    !stop
   end subroutine compute_ic_adv
 
   subroutine div_adv(div, lat, lon, vf)

@@ -22,8 +22,10 @@ from errors             import plot_errors_loglog, plot_convergence_rate
 import subprocess
 
 # Parameters
-N = (16, 32, 64, 128, 256, 512, 1024) # Values of N
-reconmethods = ('ppm', 'hyppm')       # reconstruction methods
+N = (16, 32, 64, 128, 256, 512) # Values of N
+#N = (16,) # Values of N
+reconmethods = ('ppm',) # reconstruction methods
+#reconmethods = ('ppm', 'hyppm')       # reconstruction methods
 
 # Program to be run
 program = "./main"
@@ -96,5 +98,5 @@ def main():
         filename = graphdir+div_name+'_CR'
         plot_convergence_rate(N, error_linf[:,r], error_l1[:,r], error_l2[:,r], filename, title)
         r = r+1
-main()
 
+main()

@@ -22,7 +22,9 @@ module ppm_reconstruction
   !Global constants
   use constants, only: &
         i4, &
-        r8
+        r8, &
+        i0, iend, &
+        j0, jend
 
   !Data structures
   use datastruct, only: &
@@ -58,9 +60,10 @@ contains
         a4 = a3
 
         ! Assign values of q_R and q_L
-        px%q_R(2:N+5,:,:) = a1*Q%f(2:N+5,:,:) + a2*Q%f(1:N+4,:,:) + a3*Q%f(3:N+6,:,:) + a4*Q%f(0:N+3,:,:)
-        px%q_L(3:N+4,:,:) = px%q_R(3:N+4,:,:)
-        px%q_R(3:N+4,:,:) = px%q_R(4:N+5,:,:)
+        px%q_R(i0-2:iend+2,:,:) = a1*Q%f(i0-2:iend+2,:,:) + a2*Q%f(i0-3:iend+1,:,:)&
+                                + a3*Q%f(i0-1:iend+3,:,:) + a4*Q%f(i0-4:iend,:,:)
+        px%q_L(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:)
+        px%q_R(i0-1:iend+1,:,:) = px%q_R(i0:iend+2,:,:)
 
      case('hyppm') !Hybrid PPM from PL07
         ! coeffs from equations 41 and 42 from Putman and Lin 2007
@@ -71,8 +74,10 @@ contains
         a5 =  -3._r8/60._r8
 
         ! Assign values of Q_R and Q_L
-        px%q_R(3:N+4,:,:) = a1*Q%f(1:N+2,:,:) + a2*Q%f(2:N+3,:,:) + a3*Q%f(3:N+4,:,:) + a4*Q%f(4:N+5,:,:) + a5*Q%f(5:N+6,:,:)
-        px%q_L(3:N+4,:,:) = a5*Q%f(1:N+2,:,:) + a4*Q%f(2:N+3,:,:) + a3*Q%f(3:N+4,:,:) + a2*Q%f(4:N+5,:,:) + a1*Q%f(5:N+6,:,:)
+        px%q_R(i0-1:iend+1,:,:) = a1*Q%f(i0-3:iend-1,:,:) + a2*Q%f(i0-2:iend,:,:) + a3*Q%f(i0-1:iend+1,:,:)&
+                                + a4*Q%f(i0:iend+2,:,:) + a5*Q%f(i0+1:iend+3,:,:)
+        px%q_L(i0-1:iend+1,:,:) = a5*Q%f(i0-3:iend-1,:,:) + a4*Q%f(i0-2:iend,:,:) + a3*Q%f(i0-1:iend+1,:,:)&
+                                + a2*Q%f(i0:iend+2,:,:) + a1*Q%f(i0+1:iend+3,:,:)
 
     case default
       print*, 'ERROR on ppm_reconstruction_x: invalid 1D reconstruction method: ', px%recon 
@@ -81,10 +86,10 @@ contains
  
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
-    px%dq(3:N+4,:,:) = px%q_R(3:N+4,:,:) - px%q_L(3:N+4,:,:)
-    px%q6(3:N+4,:,:) = 6._r8*Q%f(3:N+4,:,:) - 3._r8*(px%q_R(3:N+4,:,:) + px%q_L(3:N+4,:,:))
+    px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
+    px%q6(i0-1:iend+1,:,:) = 6._r8*Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
 
-    return 
+   return 
 
   end subroutine ppm_reconstruction_x
 
@@ -113,9 +118,10 @@ contains
         a4 = a3
 
         ! Assign values of q_R and q_L
-        py%q_R(:,2:N+5,:) = a1*Q%f(:,2:N+5,:) + a2*Q%f(:,1:N+4,:) + a3*Q%f(:,3:N+6,:) + a4*Q%f(:,0:N+3,:)
-        py%q_L(:,3:N+4,:) = py%q_R(:,3:N+4,:)
-        py%q_R(:,3:N+4,:) = py%q_R(:,4:N+5,:)
+        py%q_R(:,i0-2:iend+2,:) = a1*Q%f(:,i0-2:iend+2,:) + a2*Q%f(:,i0-3:iend+1,:)&
+                                + a3*Q%f(:,i0-1:iend+3,:) + a4*Q%f(:,i0-4:iend,:)
+        py%q_L(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:)
+        py%q_R(:,i0-1:iend+1,:) = py%q_R(:,i0:iend+2,:)
 
      case('hyppm') !Hybrid PPM from PL07
         ! coeffs from equations 41 and 42 from Putman and Lin 2007
@@ -126,10 +132,10 @@ contains
         a5 =  -3._r8/60._r8
 
         ! Assign values of Q_R and Q_L
-        !py%q_R(2:N+3,:,:) = a1*Q%f(0:N+1,:,:) + a2*Q%f(1:N+2,:,:) + a3*Q%f(2:N+3,:,:) + a4*Q%f(3:N+4,:,:) + a5*Q%f(4:N+5,:,:)
-        !py%q_L(2:N+3,:,:) = a5*Q%f(0:N+1,:,:) + a4*Q%f(1:N+2,:,:) + a3*Q%f(2:N+3,:,:) + a2*Q%f(3:N+4,:,:) + a1*Q%f(4:N+5,:,:)
-        py%q_R(:,3:N+4,:) = a1*Q%f(:,1:N+2,:) + a2*Q%f(:,2:N+3,:) + a3*Q%f(:,3:N+4,:) + a4*Q%f(:,4:N+5,:) + a5*Q%f(:,5:N+6,:)
-        py%q_L(:,3:N+4,:) = a5*Q%f(:,1:N+2,:) + a4*Q%f(:,2:N+3,:) + a3*Q%f(:,3:N+4,:) + a2*Q%f(:,4:N+5,:) + a1*Q%f(:,5:N+6,:)
+        py%q_R(:,i0-1:iend+1,:) = a1*Q%f(:,i0-3:iend-1,:) + a2*Q%f(:,i0-2:iend,:) + a3*Q%f(:,i0-1:iend+1,:)&
+                                + a4*Q%f(:,i0:iend+2,:) + a5*Q%f(:,i0+1:iend+3,:)
+        py%q_L(:,i0-1:iend+1,:) = a5*Q%f(:,i0-3:iend-1,:) + a4*Q%f(:,i0-2:iend,:) + a3*Q%f(:,i0-1:iend+1,:)& 
+                                + a2*Q%f(:,i0:iend+2,:) + a1*Q%f(:,i0+1:iend+3,:)
 
 
     case default
@@ -139,8 +145,8 @@ contains
  
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
-    py%dq(:,3:N+4,:) = py%q_R(:,3:N+4,:) - py%q_L(:,3:N+4,:)
-    py%q6(:,3:N+4,:) = 6._r8*Q%f(:,3:N+4,:) - 3._r8*(py%q_R(:,3:N+4,:) + py%q_L(:,3:N+4,:))
+    py%dq(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:) - py%q_L(:,i0-1:iend+1,:)
+    py%q6(:,i0-1:iend+1,:) = 6._r8*Q%f(:,i0-1:iend+1,:) - 3._r8*(py%q_R(:,i0-1:iend+1,:) + py%q_L(:,i0-1:iend+1,:))
 
     return 
 

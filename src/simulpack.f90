@@ -173,7 +173,7 @@ module simulpack
 
     ! Test name
     advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)
-    print*, advsimul%name
+    !print*, advsimul%name
 
     ! CFL number
     call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)

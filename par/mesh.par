@@ -1,6 +1,6 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-1024
+512
 !Kind of mesh use: equiangular, equiedge, read
 equiangular
 !Midpoint position: geo, local

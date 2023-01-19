@@ -7,7 +7,9 @@ module discrete_operators
   use constants, only: &
       i4, &
       r8, &
-      nbfaces
+      nbfaces, &
+      i0, iend, &
+      j0, jend
 
   !Data structures
   use datastruct, only: &
@@ -45,20 +47,12 @@ contains
 
     !aux
     real(r8) :: dt
-    integer :: i0, iend, N
-    integer :: j0, jend
-
-    N = mesh%n
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
 
     F_gQ%f(i0:iend,:,:) = -(dt/mesh%area(i0:iend,:,:))*mesh%dy* &
                          (wind_pu%ucontra%f(i0:iend,:,:)*f_pu(i0:iend,:,:) - &
                           wind_pu%ucontra%f(i0-1:iend-1,:,:)*f_pu(i0-1:iend-1,:,:))
 
- end subroutine F_operator
+  end subroutine F_operator
 
   subroutine G_operator(G_gQ, gQ, wind_pv, f_pv, mesh, dt)
     !---------------------------------------------------
@@ -81,19 +75,10 @@ contains
 
     !aux
     real(r8) :: dt
-    integer :: j0, jend, N
-    integer :: i0, iend
-
-    N = mesh%n
-    j0 = mesh%j0
-    i0 = mesh%i0
-    jend = mesh%jend
-    iend = mesh%iend
 
     G_gQ%f(:,j0:jend,:) = -(dt/mesh%area(:,j0:jend,:))*mesh%dx* &
                          (wind_pv%vcontra%f(:,j0:jend,:)*f_pv(:,j0:jend,:) - &
                           wind_pv%vcontra%f(:,j0-1:jend-1,:)*f_pv(:,j0-1:jend-1,:))
-
 
   end subroutine G_operator
 
@@ -120,13 +105,8 @@ contains
     type(vector_field), intent(in) :: wind_pv
     type(scalar_field), intent(in) :: Q
     integer(i4) :: n
-    integer(i4) :: i0, iend, j0, jend
 
     n = mesh%n
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
 
     ! Multiply Q by the metric tensor
     gQ%f = Q%f*mesh%sinc
