@@ -9,7 +9,8 @@ version=` date +%y.%m.%d `
 echo "Today: " $date
 
 
-output="fvcs$version.tar.bz2"
+#output="fvcs$version.tar.bz2"
+output="fvcs.tar.bz2"
 bkpdir="cs" 
 
 #Edit place to sync relative to system used

@@ -17,7 +17,8 @@ README.*"
 
 files="$sourcefiles $parfiles $scripts $others"
 
-output="fvcs$version.tar.bz2"
+#output="fvcs$version.tar.bz2"
+output="fvcs.tar.bz2"
 
 tar cjfv $output $files
 
