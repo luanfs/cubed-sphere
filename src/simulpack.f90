@@ -172,7 +172,7 @@ module simulpack
     call init_adv_vars(mesh)
 
     ! Test name
-    advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)
+    advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//"_"//trim(advsimul%opsplit)
     !print*, advsimul%name
 
     ! CFL number

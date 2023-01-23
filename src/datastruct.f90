@@ -286,6 +286,9 @@ module datastruct
      ! One dimensional flux scheme
      character(len=16) :: recon1d
 
+     ! Two dimensional splitting scheme
+     character(len=16) :: opsplit
+
      !Variable name - long name - detailed name
      ! This is used to for filenames of this variable
      character (len=256) :: name

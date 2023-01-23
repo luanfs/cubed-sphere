@@ -201,6 +201,8 @@ module input
     read(fileunit,*)  advsimul%vf
     read(fileunit,*)  buffer
     read(fileunit,*)  advsimul%recon1d
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%opsplit
     close(fileunit)
     return
   end subroutine getadvparameters

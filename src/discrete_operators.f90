@@ -104,9 +104,10 @@ contains
     type(scalar_field), intent(in) :: gQ
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
-    integer(i4) :: n
+    integer(i4) :: n, ng
 
     n = mesh%n
+    ng = mesh%nbg
  
     ! Compute fluxes
     call ppm_flux_pu(gQ, px, cx_pu)
@@ -116,9 +117,26 @@ contains
     call F_operator(px%df, wind_pu, px%f_upw, mesh, advsimul%dt)
     call G_operator(py%df, wind_pv, py%f_upw, mesh, advsimul%dt)
 
-    ! Advect in x and y directions
-    Qx%f = gQ%f + 0.5_r8*px%df 
-    Qy%f = gQ%f + 0.5_r8*py%df
+    ! Splitting scheme
+    select case (advsimul%opsplit)
+    case ('lr96')
+        Qx%f = gQ%f+0.5_r8*px%df
+        Qy%f = gQ%f+0.5_r8*py%df
+
+    case ('l04')
+        ! L04 equation 7 and 8
+        px%dF = px%df + (cx_pu%f(1:,:,:)-cx_pu%f(:N+ng,:,:))*gQ%f
+        py%dF = py%df + (cy_pv%f(:,1:,:)-cy_pv%f(:,:N+ng,:))*gQ%f
+        Qx%f = gQ%f+0.5_r8*px%df
+        Qy%f = gQ%f+0.5_r8*py%df
+    case ('pl07')
+        ! PL07 - equation 17 and 18
+        Qx%f = 0.5_r8*(gQ%f + (gQ%f + px%df)/(1._r8-(cx_pu%f(1:,:,:)-cx_pu%f(:N+ng,:,:))))
+        Qy%f = 0.5_r8*(gQ%f + (gQ%f + py%df)/(1._r8-(cy_pv%f(:,1:,:)-cy_pv%f(:,:N+ng,:))))
+
+    case default
+        print*, 'ERROR in divergence: invalid operator splitting,  ', advsimul%opsplit
+    end select
 
     ! Compute fluxes
     call ppm_flux_pu(Qy, px, cx_pu)

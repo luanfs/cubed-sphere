@@ -5,6 +5,8 @@
 4
 #1D Flux (ppm or hyppm)
 ppm
+#2D operator splitting (lr96, l04 or pl07)
+lr96
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
@@ -19,3 +21,7 @@ ppm
 #Possible flux methods
 #  case(1) - ppm
 #  case(2) - hyppm   (Hybrid PPM from Putman and Lin 2007(PL07))
+#Possible 2d operator splitting schemes
+#  case(1) - Splitting from Lin and Rood 1996 (lr96)
+#  case(2) - Splitting from Lin 2004 (l04)
+#  case(3) - Splitting from Putman and Lin 2007(pl07)

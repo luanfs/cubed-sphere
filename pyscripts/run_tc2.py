@@ -23,9 +23,14 @@ import subprocess
 
 # Parameters
 N = (16, 32, 64, 128, 256, 512) # Values of N
-#N = (16,) # Values of N
+
+#N = (16,32,64) # Values of N
+
 reconmethods = ('ppm',) # reconstruction methods
-#reconmethods = ('ppm', 'hyppm')       # reconstruction methods
+#reconmethods = ('hyppm',)       # reconstruction methods
+
+splitmethods =('lr96',)
+#splitmethods =('lr96', 'l04', 'pl07')
 
 # Program to be run
 program = "./main"
@@ -46,57 +51,69 @@ def main():
     ic, vf, recon = get_adv_parameters()
 
     # Error arrays
-    error_linf = np.zeros((len(N),len(reconmethods)))
-    error_l1   = np.zeros((len(N),len(reconmethods)))
-    error_l2   = np.zeros((len(N),len(reconmethods)))
+    error_linf = np.zeros((len(N),len(reconmethods),len(splitmethods)))
+    error_l1   = np.zeros((len(N),len(reconmethods),len(splitmethods)))
+    error_l2   = np.zeros((len(N),len(reconmethods),len(splitmethods)))
 
     # compile the code
     subprocess.run('cd .. ; make', shell=True)
 
     r = 0
+    o = 0
     for recon in reconmethods:
-        k = 0
-        # Update reconstruction method in advection.par
-        replace_line(pardir+'advection.par', recon, 7)
+        o = 0
+        for opsplit in splitmethods:
+            # Update reconstruction method in advection.par
+            replace_line(pardir+'advection.par', recon, 7)
 
-        for n in N:
-            # Grid name
-            grid_name = gridname(n, kind, midpoint, resolution)
+            # Update splitting method in advection.par
+            replace_line(pardir+'advection.par', opsplit, 9)
 
-            # Div error name
-            div_name = "div_vf"+vf+"_"+recon
+            k = 0
+            for n in N:
+                # Grid name
+                grid_name = gridname(n, kind, midpoint, resolution)
 
-            # File to be opened
-            filename = datadir+div_name+"_"+grid_name+"_errors.txt"
-            print(filename)
+                # Div error name
+                div_name = "div_vf"+vf+"_"+recon+"_"+opsplit
 
-            # Update N in mesh.par
-            replace_line(pardir+'mesh.par', str(n), 3)
+                # File to be opened
+                filename = datadir+div_name+"_"+grid_name+"_errors.txt"
+                print(filename)
 
-            # Run the program
-            if (run):
-                subprocess.run('cd .. ; ./main', shell=True)
+                # Update N in mesh.par
+                replace_line(pardir+'mesh.par', str(n), 3)
 
-            errors = np.loadtxt(filename)
-            error_linf[k,r] = errors[0]
-            error_l1[k,r] = errors[1]
-            error_l2[k,r] = errors[2]
-            k = k+1
+                # Run the program
+                if (run):
+                    subprocess.run('cd .. ; ./main', shell=True)
 
-            fields = (div_name, div_name+'_error')
-            plot_fields_list(fields, grid_name, colormap, map_projection)
+                #print(k,r,o)
+                errors = np.loadtxt(filename)
+                error_linf[k,r,o] = errors[0]
+                error_l1[k,r,o] = errors[1]
+                error_l2[k,r,o] = errors[2]
+                k = k+1
 
+                fields = (div_name, div_name+'_error')
+                plot_fields_list(fields, grid_name, colormap, map_projection)
+
+            o = o+1
         r = r+1
 
     # Plot errors
     r = 0
+    o = 0
     for recon in reconmethods:
-        div_name = "div_vf"+vf+"_"+recon+"_"+ grid_name
-        filename = graphdir+div_name+'_errors'
-        title = div_name
-        plot_errors_loglog(N, error_linf[:,r], error_l1[:,r], error_l2[:,r], filename, title)
-        filename = graphdir+div_name+'_CR'
-        plot_convergence_rate(N, error_linf[:,r], error_l1[:,r], error_l2[:,r], filename, title)
+        o = 0
+        for opsplit in splitmethods:
+            div_name = "div_vf"+vf+"_"+recon+"_"+opsplit+"_"+ grid_name
+            filename = graphdir+div_name+'_errors'
+            title = div_name
+            plot_errors_loglog(N, error_linf[:,r,o], error_l1[:,r,o], error_l2[:,r,o], filename, title)
+            filename = graphdir+div_name+'_CR'
+            plot_convergence_rate(N, error_linf[:,r,o], error_l1[:,r,o], error_l2[:,r,o], filename, title)
+            o = o+1
         r = r+1
 
 main()
