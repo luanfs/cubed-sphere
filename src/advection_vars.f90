@@ -38,10 +38,6 @@ module advection_vars
   ! Dimension splitting vars
   type(scalar_field) :: Qx
   type(scalar_field) :: Qy
-  type(scalar_field) :: F_gQ
-  type(scalar_field) :: G_gQ
-  type(scalar_field) :: FG_gQ
-  type(scalar_field) :: GF_gQ
 
   ! PPM fields
   type(ppm_parabola) :: px ! ppm in x direction

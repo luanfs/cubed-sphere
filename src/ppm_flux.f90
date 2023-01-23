@@ -44,7 +44,7 @@ module ppm_flux
 
 contains 
 
-  subroutine ppm_flux_pu(Q, px, cx_pu, ucontra_pu)
+  subroutine ppm_flux_pu(Q, px, cx_pu)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PU
     !
@@ -55,7 +55,6 @@ contains
     !--------------------------------------------------------------------------------
     type(scalar_field), intent(in) :: Q
     type(ppm_parabola), intent(inout) :: px    ! parabola
-    type(scalar_field), intent(in) :: ucontra_pu  ! u contravariant velocity at pu points 
     type(scalar_field), intent(inout) :: cx_pu       ! CFL in x direction at pu points 
 
     integer(i4)::N
@@ -68,7 +67,7 @@ contains
         call numerical_flux_ppm_pu(px, cx_pu)
 
         ! Get upwind flux
-        call upwind_flux_pu(px, ucontra_pu)
+        call upwind_flux_pu(px, cx_pu)
  
      case default
       print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
@@ -79,7 +78,7 @@ contains
   end subroutine ppm_flux_pu
 
 
-  subroutine ppm_flux_pv(Q, py, cy_pv, vcontra_pv)
+  subroutine ppm_flux_pv(Q, py, cy_pv)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PV
     !
@@ -90,7 +89,6 @@ contains
     !--------------------------------------------------------------------------------
     type(scalar_field), intent(in) :: Q
     type(ppm_parabola), intent(inout) :: py       ! parabola
-    type(scalar_field), intent(in) :: vcontra_pv  ! v contravariant velocity at pv points 
     type(scalar_field), intent(inout) :: cy_pv    ! CFL in y direction at pv points 
 
     select case(py%recon)
@@ -102,7 +100,7 @@ contains
         call numerical_flux_ppm_pv(py, cy_pv)
 
         ! Get upwind flux
-        call upwind_flux_pv(py, vcontra_pv)
+        call upwind_flux_pv(py, cy_pv)
 
      case default
       print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
@@ -156,14 +154,14 @@ contains
  end subroutine numerical_flux_ppm_pv
 
 
-  subroutine upwind_flux_pu(px, ucontra_pu)
+  subroutine upwind_flux_pu(px, cx_pu)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PU
     !
     ! Given the fluxes at right and left, this routine computes the upwind flux at pu
     !--------------------------------------------------------------------------------
     type(ppm_parabola), intent(inout) :: px    ! flux values at edges (pu points)
-    type(scalar_field), intent(in) :: ucontra_pu  ! u contravariant velocity at pu points 
+    type(scalar_field), intent(in) :: cx_pu  ! cfl of u (contravariant velocity) at pu points 
 
     ! aux
     integer(i4) :: i, j, p, N
@@ -174,7 +172,7 @@ contains
       do i = i0-1, iend
         do j = 0, N+nghost
           ! Upwind flux
-          if(ucontra_pu%f(i,j,p) > 0._r8)then
+          if(cx_pu%f(i,j,p) > 0._r8)then
             px%f_upw(i,j,p) = px%f_L(i,j,p)
           else
             px%f_upw(i,j,p) = px%f_R(i,j,p)
@@ -184,14 +182,14 @@ contains
     end do
   end subroutine upwind_flux_pu
 
-  subroutine upwind_flux_pv(py, vcontra_pv)
+  subroutine upwind_flux_pv(py, cy_pv)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PV
     !
     ! Given the fluxes at right and left, this routine computes the upwind flux at pv
     !--------------------------------------------------------------------------------
     type(ppm_parabola), intent(inout) :: py
-    type(scalar_field), intent(in) :: vcontra_pv  ! v contravariant velocity at pu points 
+    type(scalar_field), intent(in) :: cy_pv ! cfl of v (contravariant velocity) at pu points 
 
     ! aux
     integer(i4) :: i, j, p, N
@@ -201,7 +199,7 @@ contains
       do i = 0, N+nghost
         do j = j0-1, jend
           ! Upwind flux
-          if(vcontra_pv%f(i,j,p) >= 0._r8)then
+          if(cy_pv%f(i,j,p) >= 0._r8)then
             py%f_upw(i,j,p) = py%f_L(i,j,p)
           else
             py%f_upw(i,j,p) = py%f_R(i,j,p)

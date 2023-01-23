@@ -181,9 +181,11 @@ module simulpack
 
     ! Multiply Q by the metric tensor
     Q%f = 1._r8
+    gQ%f = Q%f*mesh%sinc
 
     ! Compute the divergence
-    call divergence(Q, wind_pu, wind_pv, mesh)
+    call divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, px, py, advsimul, mesh)
+    div_ugq%f(i0:iend,j0:jend,:) = (px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt
 
     ! Exact divergence
     call compute_exact_div(div_ugq_exact, mesh, advsimul)

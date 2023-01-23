@@ -449,6 +449,7 @@ module allocation
     call r8_3darray_allocation(p%q_R, 1, n, 1, n, 1, nbfaces) 
     call r8_3darray_allocation(p%dq, 1, n, 1, n, 1, nbfaces) 
     call r8_3darray_allocation(p%q6, 1, n, 1, n, 1, nbfaces) 
+    call r8_3darray_allocation(p%df, 1, n, 1, n, 1, nbfaces) 
 
     ! Allocate the cubed-sphere points
     select case(p%dir)
@@ -492,13 +493,9 @@ module allocation
     call scalar_field_allocation(div_ugq_error, mesh, 0)
     call scalar_field_allocation(gQ, mesh, 0)
 
-    !Dimension splitting variables
+    !Operator splitting variables
     call scalar_field_allocation(Qx, mesh, 0)
     call scalar_field_allocation(Qy, mesh, 0)
-    call scalar_field_allocation(F_gQ, mesh, 0)
-    call scalar_field_allocation(G_gQ, mesh, 0)
-    call scalar_field_allocation(FG_gQ, mesh, 0)
-    call scalar_field_allocation(GF_gQ, mesh, 0)
 
     !PPM vars
     call ppm_parabola_allocation(px, mesh)

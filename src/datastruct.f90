@@ -135,7 +135,6 @@ module datastruct
    ! Lenghts in y direction (geodesic connecting mid v points)
    real(r8), allocatable:: ly(:,:,:)
 
-
    ! Local coordinates of po points
    real(r8), allocatable:: x_po(:,:,:)
    real(r8), allocatable:: y_po(:,:,:)
@@ -145,7 +144,6 @@ module datastruct
 
    ! Minimum/Maximum geodesic areas
    real(r8):: minarea, maxarea, meanarea
-
 
    ! Local coordinates uniform grid size
    real(r8):: dx, dy
@@ -309,6 +307,9 @@ module datastruct
      real (r8), allocatable  :: f_L(:,:,:) ! flux from left
      real (r8), allocatable  :: f_R(:,:,:) ! flux from right
      real (r8), allocatable  :: f_upw(:,:,:)  ! upwind flux
+
+     ! Divergence of flux
+     real (r8), allocatable  :: df(:,:,:)  ! flux divergence
 
      ! Direction of reconstruction
      !   1 - x direction
