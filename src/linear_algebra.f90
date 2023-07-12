@@ -1,25 +1,25 @@
 module linear_algebra
-  !===============================================================================================
-  !  Module for numerical linear algebra routines
-  !===============================================================================================
+!===============================================================================================
+!  Module for numerical linear algebra routines
+!===============================================================================================
 
-  !Global constants
-  use constants, only: &
-       eps2, &
-       i4, &
-       r8, &
-       r4, &
-       r16
+!Global constants
+use constants, only: &
+   eps2, &
+   i4, &
+   r8, &
+   r4, &
+   r16
 
-  implicit none
+implicit none
 
 contains 
 
-  !===============================================================================================
-  !   The following routines were taken from iModel  https://github.com/pedrospeixoto/iModel
-  !===============================================================================================
+!===============================================================================================
+!   The following routines were taken from iModel  https://github.com/pedrospeixoto/iModel
+!===============================================================================================
 
-  function cross_product(a,b)
+function cross_product(a,b)
     !-----------------------------------------------------------------------
     !  CROSS_PRODUCT
     !
@@ -37,9 +37,9 @@ contains
     cross_product(3) = a(1)*b(2) - a(2)*b(1)
 
     return
-  end function cross_product
+end function cross_product
 
-  function det(p1, p2, p3)
+function det(p1, p2, p3)
     !-----------------------------------------------------------------------
     !  DET
     !
@@ -54,9 +54,9 @@ contains
     det=dot_product(cross_product(p1,p2),p3)
 
     return
-  end function det
+end function det
 
-  function robdet(p1, p2, p3)
+function robdet(p1, p2, p3)
     !-----------------------------------------------------------------------
     !  ROBDET
     !
@@ -89,9 +89,9 @@ contains
     robdet=real(robdettmp, r8)
 
     return
-  end function robdet
+end function robdet
 
-  function norm(p)
+function norm(p)
     !-----------------------------------------
     ! NORM
     ! Calculates the euclidian norm of a vector
@@ -103,9 +103,9 @@ contains
     norm=dsqrt(norm)
 
     return
-  end function norm
+end function norm
 
-  function error_norm_max_rel(f, g)
+function error_norm_max_rel(f, g)
     !-------------------------------------------
     !Calculates the maximum absolute value of
     !  f-g csgrid array divided by the max of g
@@ -126,9 +126,9 @@ contains
 
     error_norm_max_rel=maxfg/maxg
     return
-  end function error_norm_max_rel
+end function error_norm_max_rel
 
-  function error_norm_2_rel(f, g)
+function error_norm_2_rel(f, g)
     !-------------------------------------------
     !Calculates relative L2 error
     !  That is, the square root of the
@@ -152,9 +152,9 @@ contains
     error_norm_2_rel=dsqrt(sum_sq/sum_sq_g)
 
     return
-  end function error_norm_2_rel
+end function error_norm_2_rel
 
-  function error_norm_1_rel(f, g)
+function error_norm_1_rel(f, g)
     !-------------------------------------------
     !Calculates the
     !  the sum of the absolute values of (f-g) vector
@@ -173,6 +173,6 @@ contains
     end if
     error_norm_1_rel = sumfg/sumg
     return
-  end function error_norm_1_rel
+end function error_norm_1_rel
 
 end module linear_algebra 

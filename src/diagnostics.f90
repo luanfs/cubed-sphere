@@ -1,26 +1,26 @@
 module diagnostics
-  !===============================================================================================
-  !   This module contains all the routines to compute the diagnostics
-  !   for the advection and shallow-water models
-  !===============================================================================================
+!===============================================================================================
+!   This module contains all the routines to compute the diagnostics
+!   for the advection and shallow-water models
+!===============================================================================================
 
-  !Global constants
-  use constants, only: &
-        i4, &
-        r8, &
-        nbfaces
+!Global constants
+use constants, only: &
+    i4, &
+    r8, &
+    nbfaces
 
-  ! Data structures
-  use datastruct, only: &
-      cubedsphere, &
-      scalar_field, &
-      simulation
+! Data structures
+use datastruct, only: &
+  cubedsphere, &
+  scalar_field, &
+  simulation
 
- implicit none
+implicit none
 
 contains 
 
-  function mass_computation(Q, mesh)
+function mass_computation(Q, mesh)
     type(cubedsphere)  :: mesh
     type(scalar_field) :: Q
     real(r8) :: mass_computation
@@ -38,13 +38,12 @@ contains
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(Q,mesh) &
     !$OMP SHARED(i0,iend,j0,jend)
-    mass_computation = sum(Q%f(i0:iend,j0:jend,:)*mesh%area(i0:iend,j0:jend,:))
+    mass_computation = sum(Q%f(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))
     !$OMP END PARALLEL WORKSHARE
 
+end function mass_computation
 
-  end function mass_computation
-
-  subroutine adv_diagnostics(advsimul, mesh, Q)
+subroutine adv_diagnostics(advsimul, mesh, Q)
     !---------------------------------------------------------
     ! Computes the diagnostics for the advection model
     !---------------------------------------------------------
@@ -57,7 +56,7 @@ contains
 
     ! mass change
     advsimul%mass_variation = abs(advsimul%mass-advsimul%mass0)/abs(advsimul%mass0)
-  end subroutine adv_diagnostics
+end subroutine adv_diagnostics
 
 
 end module diagnostics

@@ -1,40 +1,40 @@
 module advection_timestep
-  !===============================================================================================
-  ! Module for routines needed in a advection timestep
-  !
-  ! Luan da Fonseca Santos - 2022
-  ! (luan.santos@usp.br)
-  !===============================================================================================
+!===============================================================================================
+! Module for routines needed in a advection timestep
+!
+! Luan da Fonseca Santos - 2022
+! (luan.santos@usp.br)
+!===============================================================================================
 
-  !Global constants
-  use constants, only: &
-        i4, &
-        r8, &
-        pi, &
-        nbfaces
+!Global constants
+use constants, only: &
+    i4, &
+    r8, &
+    pi, &
+    nbfaces
 
-  ! Spherical geometry
-  use sphgeo, only: &
-      sph2cart, &
-      deg2rad, &
-      ll2contra, &
-      contra2ll
+! Spherical geometry
+use sphgeo, only: &
+  sph2cart, &
+  deg2rad, &
+  ll2contra, &
+  contra2ll
 
-  ! Data structures
-  use datastruct, only: &
-      cubedsphere, &
-      scalar_field, &
-      vector_field
+! Data structures
+use datastruct, only: &
+  cubedsphere, &
+  scalar_field, &
+  vector_field
 
-  ! Advection initial condition
-  use advection_ic, only: &
-      velocity_adv
+! Advection initial condition
+use advection_ic, only: &
+  velocity_adv
 
- implicit none
+implicit none
 
 contains 
 
-  subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
+subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !--------------------------------------------------
     ! Compute the velocity update needed in a timestep 
     ! for the advection problem on the sphere
@@ -69,33 +69,34 @@ contains
 
     ! Vector field at pu
     do p = 1 , nbfaces
-      do i = i0-1, iend
-        do j = j0, jend
-          lat  = mesh%pu(i,j,p)%lat
-          lon  = mesh%pu(i,j,p)%lon
+        do i = i0-1, iend
+            do j = j0, jend
+                lat  = mesh%pu(i,j,p)%lat
+                lon  = mesh%pu(i,j,p)%lon
 
-          call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
-          call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
-          V_pu%ucontra%f(i,j,p) = ucontra
-          V_pu%vcontra%f(i,j,p) = vcontra
+                call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
+                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
+                V_pu%ucontra%f(i,j,p) = ucontra
+                V_pu%vcontra%f(i,j,p) = vcontra
+            end do
         end do
-      end do
     end do    
 
     ! Vector field at pv
     do p = 1 , nbfaces
-      do i = i0, iend
-        do j = j0-1, jend
-          lat  = mesh%pv(i,j,p)%lat
-          lon  = mesh%pv(i,j,p)%lon
+        do i = i0, iend
+            do j = j0-1, jend
+                lat  = mesh%pv(i,j,p)%lat
+                lon  = mesh%pv(i,j,p)%lon
 
-          call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
-          call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
-          V_pv%ucontra%f(i,j,p) = ucontra
-          V_pv%vcontra%f(i,j,p) = vcontra
+                call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
+                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
+                V_pv%ucontra%f(i,j,p) = ucontra
+                V_pv%vcontra%f(i,j,p) = vcontra
+            end do
         end do
-      end do
     end do
  
-  end subroutine adv_update
+end subroutine adv_update
+
 end module advection_timestep

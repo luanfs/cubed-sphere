@@ -1,22 +1,22 @@
 module deallocation
-  !========================================================================
-  !
-  ! Module for memory deallocation routines
-  !
-  ! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
-  !
-  ! Luan Santos 2022
-  !========================================================================
+!========================================================================
+!
+! Module for memory deallocation routines
+!
+! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
+!
+! Luan Santos 2022
+!========================================================================
 
-  use datastruct, only: &
-      cubedsphere
+use datastruct, only: &
+    cubedsphere
 
-  implicit none
+implicit none
 
-  contains 
+contains 
 
 
-  subroutine meshdeallocation(mesh)
+subroutine meshdeallocation(mesh)
     !---------------------------------------------------
     ! MESHDEALLOCATION
     ! deallocate all the needed mesh atributtes
@@ -28,23 +28,18 @@ module deallocation
     deallocate(mesh%pc) ! Centers
     deallocate(mesh%pu) ! Midpoints at u
     deallocate(mesh%pv) ! Midpoints at v
-    deallocate(mesh%area) ! Areas
-    deallocate(mesh%lx) ! Length of geodesic connecting midpoints at u    
-    deallocate(mesh%ly) ! Length of geodesic connecting midpoints at v 
     deallocate(mesh%ll2contra_pu) ! latlon 2 contravariant conversion at u
     deallocate(mesh%ll2contra_pv) ! latlon 2 contravariant conversion at v
     deallocate(mesh%contra2ll_pu) ! contravariant 2 latlon conversion at u
     deallocate(mesh%contra2ll_pv) ! contravariant 2 latlon conversion at v 
-    deallocate(mesh%sinc) ! Sine of angles at centers
-    deallocate(mesh%sinu) ! Sine of angles at u
-    deallocate(mesh%sinv) ! Sine of angles at v
-    deallocate(mesh%cosu) ! Cossine of angles at u
-    deallocate(mesh%cosv) ! Cossine of angles at v
+    deallocate(mesh%mt_pc)! Metric tensor at centers
+    deallocate(mesh%mt_pu) ! Metric tensor at u
+    deallocate(mesh%mt_pv) ! Metric tensor at v
     deallocate(mesh%ix_ll, mesh%jy_ll, mesh%panels_ll) ! Latlon grid indexes on cubedsphere
 
-  end subroutine meshdeallocation 
+end subroutine meshdeallocation 
 
-  subroutine tgvectors_deallocation(mesh)
+subroutine tgvectors_deallocation(mesh)
     !---------------------------------------------------
     ! TGVECTORS_DEALLOCATION
     ! deallocate all the tangent vectors and local coordinates
@@ -57,14 +52,9 @@ module deallocation
     deallocate(mesh%tgy_pv) ! Tangent vector at pv in y direction
     deallocate(mesh%tgx_pc) ! Tangent vector at pc in x direction
     deallocate(mesh%tgy_pc) ! Tangent vector at pc in y direction
-    deallocate(mesh%x_po)
-    deallocate(mesh%y_po)
-
-
   end subroutine tgvectors_deallocation 
 
-
-  subroutine adv_deallocation()
+subroutine adv_deallocation()
     use advection_vars
     !---------------------------------------------------
     ! ADV_DEALLOCATION
@@ -81,11 +71,13 @@ module deallocation
 
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_L, px%f_R, px%f_upw, px%df)
     deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_L, py%f_R, py%f_upw, py%df)
- 
+
     deallocate(wind_pu%u%f)
     deallocate(wind_pu%v%f)
     deallocate(wind_pu%ucontra%f)
     deallocate(wind_pu%vcontra%f)
+    deallocate(wind_pu%ucontra_av%f)
+    deallocate(wind_pu%vcontra_av%f)
     deallocate(wind_pu%ucovari%f)
     deallocate(wind_pu%vcovari%f)
 
@@ -93,9 +85,11 @@ module deallocation
     deallocate(wind_pv%v%f)
     deallocate(wind_pv%ucontra%f)
     deallocate(wind_pv%vcontra%f)
+    deallocate(wind_pv%ucontra_av%f)
+    deallocate(wind_pv%vcontra_av%f)
     deallocate(wind_pv%ucovari%f)
     deallocate(wind_pv%vcovari%f)
 
-  end subroutine adv_deallocation
+end subroutine adv_deallocation
 end module deallocation 
 

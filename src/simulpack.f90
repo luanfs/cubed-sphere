@@ -1,71 +1,73 @@
 module simulpack
-  !========================================================================
-  !
-  ! Module for simulation package
-  ! Includes: grid quality, divergence and advection simulations
-  !
-  ! Luan Santos 2022
-  ! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
-  !========================================================================
+!========================================================================
+!
+! Module for simulation package
+! Includes: grid quality, divergence and advection simulations
+!
+! Luan Santos 2022
+! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
+!========================================================================
 
-  !Global constants
-  use constants, only: &
-      griddir, &
-      i4, &
-      pardir, &
-      r8, &
-      showonscreen, &
-      simulcase, &
-      nbfaces, &
-      erad, &
-      pi
+!Global constants
+use constants, only: &
+    griddir, &
+    i4, &
+    pardir, &
+    r8, &
+    showonscreen, &
+    simulcase, &
+    nbfaces, &
+    erad, &
+    pi, deg2rad,&
+    i0, iend, &
+    j0, jend, &
+    n0, nend
 
-  !Data structures
-  use datastruct, only: &
-      cubedsphere, &
-      scalar_field, &
-      vector_field, &
-      simulation
+!Data structures
+use datastruct, only: &
+    cubedsphere, &
+    scalar_field, &
+    vector_field, &
+    simulation
 
-  ! Allocation
-  use allocation, only: &
-      scalar_field_allocation
+! Allocation
+use allocation, only: &
+    scalar_field_allocation
 
-  ! Deallocation
-  use deallocation, only: &
-      adv_deallocation
+! Deallocation
+use deallocation, only: &
+    adv_deallocation
 
-  ! Output
-  use output, only: &
-      plot_scalarfield, &
-      write_final_errors
+! Output
+use output, only: &
+    plot_scalarfield, &
+    write_final_errors
 
-  ! Input
-  use input, only: &
-      getadvparameters
+! Input
+use input, only: &
+    getadvparameters
 
-  ! Initial conditions
-  use advection_ic, only: &
-      init_adv_vars, &
-      compute_exact_div
+! Initial conditions
+use advection_ic, only: &
+    init_adv_vars, &
+    compute_exact_div
 
-  ! Discrete operators
-  use discrete_operators, only: &
-      cfl_x, cfl_y, &
-      divergence
+! Discrete operators
+use discrete_operators, only: &
+    cfl_x, cfl_y, &
+    divergence
 
-  ! Linear algebra
-  use linear_algebra, only: &
-      error_norm_max_rel, &
-      error_norm_1_rel, &
-      error_norm_2_rel
+! Linear algebra
+use linear_algebra, only: &
+    error_norm_max_rel, &
+    error_norm_1_rel, &
+    error_norm_2_rel
 
+implicit none
 
-  implicit none
+contains 
 
-  contains 
-
-  subroutine grid_quality(mesh)
+subroutine grid_quality(mesh)
     !---------------------------------------------------
     ! GRID_QUALITY
     !--------------------------------------------------
@@ -74,15 +76,12 @@ module simulpack
     ! Scalar fields
     type(scalar_field):: area
     type(scalar_field):: length
-    type(scalar_field):: sinc
+    type(scalar_field):: mt_pc
 
     ! aux vars
     real(r8) :: erad_km, erad2_km ! Earth radius in km
     integer(i4) :: p
     integer(i4) :: i   , j
-    integer(i4) :: i0  , j0
-    integer(i4) :: iend, jend
-
     print*, 'Grid quality testing...'
     print*
 
@@ -93,56 +92,31 @@ module simulpack
     ! Scalar fields allocation
     call scalar_field_allocation(area, mesh, 0)
     call scalar_field_allocation(length, mesh, 0)
-    call scalar_field_allocation(sinc, mesh, 0)
+    call scalar_field_allocation(mt_pc, mesh, 0)
 
-    ! Interior indexes
-    i0   = mesh%i0
-    iend = mesh%iend
-    j0   = mesh%j0
-    jend = mesh%jend
-  
-    if(mesh%resolution == 'unif') then ! use information from a single panel
-      ! Get areas assuming earth radius
-      area%f(i0:iend,j0:jend,1) = erad2_km*mesh%area(i0:iend,j0:jend,1)
-      
-      do p = 2, nbfaces
-        area%f(i0:iend,j0:jend,p) =  area%f(i0:iend, j0:jend,1) 
-      end do
+    ! Get metric tensor
+    mt_pc%f(i0:iend,j0:jend,:) = mesh%mt_pc(i0:iend,j0:jend,:)
 
-      ! Get lenghts assuming earth radius
-      length%f(i0:iend,j0:jend,1) = erad_km*(mesh%lx(i0:iend,j0:jend,1) + mesh%ly(i0:iend,j0:jend,1))*0.5_r8
+    ! Get areas assuming earth radius
+    area%f(i0:iend,j0:jend,:) = erad2_km*mesh%mt_pc(i0:iend,j0:jend,:)*mesh%dx*mesh%dy
 
-      do p = 2, nbfaces
-        length%f(i0:iend,j0:jend,p) =  length%f(i0:iend, j0:jend,1) 
-      end do
-
-      ! Get metric tensor (unit sphere)
-      sinc%f(i0:iend,j0:jend,1) = mesh%sinc(i0:iend,j0:jend,1) 
-
-      do p = 2, nbfaces
-        sinc%f(i0:iend,j0:jend,p) =  sinc%f(i0:iend, j0:jend,1) 
-      end do
-
-
-    else 
-      print*, 'ERROR on grid_quality: invalid mesh resolution: ', mesh%resolution
-      stop
-    end if
+    ! Get lenghts assuming earth radius
+    length%f(i0:iend,j0:jend,:) = dsqrt(area%f(i0:iend,j0:jend,:))
 
     ! Name scalar fields
     area%name = "area"
     length%name = "length"
-    sinc%name = "sinc"
+    mt_pc%name = "metric_tensor"
 
     ! Plot scalar fields
     call plot_scalarfield(area, mesh)
     call plot_scalarfield(length, mesh)
-    call plot_scalarfield(sinc, mesh)
+    call plot_scalarfield(mt_pc, mesh)
 
-    deallocate(area%f, length%f, sinc%f)
-  end subroutine grid_quality 
+    deallocate(area%f, length%f, mt_pc%f)
+end subroutine grid_quality 
 
-  subroutine div_test(mesh)
+subroutine div_test(mesh)
     use advection_vars
     !---------------------------------------------------
     ! DIV_TEST
@@ -151,16 +125,9 @@ module simulpack
 
     ! aux integer
     integer(i4) :: i, j, p
-    integer(i4) :: i0, iend
-    integer(i4) :: j0, jend
 
     !File name for output
     character (len=256):: filename
-
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
 
     ! Get test parameter from par/advection.par
     call getadvparameters(advsimul)
@@ -171,6 +138,7 @@ module simulpack
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
 
+    print*, advsimul%dt
     ! Test name
     advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//"_"//trim(advsimul%opsplit)
     !print*, advsimul%name
@@ -181,11 +149,11 @@ module simulpack
 
     ! Multiply Q by the metric tensor
     Q%f = 1._r8
-    gQ%f = Q%f*mesh%sinc
+    gQ%f = Q%f*mesh%mt_pc
 
     ! Compute the divergence
     call divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, px, py, advsimul, mesh)
-    div_ugq%f(i0:iend,j0:jend,:) = (px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt
+    div_ugq%f(i0:iend,j0:jend,:) = -(px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt/mesh%mt_pc
 
     ! Exact divergence
     call compute_exact_div(div_ugq_exact, mesh, advsimul)
@@ -213,10 +181,10 @@ module simulpack
     filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
     call  write_final_errors(advsimul, mesh, filename) 
 
-  end subroutine div_test
+end subroutine div_test
 
 
-  subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
+subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
     !---------------------------------------------------
     ! COMPUTE_ERRORS_FIELD
     !
@@ -225,51 +193,51 @@ module simulpack
     ! of Q
     !--------------------------------------------------
     type(cubedsphere),intent(in) :: mesh
-    type(scalar_field), intent(in) :: Q      ! numerical approximation
-    type(scalar_field), intent(in) :: Q_ref   ! reference solution
-    type(scalar_field), intent(out) :: Q_error ! error
+    type(scalar_field), intent(inout) :: Q      ! numerical approximation
+    type(scalar_field), intent(inout) :: Q_ref   ! reference solution
+    type(scalar_field), intent(inout) :: Q_error ! error
     real(r8), intent(out) :: linf, l1, l2
     ! aux vars
-    integer (i4) :: i0, iend
-    integer (i4) :: j0, jend
+    integer (i4) :: x0, xend
+    integer (i4) :: y0, yend
 
     select case(Q%pos)
-      case(0) ! centers
-        i0 = mesh%i0
-        j0 = mesh%j0
-        iend = mesh%iend
-        jend = mesh%jend
+        case(0) ! pc
+            x0 = i0
+            y0 = j0
+            xend = iend
+            yend = jend
 
-      case(1) ! vertices
-        i0 = mesh%i0-1
-        j0 = mesh%j0-1
-        iend = mesh%iend
-        jend = mesh%jend
+        case(1) ! po
+            x0 = i0+1
+            y0 = j0+1
+            xend = iend+1
+            yend = jend+1
 
-      case(2) ! mid u
-        i0 = mesh%i0-1
-        j0 = mesh%j0
-        iend = mesh%iend
-        jend = mesh%jend
- 
-      case(3) ! mid v
-        i0 = mesh%i0
-        j0 = mesh%j0-1
-        iend = mesh%iend
-        jend = mesh%jend
- 
-      case default
-        print*, 'ERROR on compute_errors_field: invalid position', Q%pos
+        case(2) ! pu
+            x0 = i0+1
+            y0 = j0
+            xend = iend+1
+            yend = jend
+
+        case(3) ! pv
+            x0 = i0
+            y0 = j0+1
+            xend = iend
+            yend = jend+1
+
+        case default
+            print*, 'ERROR on compute_errors_field: invalid position', Q%pos
 
     end select
-     
+
     ! Compute the errors
     Q_error%f = Q_ref%f - Q%f
-    linf = error_norm_max_rel(Q%f(i0:iend,j0:jend,:), Q_ref%f(i0:iend,j0:jend,:)) 
-    l1   = error_norm_1_rel  (Q%f(i0:iend,j0:jend,:), Q_ref%f(i0:iend,j0:jend,:)) 
-    l2   = error_norm_2_rel  (Q%f(i0:iend,j0:jend,:), Q_ref%f(i0:iend,j0:jend,:)) 
+    linf = error_norm_max_rel(Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
+    l1   = error_norm_1_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
+    l2   = error_norm_2_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
 
- 
-  end subroutine compute_errors_field
+
+end subroutine compute_errors_field
 
 end module simulpack 

@@ -1,36 +1,37 @@
 module allocation
-  !========================================================================
-  !
-  ! Module for memory allocation routines
-  !
-  ! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
-  !
-  ! Luan Santos 2022
-  !========================================================================
+!========================================================================
+!
+! Module for memory allocation routines
+!
+! Routines based on iModel (https://github.com/pedrospeixoto/iModel)
+!
+! Luan Santos 2022
+!========================================================================
 
-  !Global constants
-  use constants, only: &
-      i4, &
-      r8, &
-      nbfaces, &
-      n_lat, n_lon
+!Global constants
+use constants, only: &
+  i4, &
+  r8, &
+  nbfaces, &
+  n_lat, n_lon, &
+  n0, nend
 
-  !Data structures
-  use datastruct, only: &
-      point_structure, &
-      vector, &
-      matrix, &
-      cubedsphere, &
-      scalar_field, &
-      vector_field, &
-      simulation, &
-      ppm_parabola
+!Data structures
+use datastruct, only: &
+  point_structure, &
+  vector, &
+  matrix, &
+  cubedsphere, &
+  scalar_field, &
+  vector_field, &
+  simulation, &
+  ppm_parabola
 
-  implicit none
+implicit none
 
-  contains 
+contains 
 
-  subroutine r8_1darray_allocation(data, i0, iend)
+subroutine r8_1darray_allocation(data, i0, iend)
     !---------------------------------------------------
     ! r8_1DARRAY_ALLOCATION
     ! allocates a real r8 1d array
@@ -46,19 +47,19 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend), stat=status)
-       if(status>0)then
-          print *, "ERROR on r8_1darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend), stat=status)
+        if(status>0)then
+            print *, "ERROR on r8_1darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on r8_1darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine r8_1darray_allocation 
+end subroutine r8_1darray_allocation 
 
-  subroutine r8_2darray_allocation(data, i0, iend, j0, jend)
+subroutine r8_2darray_allocation(data, i0, iend, j0, jend)
     !---------------------------------------------------
     ! r8_2DARRAY_ALLOCATION
     ! allocates a real r8 2d array
@@ -75,19 +76,19 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend), stat=status)
-       if(status>0)then
-          print *, "ERROR on r8_2darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend), stat=status)
+        if(status>0)then
+            print *, "ERROR on r8_2darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on r8_2darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine r8_2darray_allocation 
+end subroutine r8_2darray_allocation 
 
-  subroutine i4_2darray_allocation(data, i0, iend, j0, jend)
+subroutine i4_2darray_allocation(data, i0, iend, j0, jend)
     !---------------------------------------------------
     ! i4_2DARRAY_ALLOCATION
     ! allocates an integer 2d array
@@ -104,21 +105,21 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend), stat=status)
-       if(status>0)then
-          print *, "ERROR on i4_2darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend), stat=status)
+        if(status>0)then
+            print *, "ERROR on i4_2darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on i4_2darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine i4_2darray_allocation 
+end subroutine i4_2darray_allocation 
 
 
 
-  subroutine r8_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
+subroutine r8_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
     ! r8_3DARRAY_ALLOCATION
     ! allocates a real r8 3d array
@@ -136,20 +137,20 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
-       if(status>0)then
-          print *, "ERROR on r8_3darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
+        if(status>0)then
+            print *, "ERROR on r8_3darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on r8_3darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine r8_3darray_allocation 
+end subroutine r8_3darray_allocation 
 
 
-  subroutine point_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
+subroutine point_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
     ! POINT_3DARRAY_ALLOCATION
     ! allocates a point structure 3d array
@@ -167,19 +168,19 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
-       if(status>0)then
-          print *, "ERROR on point_3darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
+        if(status>0)then
+            print *, "ERROR on point_3darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on point_3darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine point_3darray_allocation 
+end subroutine point_3darray_allocation 
 
-  subroutine point_2darray_allocation(data, i0, iend, j0, jend)
+subroutine point_2darray_allocation(data, i0, iend, j0, jend)
     !---------------------------------------------------
     ! POINT_2DARRAY_ALLOCATION
     ! allocates a point structure 2d array
@@ -196,19 +197,19 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend), stat=status)
-       if(status>0)then
-          print *, "ERROR on point_2darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend), stat=status)
+        if(status>0)then
+            print *, "ERROR on point_2darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on point_2darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine point_2darray_allocation 
+end subroutine point_2darray_allocation 
 
-  subroutine vector_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
+subroutine vector_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
     ! VECTOR_3DARRAY_ALLOCATION
     ! allocates a vector structure 3d array
@@ -226,19 +227,19 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
-       if(status>0)then
-          print *, "ERROR on vector_3darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
+        if(status>0)then
+            print *, "ERROR on vector_3darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on vector_3darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine vector_3darray_allocation 
+end subroutine vector_3darray_allocation 
 
-  subroutine matrix_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
+subroutine matrix_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
     ! MATRIX_3DARRAY_ALLOCATION
     ! allocates a matrix structure 3d array
@@ -256,52 +257,59 @@ module allocation
     integer (i4):: status
 
     if(.not.allocated(data))then
-       allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
-       if(status>0)then
-          print *, "ERROR on matrix_3darray_allocation: Allocation problem ", status
-          stop
-       end if
+        allocate(data(i0:iend,j0:jend,k0:kend), stat=status)
+        if(status>0)then
+            print *, "ERROR on matrix_3darray_allocation: Allocation problem ", status
+            stop
+        end if
     else
         print *, "ERROR on matrix_3darray_allocation: Trying to allocate an already allocated variable "
         stop
     end if
     return
-  end subroutine matrix_3darray_allocation 
+end subroutine matrix_3darray_allocation 
 
 
 
-  subroutine meshallocation(mesh)
+subroutine meshallocation(mesh)
     !---------------------------------------------------
     ! MESHALLOCATION
     ! allocate all the needed mesh atributtes
     !--------------------------------------------------
     type(cubedsphere):: mesh
-    
+
     ! aux vars
-    integer (i4):: n
+    integer (i4):: n0, nf
 
     ! Number of cells along a coordinate axis (including ghost cells)
-    n = mesh%ntotal
+    n0 = mesh%n0
+    nf = mesh%nend
 
     ! Allocate the cubed-sphere points
-    call point_3darray_allocation(mesh%pc, 1, n, 1, n, 1, nbfaces) 
-    call point_3darray_allocation(mesh%pu, 0, n, 1, n, 1, nbfaces) 
-    call point_3darray_allocation(mesh%pv, 1, n, 0, n, 1, nbfaces) 
-    call point_3darray_allocation(mesh%po, 0, n, 0, n, 1, nbfaces)
+    call point_3darray_allocation(mesh%pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call point_3darray_allocation(mesh%pu, n0, nf+1, n0, nf  , 1, nbfaces) 
+    call point_3darray_allocation(mesh%pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+    call point_3darray_allocation(mesh%po, n0, nf+1, n0, nf+1, 1, nbfaces)
 
     ! Allocate the cubed-sphere tangent vectors
-    call vector_3darray_allocation(mesh%tgx_pc, 1, n, 1, n, 1, nbfaces) 
-    call vector_3darray_allocation(mesh%tgy_pc, 1, n, 1, n, 1, nbfaces) 
-    call vector_3darray_allocation(mesh%tgx_pu, 0, n, 1, n, 1, nbfaces) 
-    call vector_3darray_allocation(mesh%tgy_pu, 0, n, 1, n, 1, nbfaces) 
-    call vector_3darray_allocation(mesh%tgx_pv, 1, n, 0, n, 1, nbfaces) 
-    call vector_3darray_allocation(mesh%tgy_pv, 1, n, 0, n, 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgx_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgy_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgx_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgy_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgx_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgy_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+
+    ! Metric tensor
+    call r8_3darray_allocation(mesh%mt_pc, n0, nf  , n0, nf  , 1, nbfaces)
+    call r8_3darray_allocation(mesh%mt_pu, n0, nf+1, n0, nf  , 1, nbfaces)
+    call r8_3darray_allocation(mesh%mt_pv, n0, nf  , n0, nf+1, 1, nbfaces)
+
 
     ! Allocate the cubed-sphere latlon/contravariant conversion matrix
-    call matrix_3darray_allocation(mesh%contra2ll_pu, 0, n, 1, n, 1, nbfaces) 
-    call matrix_3darray_allocation(mesh%ll2contra_pu, 0, n, 1, n, 1, nbfaces) 
-    call matrix_3darray_allocation(mesh%contra2ll_pv, 1, n, 0, n, 1, nbfaces) 
-    call matrix_3darray_allocation(mesh%ll2contra_pv, 1, n, 0, n, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%contra2ll_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%ll2contra_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%contra2ll_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%ll2contra_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
 
     ! Latlon-grid allocation
     mesh%nlon = n_lon
@@ -311,30 +319,10 @@ module allocation
     call i4_2darray_allocation(mesh%jy_ll, 0, mesh%nlon, 0, mesh%nlat)
     call i4_2darray_allocation(mesh%panels_ll, 0, mesh%nlon, 0, mesh%nlat)
 
-    ! Areas allocation
-    call r8_3darray_allocation(mesh%area, 1, n, 1, n, 1, nbfaces)
-
-    ! Lengths in x direction
-    call r8_3darray_allocation(mesh%lx, 1, n, 1, n, 1, nbfaces)
-
-    ! Lengths in y direction
-    call r8_3darray_allocation(mesh%ly, 1, n, 1, n, 1, nbfaces)
-
-    ! Angles allocation
-    call r8_3darray_allocation(mesh%sinc, 1, n, 1, n, 1, nbfaces)
-    call r8_3darray_allocation(mesh%sinu, 0, n, 1, n, 1, nbfaces)
-    call r8_3darray_allocation(mesh%sinv, 1, n, 0, n, 1, nbfaces)
-    call r8_3darray_allocation(mesh%cosu, 0, n, 1, n, 1, nbfaces)
-    call r8_3darray_allocation(mesh%cosv, 1, n, 0, n, 1, nbfaces)
-
-    ! Local coordinates of po
-    call r8_3darray_allocation(mesh%x_po, 0, n, 0, n, 1, nbfaces)
-    call r8_3darray_allocation(mesh%y_po, 0, n, 0, n, 1, nbfaces)
- 
     return
-  end subroutine meshallocation 
+end subroutine meshallocation 
 
-  subroutine scalar_field_allocation(Q, mesh, pos)
+subroutine scalar_field_allocation(Q, mesh, pos)
     !---------------------------------------------------
     ! SCALAR_FIELD_ALLOCATION
     !
@@ -357,36 +345,36 @@ module allocation
     integer, intent(in) :: pos
 
     ! aux vars
-    integer (i4):: n
+    integer (i4):: n0, nend
 
     ! Number of cells along a coordinate axis (including ghost cells)
-    n = mesh%ntotal
+    n0 = mesh%n0
+    nend = mesh%nend
 
     ! Allocate the cubed-sphere points
     select case(pos)
-      case(0) ! centers
-        call r8_3darray_allocation(Q%f, 1, n, 1, n, 1, nbfaces) 
+        case(0) ! centers
+            call r8_3darray_allocation(Q%f, n0, nend, n0, nend, 1, nbfaces) 
 
-      case(1) ! vertices
-        call r8_3darray_allocation(Q%f, 0, n, 0, n, 1, nbfaces) 
+        case(1) ! vertices
+            call r8_3darray_allocation(Q%f, n0, nend+1, n0, nend+1, 1, nbfaces) 
 
-      case(2) ! mid u
-        call r8_3darray_allocation(Q%f, 0, n, 1, n, 1, nbfaces) 
+        case(2) ! mid u
+            call r8_3darray_allocation(Q%f, n0, nend+1, n0, nend, 1, nbfaces) 
 
-      case(3) ! mid v
-        call r8_3darray_allocation(Q%f, 1, n, 0, n, 1, nbfaces) 
+        case(3) ! mid v
+            call r8_3darray_allocation(Q%f, n0, nend, n0, nend+1, 1, nbfaces) 
 
-      case default
-        print*, 'ERROR on scalar_field_allocation: invalid position', pos
-
+        case default
+            print*, 'ERROR on scalar_field_allocation: invalid position', pos
     end select
       
     ! Store the position
     Q%pos = pos
     return
-  end subroutine scalar_field_allocation 
+end subroutine scalar_field_allocation 
 
-  subroutine vector_field_allocation(V, mesh, pos)
+subroutine vector_field_allocation(V, mesh, pos)
     !---------------------------------------------------
     ! VECTOR_FIELD_ALLOCATION
     !
@@ -413,16 +401,18 @@ module allocation
     call scalar_field_allocation(V%v, mesh, pos) 
     call scalar_field_allocation(V%ucontra, mesh, pos) 
     call scalar_field_allocation(V%vcontra, mesh, pos) 
+    call scalar_field_allocation(V%ucontra_av, mesh, pos) 
+    call scalar_field_allocation(V%vcontra_av, mesh, pos) 
     call scalar_field_allocation(V%ucovari, mesh, pos) 
     call scalar_field_allocation(V%vcovari, mesh, pos) 
      
     ! Store the position
     V%pos = pos
     return
-  end subroutine vector_field_allocation 
+end subroutine vector_field_allocation 
 
 
-  subroutine ppm_parabola_allocation(p, mesh)
+subroutine ppm_parabola_allocation(p, mesh)
     !---------------------------------------------------
     !   PPM_PARABOLA_ALLOCATION
     !
@@ -439,39 +429,34 @@ module allocation
     type(cubedsphere), intent(in):: mesh
     type(ppm_parabola), intent(inout) :: p
    
-    ! aux vars
-    integer (i4):: n
 
-    ! Number of cells along a coordinate axis (including ghost cells)
-    n = mesh%ntotal
-
-    call r8_3darray_allocation(p%q_L, 1, n, 1, n, 1, nbfaces) 
-    call r8_3darray_allocation(p%q_R, 1, n, 1, n, 1, nbfaces) 
-    call r8_3darray_allocation(p%dq, 1, n, 1, n, 1, nbfaces) 
-    call r8_3darray_allocation(p%q6, 1, n, 1, n, 1, nbfaces) 
-    call r8_3darray_allocation(p%df, 1, n, 1, n, 1, nbfaces) 
+    call r8_3darray_allocation(p%q_L, n0, nend, n0, nend, 1, nbfaces) 
+    call r8_3darray_allocation(p%q_R, n0, nend, n0, nend, 1, nbfaces) 
+    call r8_3darray_allocation(p%dq,  n0, nend, n0, nend, 1, nbfaces) 
+    call r8_3darray_allocation(p%q6,  n0, nend, n0, nend, 1, nbfaces) 
+    call r8_3darray_allocation(p%df,  n0, nend, n0, nend, 1, nbfaces) 
 
     ! Allocate the cubed-sphere points
     select case(p%dir)
-      case(1) ! x direction
-        call r8_3darray_allocation(p%f_L, 0, n, 1, n, 1, nbfaces) 
-        call r8_3darray_allocation(p%f_R, 0, n, 1, n, 1, nbfaces) 
-        call r8_3darray_allocation(p%f_upw, 0, n, 1, n, 1, nbfaces) 
+        case(1) ! x direction
+            call r8_3darray_allocation(p%f_L,   n0, nend+1, n0, nend, 1, nbfaces) 
+            call r8_3darray_allocation(p%f_R,   n0, nend+1, n0, nend, 1, nbfaces) 
+            call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend, 1, nbfaces) 
 
       case(2) ! y direction
-        call r8_3darray_allocation(p%f_L, 1, n, 0, n, 1, nbfaces) 
-        call r8_3darray_allocation(p%f_R, 1, n, 0, n, 1, nbfaces) 
-        call r8_3darray_allocation(p%f_upw, 1, n, 0, n, 1, nbfaces) 
+            call r8_3darray_allocation(p%f_L,   n0, nend, n0, nend+1, 1, nbfaces) 
+            call r8_3darray_allocation(p%f_R,   n0, nend, n0, nend+1, 1, nbfaces) 
+            call r8_3darray_allocation(p%f_upw, n0, nend, n0, nend+1, 1, nbfaces) 
 
       case default
-        print*, 'ERROR on ppm_parabola_allocation: invalid direction', p%dir
+            print*, 'ERROR on ppm_parabola_allocation: invalid direction', p%dir
 
       end select
       return
-  end subroutine ppm_parabola_allocation 
+end subroutine ppm_parabola_allocation 
 
 
-  subroutine allocate_adv_vars(mesh)
+subroutine allocate_adv_vars(mesh)
     use advection_vars
     !---------------------------------------------------
     ! ALLOCATE_ADV_VARS 
@@ -501,6 +486,6 @@ module allocation
     call ppm_parabola_allocation(px, mesh)
     call ppm_parabola_allocation(py, mesh)
 
-  end subroutine
+end subroutine
 end module allocation 
 
