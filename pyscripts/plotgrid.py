@@ -17,12 +17,13 @@ sys.path.append(srcdir)
 from configuration      import get_parameters, gridname, loadgrid
 from constants          import Nlat, Nlon, griddir, datadir, graphdir
 from plot               import plot_grid
+
 def main():
     # Get the parameters
-    N, kind, midpoint, resolution = get_parameters()
+    N, kind = get_parameters()
 
     # Grid name
-    filename = gridname(N, kind, midpoint, resolution)
+    filename = gridname(N, kind)
 
     # Load the grid data
     vert_lat, vert_lon, center_lat, center_lon, \
@@ -34,6 +35,5 @@ def main():
               midu_lat, midu_lon, midv_lat, midv_lon, \
               filename, int(N), map_projection)
 
-main()
-
-
+if __name__ == '__main__':
+    main()

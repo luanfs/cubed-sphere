@@ -33,5 +33,5 @@ graphdir = "../graphs/"            # Graphs directory
 pardir   = "../par/"               # Parameter files directory
 
 # Plotting parameters
-Nlat = 1250                        # Number of points in the latlon grid used for plotting
+Nlat = 720                         # Number of points in the latlon grid used for plotting
 Nlon = 2*Nlat

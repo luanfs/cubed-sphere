@@ -16,20 +16,19 @@ from configuration      import get_parameters, gridname, loadgrid
 from plot               import plot_fields_list
 from constants          import datadir, Nlat, Nlon
 
-
 # Parameters
 colormap = 'jet'
 map_projection = 'mercator'
 
 def main():
     # Get the parameters
-    N, kind, midpoint, resolution = get_parameters()
+    N, kind = get_parameters()
 
     # Grid name
-    grid_name = gridname(N, kind, midpoint, resolution)
+    grid_name = gridname(N, kind)
 
-    fields = ('area', 'length', 'sinc')
+    fields = ('area', 'length', 'metric_tensor')
     plot_fields_list(fields, grid_name, colormap, map_projection)
 
-main()
-
+if __name__ == '__main__':
+    main()

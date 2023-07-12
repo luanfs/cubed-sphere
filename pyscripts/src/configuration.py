@@ -26,8 +26,6 @@ def get_parameters():
       confpar.readline()
       kind = confpar.readline()
       confpar.readline()
-      midpoint = confpar.readline()
-      confpar.readline()
       gridload = confpar.readline()
       confpar.readline()
       showonscreen = confpar.readline()
@@ -36,19 +34,15 @@ def get_parameters():
       # Close the file
       confpar.close()
 
-      resolution = 'unif'
-
       # rm \n
       N = rmspace(N)
       kind = rmspace(kind)
-      midpoint = rmspace(midpoint)
-      resolution = rmspace(resolution)
 
    else:   # The file does not exist
       print("ERROR in get_grid_parameters: file mesh.par not found in /par.")
       exit()
 
-   return N, kind, midpoint, resolution
+   return N, kind
 
 def get_adv_parameters():
    # The standard adv file advection.par must exist in par/ directory
@@ -86,8 +80,8 @@ def get_adv_parameters():
 '''-----------------------------------
  Give a name to the grid
 -------------------------------------'''
-def gridname(N, kind, midpoint, resolution):
-    filename = kind+"_"+str(N)+"_"+midpoint+"_"+resolution
+def gridname(N, kind):
+    filename = kind+"_"+str(N)
     return filename
 
 '''-----------------------------------
@@ -97,33 +91,34 @@ def rmspace(value):
     return ''.join(value.splitlines())
 
 def loadgrid(filename, N):
+    ng = 4
     # Open the vertices file
-    f = open(griddir+filename+"_vert.dat",'rb')
+    f = open(griddir+filename+"_po.dat",'rb')
     grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+1, N+1,2))
+    grid = np.reshape(grid,(nbfaces, N+ng+1, N+ng+1,2))
     vert_lat = grid[:,:,:,0]*rad2deg
     vert_lon = grid[:,:,:,1]*rad2deg
     #print(np.amin(vert_lat), np.amax(vert_lat))
     #print(np.amin(vert_lon), np.amax(vert_lon))
 
     # Open the centers file
-    f = open(griddir+filename+"_center.dat",'rb')
+    f = open(griddir+filename+"_pc.dat",'rb')
     grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N, N, 2))
+    grid = np.reshape(grid,(nbfaces, N+ng, N+ng, 2))
     center_lat = grid[:,:,:,0]*rad2deg
     center_lon = grid[:,:,:,1]*rad2deg
 
     # Open the midu file
-    f = open(griddir+filename+"_midu.dat",'rb')
+    f = open(griddir+filename+"_pu.dat",'rb')
     grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+1, N, 2))
+    grid = np.reshape(grid,(nbfaces, N+ng+1, N+ng, 2))
     midu_lat = grid[:,:,:,0]*rad2deg
     midu_lon = grid[:,:,:,1]*rad2deg
 
-    # Open the midu file
-    f = open(griddir+filename+"_midv.dat",'rb')
+    # Open the midv file
+    f = open(griddir+filename+"_pv.dat",'rb')
     grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N, N+1, 2))
+    grid = np.reshape(grid,(nbfaces, N+ng, N+ng+1, 2))
     midv_lat = grid[:,:,:,0]*rad2deg
     midv_lon = grid[:,:,:,1]*rad2deg
 
