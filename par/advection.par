@@ -2,11 +2,13 @@
 #Initial condition field 
 1
 #Vector field
-4
+1
+#Time step
+0.00078125
 #1D Flux (ppm or hyppm)
-ppm
+hyppm
 #2D operator splitting (lr96, l04 or pl07)
-lr96
+avlt
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
