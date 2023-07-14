@@ -45,7 +45,7 @@ implicit none
 
 contains 
 
-subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
+subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PU
     !
@@ -59,6 +59,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
     type(ppm_parabola), intent(inout) :: px      ! parabola
     type(scalar_field), intent(inout) :: V_pu_av ! time averaged wind at pu points 
     type(scalar_field), intent(inout) :: cx_pu   ! CFL number of V_pu_av
+    character(len=16) :: mt ! metric tensor formulation
 
     select case(px%recon)
         case('ppm', 'hyppm')
@@ -69,7 +70,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
             call numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
 
             ! Get upwind flux
-            call upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
+            call upwind_flux_pu(px, V_pu_av, cx_pu, mesh, mt)
         case default
             print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
             stop
@@ -79,7 +80,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
 end subroutine ppm_flux_pu
 
 
-subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
+subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PV
     !
@@ -93,6 +94,7 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
     type(ppm_parabola), intent(inout) :: py      ! parabola
     type(scalar_field), intent(inout) :: V_pv_av ! time averaged wind at pv points 
     type(scalar_field), intent(inout) :: cy_pv   ! CFL number of V_pv_av
+    character(len=16) :: mt ! metric tensor formulation
 
     select case(py%recon)
         case('ppm', 'hyppm')
@@ -103,7 +105,7 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
             call numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
 
             ! Get upwind flux
-            call upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
+            call upwind_flux_pv(py, V_pv_av, cy_pv, mesh, mt)
 
         case default
             print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
@@ -201,7 +203,7 @@ subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
 end subroutine numerical_flux_ppm_pv
 
 
-subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
+subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh, mt)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PU
     !
@@ -211,6 +213,7 @@ subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
     type(ppm_parabola), intent(inout) :: px    ! flux values at edges (pu points)
     type(scalar_field), intent(in) :: V_pu_av  ! time averaged u (contravariant velocity) at pu points 
     type(scalar_field), intent(in) :: cx_pu  ! cfl of u (contravariant velocity) at pu points 
+    character(len=16) :: mt ! metric tensor formulation
     ! aux
     integer(i4) :: i, j, p
 
@@ -226,9 +229,14 @@ subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
             end do
         end do
     end do
+
+    if (mt == 'pl07') then
+        px%f_upw(:,:,:) = px%f_upw(:,:,:)*mesh%mt_pu(:,:,:)
+    end if
+
 end subroutine upwind_flux_pu
 
-subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
+subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh, mt)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PV
     !
@@ -238,6 +246,7 @@ subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
     type(ppm_parabola), intent(inout) :: py
     type(scalar_field), intent(in) :: V_pv_av  ! time averaged v (contravariant velocity) at pu points 
     type(scalar_field), intent(in) :: cy_pv ! cfl of v (contravariant velocity) at pv points 
+    character(len=16) :: mt ! metric tensor formulation
     ! aux
     integer(i4) :: i, j, p
 
@@ -253,6 +262,11 @@ subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
             end do
         end do
     end do
+
+    if (mt == 'pl07') then
+        py%f_upw(:,:,:) = py%f_upw(:,:,:)*mesh%mt_pv(:,:,:)
+    end if
+
 end subroutine upwind_flux_pv
 
 end module ppm_flux

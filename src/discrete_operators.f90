@@ -29,7 +29,7 @@ implicit none
 
 contains 
 
-subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt)
+subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     !---------------------------------------------------
     !
     ! Dimension splitting operators implementation
@@ -47,17 +47,18 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(cubedsphere), intent(inout) :: mesh
+    character(len=16) :: mt ! metric tensor formulation
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh)
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh, mt)
 
     ! F operator
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
 
 end subroutine F_operator
 
-subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt)
+subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     !---------------------------------------------------
     !
     ! Dimension splitting operators implementation
@@ -75,16 +76,56 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
     type(cubedsphere), intent(inout) :: mesh
+    character(len=16) :: mt ! metric tensor formulation
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh, mt)
 
     ! G operator
     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
 
 end subroutine G_operator
 
+subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
+    !---------------------------------------------------
+    ! Inner flux operator in x direction
+    !---------------------------------------------------
+    type(vector_field), intent(inout) :: wind_pu
+    type(scalar_field), intent(inout) :: cx_pu
+    type(scalar_field), intent(inout) :: Q
+    type(ppm_parabola), intent(inout) :: px ! ppm in x direction
+    type(cubedsphere), intent(inout) :: mesh
+    character(len=16) :: mt ! metric tensor formulation
+    real(r8), intent(in) :: dt
+
+    ! Compute fluxes
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh, mt)
+
+    ! F operator
+    px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
+
+end subroutine inner_f_operator
+
+subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
+    !---------------------------------------------------
+    ! Inner flux operator in y direction
+    !---------------------------------------------------
+    type(vector_field), intent(inout) :: wind_pv
+    type(scalar_field), intent(inout) :: cy_pv
+    type(scalar_field), intent(inout) :: Q
+    type(ppm_parabola), intent(inout) :: py ! ppm in y direction
+    type(cubedsphere), intent(inout) :: mesh
+    character(len=16) :: mt ! metric tensor formulation
+    real(r8), intent(in) :: dt
+
+    ! Compute fluxes
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh, mt)
+
+    ! G operator
+    py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
+
+end subroutine inner_g_operator
 
 
 subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
@@ -111,10 +152,9 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     wind_pu%ucontra_av%f = wind_pu%ucontra%f
     wind_pv%vcontra_av%f = wind_pv%vcontra%f
  
-
     ! Dimension splitting operators
-    call F_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt)
-    call G_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt)
+    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt)
+    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
 
     ! Splitting scheme
     select case (advsimul%opsplit)
@@ -126,8 +166,10 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
 
     case ('pl07')
         ! PL07 - equation 17 and 18
-        px%Q%f = 0.5_r8*(px%Q%f + (px%Q%f + px%df)/(1._r8-(cx_pu%f(n0+1:,:,:)-cx_pu%f(:nend,:,:))))
-        py%Q%f = 0.5_r8*(py%Q%f + (py%Q%f + py%df)/(1._r8-(cy_pv%f(:,n0+1:,:)-cy_pv%f(:,:nend,:))))
+        Qx%f = 0.5_r8*(px%Q%f + (px%Q%f + px%df)/&
+        (1._r8-(cx_pu%f(n0+1:,:,:)*mesh%mt_pu(n0+1:,:,:)-cx_pu%f(:nend,:,:)*mesh%mt_pu(:nend,:,:))))
+        Qy%f = 0.5_r8*(py%Q%f + (py%Q%f + py%df)/&
+        (1._r8-(cy_pv%f(:,n0+1:,:)*mesh%mt_pv(:,n0+1:,:)-cy_pv%f(:,:nend,:)*mesh%mt_pv(:,:nend,:))))
 
     case default
         print*, 'ERROR in divergence: invalid operator splitting,  ', advsimul%opsplit
@@ -135,11 +177,11 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     end select
  
     ! Compute fluxes
-    call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
-    call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
+    call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt)
+    call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
 
     ! Compute the divergence
-    div_ugq%f(i0:iend,j0:jend,:) = -(px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt/mesh%mt_pc
+    div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
 
 end subroutine divergence
 
