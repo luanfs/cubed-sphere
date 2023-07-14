@@ -71,7 +71,6 @@ function q0_adv(lat, lon, ic)
     real(r8) :: b0 ! Gaussian width 
 
     select case(ic)
-
         case(1) ! constant scalar field
             q0_adv = 1._r8
 
@@ -149,8 +148,8 @@ subroutine velocity_adv(ulon, vlat, lat, lon, time, vf)
         case(4) ! trigonometric field
             m = 1
             n = 1
-            ulon = -m*(dsin(lon)*dsin(m*lon)*dcos(n*lat)**3)!/np.cos(lat)
-            vlat = -4*n*(dcos(n*lat)**3)*dsin(n*lat)*dcos(m*lon)*dsin(lon)
+            ulon = m*(dsin(lon)*dsin(m*lon)*dcos(n*lat)**3)!/np.cos(lat)
+            vlat = 4*n*(dcos(n*lat)**3)*dsin(n*lat)*dcos(m*lon)*dsin(lon)
         case default
             print*, "ERROR on velocity_adv: invalid vector field"
             stop
@@ -185,6 +184,10 @@ subroutine init_adv_vars(mesh)
     ! Reconstruction scheme
     px%recon = advsimul%recon1d
     py%recon = advsimul%recon1d
+
+    ! Metric tensor formulation
+    px%mt = advsimul%mt
+    py%mt = advsimul%mt
 
     ! N
     px%n = mesh%n
