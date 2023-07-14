@@ -256,6 +256,9 @@ type simulation
     ! Two dimensional splitting scheme
     character(len=16) :: opsplit
 
+    ! Metric tensor scheme
+    character(len=16) :: mt
+
     !Variable name - long name - detailed name
     ! This is used to for filenames of this variable
     character (len=256) :: name
@@ -281,6 +284,9 @@ type ppm_parabola
     ! Divergence of flux
     real (r8), allocatable  :: df(:,:,:)  ! flux divergence
 
+    ! field to be reconstructed
+    type(scalar_field) :: Q
+
     ! Direction of reconstruction
     !   1 - x direction
     !   2 - y direction 
@@ -291,6 +297,10 @@ type ppm_parabola
 
     ! One dimensional reconstruction scheme
     character(len=16) :: recon
+
+    ! Metric tensor scheme
+    character(len=16) :: mt
+
 
 end type ppm_parabola
  

@@ -435,7 +435,9 @@ subroutine ppm_parabola_allocation(p, mesh)
     call r8_3darray_allocation(p%dq,  n0, nend, n0, nend, 1, nbfaces) 
     call r8_3darray_allocation(p%q6,  n0, nend, n0, nend, 1, nbfaces) 
     call r8_3darray_allocation(p%df,  n0, nend, n0, nend, 1, nbfaces) 
+    call scalar_field_allocation(p%Q, mesh, 0)
 
+    !---------------------------------------------------
     ! Allocate the cubed-sphere points
     select case(p%dir)
         case(1) ! x direction
