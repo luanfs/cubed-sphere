@@ -148,10 +148,10 @@ subroutine div_test(mesh)
 
     ! Multiply Q by the metric tensor
     Q%f = 1._r8
-    gQ%f = Q%f*mesh%mt_pc
 
     ! Compute the divergence
-    call divergence(div_ugq, Q, gQ, wind_pu, wind_pv, cx_pu, cy_pv, px, py, advsimul, mesh)
+    call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
+        px, py, Qx, Qy, advsimul, mesh)
 
     ! Exact divergence
     call compute_exact_div(div_ugq_exact, mesh, advsimul)

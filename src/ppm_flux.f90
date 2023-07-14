@@ -176,7 +176,7 @@ subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
             py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)*mesh%mt_pc(:,j0-1:jend+1,:)
 
         case('pl07')
-            !py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
+            py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
 
         case default
             print*, 'ERROR on numerical_flux_ppm_pv: invalid 1D metric tensor method: ', py%mt
