@@ -75,7 +75,7 @@ end subroutine G_operator
 
 
 
-subroutine divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
+subroutine divergence(div_ugq, Q, gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
                         px, py, advsimul, mesh)
     !---------------------------------------------------
     !
@@ -86,21 +86,25 @@ subroutine divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
     use advection_vars, only: &
         Qx, Qy
 
-    type(cubedsphere), intent(in) :: mesh
+    type(cubedsphere), intent(inout) :: mesh
     type(simulation), intent(in) :: advsimul
     type(vector_field), intent(inout) :: wind_pu
     type(vector_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: cy_pv
-    type(scalar_field), intent(in) :: gQ
+    type(scalar_field), intent(inout) :: Q
+    type(scalar_field), intent(inout) :: gQ
+    type(scalar_field), intent(inout) :: div_ugq
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
  
     ! Compute fluxes
     wind_pu%ucontra_av%f = wind_pu%ucontra%f
     wind_pv%vcontra_av%f = wind_pv%vcontra%f
-    call ppm_flux_pu(gQ, px, wind_pu%ucontra_av, cx_pu)
-    call ppm_flux_pv(gQ, py, wind_pv%vcontra_av, cy_pv)
+    !px%Q%f = Q%f
+    !py%Q%f = Q%f
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh)
 
     ! Dimension splitting operators
     call F_operator(px%df, px%f_upw, mesh, advsimul%dt)
@@ -111,26 +115,32 @@ subroutine divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
     case ('avlt')
         Qx%f = gQ%f+0.5_r8*px%df
         Qy%f = gQ%f+0.5_r8*py%df
-        !Qx%f = Qx%f/mesh%mt_pc
-        !Qy%f = Qy%f/mesh%mt_pc
-    Case ('pl07')
+        Qx%f = Qx%f/mesh%mt_pc
+        Qy%f = Qy%f/mesh%mt_pc
+
+    case ('pl07')
         ! PL07 - equation 17 and 18
-        Qx%f = 0.5_r8*(gQ%f + (gQ%f + px%df)/(1._r8-(cx_pu%f(n0+1:,:,:)-cx_pu%f(:nend,:,:))))
-        Qy%f = 0.5_r8*(gQ%f + (gQ%f + py%df)/(1._r8-(cy_pv%f(:,n0+1:,:)-cy_pv%f(:,:nend,:))))
+        px%Q%f = 0.5_r8*(px%Q%f + (px%Q%f + px%df)/(1._r8-(cx_pu%f(n0+1:,:,:)-cx_pu%f(:nend,:,:))))
+        py%Q%f = 0.5_r8*(py%Q%f + (py%Q%f + py%df)/(1._r8-(cy_pv%f(:,n0+1:,:)-cy_pv%f(:,:nend,:))))
 
     case default
         print*, 'ERROR in divergence: invalid operator splitting,  ', advsimul%opsplit
         stop
     end select
-
+    !print*, minval(abs(Qx%f)), maxval(abs(Qx%f))
+    !print*, minval(abs(Qy%f)), maxval(abs(Qy%f))
+ 
     ! Compute fluxes
-    call ppm_flux_pu(Qy, px, wind_pu%ucontra_av, cx_pu)
-    call ppm_flux_pv(Qx, py, wind_pv%vcontra_av, cy_pv)
+    call ppm_flux_pu(Qy, px, wind_pu%ucontra_av, cx_pu, mesh)
+    call ppm_flux_pv(Qx, py, wind_pv%vcontra_av, cy_pv, mesh)
 
     ! Dimension splitting operators
     call F_operator(px%df, px%f_upw, mesh, advsimul%dt)
     call G_operator(py%df, py%f_upw, mesh, advsimul%dt)
- 
+    !print*, minval(abs(px%df)), maxval(abs(px%df))
+    !print*, minval(abs(py%df)), maxval(abs(py%df))
+    ! compute the divergence
+    div_ugq%f(i0:iend,j0:jend,:) = -(px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt/mesh%mt_pc
 end subroutine divergence
 
 

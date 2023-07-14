@@ -138,10 +138,9 @@ subroutine div_test(mesh)
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
 
-    print*, advsimul%dt
     ! Test name
-    advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//"_"//trim(advsimul%opsplit)
-    !print*, advsimul%name
+    advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//&
+    "_"//trim(advsimul%opsplit)//"_"//trim(advsimul%mt)
 
     ! CFL number
     call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
@@ -152,8 +151,7 @@ subroutine div_test(mesh)
     gQ%f = Q%f*mesh%mt_pc
 
     ! Compute the divergence
-    call divergence(gQ, wind_pu, wind_pv, cx_pu, cy_pv, px, py, advsimul, mesh)
-    div_ugq%f(i0:iend,j0:jend,:) = -(px%df(i0:iend,j0:jend,:) + py%df(i0:iend,j0:jend,:))/advsimul%dt/mesh%mt_pc
+    call divergence(div_ugq, Q, gQ, wind_pu, wind_pv, cx_pu, cy_pv, px, py, advsimul, mesh)
 
     ! Exact divergence
     call compute_exact_div(div_ugq_exact, mesh, advsimul)

@@ -5,25 +5,27 @@
 1
 #Time step
 0.00078125
-#1D Flux (ppm or hyppm)
+#1D reconstruction (ppm or hyppm)
 hyppm
-#2D operator splitting (lr96, l04 or pl07)
+#2D operator splitting (avlt or pl07)
 avlt
+#metric tensor treatment (pl07 or mt0)
+mt0
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
 #  case(2) - gaussian hill
 #  case(3) - two gaussian hills
 #Possible vector fields
-#  case(1) - zonal wind (divergence free)
-#  case(2) - rotated zonal wind (divergence free)
-#  case(3) - Non divergent field 2 from Nair and Lauritzen 2010
-#  case(4) - Non divergent field 4 from Nair and Lauritzen 2010
-#  case(5) - Divergent field 3 from Nair and Lauritzen 2010
+#  case(1) - rotated zonal wind (divergence free)
+#  case(2) - Non divergent field 4 from Nair and Lauritzen 2010
+#  case(3) - Divergent field 3 from Nair and Lauritzen 2010
 #Possible flux methods
-#  case(1) - ppm
-#  case(2) - hyppm   (Hybrid PPM from Putman and Lin 2007(PL07))
+#  case(ppm)   - PPM from Collela and Woodward 1984
+#  case(hyppm) - Hybrid PPM from Putman and Lin 2007
 #Possible 2d operator splitting schemes
-#  case(1) - Splitting from Lin and Rood 1996 (lr96)
-#  case(2) - Splitting from Lin 2004 (l04)
-#  case(3) - Splitting from Putman and Lin 2007(pl07)
+#  case(avlt) - Average of Lie-Trotter splitting in x and y direction 
+#  case(pl07) - Splitting from Putman and Lin 2007
+#Possible metric tensor formulation
+#  case(pl07) - assume a constant metric tensor in each 1D integration domain
+#  case(mt0)  - incorporates the metric tensor in PPM reconstruction

@@ -33,7 +33,8 @@ use constants, only: &
 !Data structures
 use datastruct, only: &
   scalar_field, &
-  ppm_parabola
+  ppm_parabola, &
+  cubedsphere
 
 !PPM reconstruction
 use ppm_reconstruction, only: &
@@ -44,7 +45,7 @@ implicit none
 
 contains 
 
-subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu)
+subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PU
     !
@@ -53,7 +54,8 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu)
     ! from module ppm_reconstruction and evaluates the flux
     ! at pu points
     !--------------------------------------------------------------------------------
-    type(scalar_field), intent(in) :: Q
+    type(cubedsphere), intent(inout) :: mesh
+    type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px      ! parabola
     type(scalar_field), intent(inout) :: V_pu_av ! time averaged wind at pu points 
     type(scalar_field), intent(inout) :: cx_pu   ! CFL number of V_pu_av
@@ -64,10 +66,10 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu)
             call ppm_reconstruction_x(Q, px)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pu(px, cx_pu)
+            call numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
 
             ! Get upwind flux
-            call upwind_flux_pu(px, V_pu_av, cx_pu)
+            call upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
         case default
             print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
             stop
@@ -77,7 +79,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu)
 end subroutine ppm_flux_pu
 
 
-subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv)
+subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PV
     !
@@ -86,7 +88,8 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv)
     ! from module ppm_reconstruction and evaluates the flux
     ! at pv points
     !--------------------------------------------------------------------------------
-    type(scalar_field), intent(in) :: Q
+    type(cubedsphere), intent(inout) :: mesh
+    type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py      ! parabola
     type(scalar_field), intent(inout) :: V_pv_av ! time averaged wind at pv points 
     type(scalar_field), intent(inout) :: cy_pv   ! CFL number of V_pv_av
@@ -97,10 +100,10 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv)
             call ppm_reconstruction_y(Q, py)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pv(py, cy_pv)
+            call numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
 
             ! Get upwind flux
-            call upwind_flux_pv(py, V_pv_av, cy_pv)
+            call upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
 
         case default
             print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
@@ -110,16 +113,37 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv)
 
 end subroutine ppm_flux_pv
 
-subroutine numerical_flux_ppm_pu(px, cx_pu)
+subroutine numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PU
     !
     ! Given the ppm coefficients, this routine computes the fluxes
     ! at pu points
     !--------------------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! parabola
     type(scalar_field), intent(inout) :: cx_pu   ! CFL number of V_pu_av
     integer(i4) :: N
+
+    select case(px%mt)
+        case('mt0')
+            px%q_L(i0-1:iend+1,:,:) = px%q_L(i0-1:iend+1,:,:)*mesh%mt_pu(i0-1:iend+1,:,:)
+            px%q_R(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:)*mesh%mt_pu(i0:iend+2,:,:)
+            px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)*mesh%mt_pc(i0-1:iend+1,:,:)
+
+        case('pl07')
+            px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)
+
+        case default
+            print*, 'ERROR on numerical_flux_ppm_pu: invalid 1D metric tensor method: ', px%mt
+            stop
+    end select
+
+    ! Compute the polynomial coefs
+    ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
+    px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
+    px%q6(i0-1:iend+1,:,:) = 6._r8*px%Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
 
     ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
     ! Flux at left edges
@@ -130,17 +154,40 @@ subroutine numerical_flux_ppm_pu(px, cx_pu)
     px%f_R(i0:iend+1,:,:) = px%q_L(i0:iend+1,:,:) - cx_pu%f(i0:iend+1,:,:)*0.5*&
     (px%dq(i0:iend+1,:,:) + (1.0+(2.0/3.0)*cx_pu%f(i0:iend+1,:,:) )*px%q6(i0:iend+1,:,:))
 
+    return 
 end subroutine numerical_flux_ppm_pu
 
-subroutine numerical_flux_ppm_pv(py,  cy_pv)
+subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PV
     !
     ! Given the ppm coefficients, this routine computes the fluxes
     ! at pv points
     !--------------------------------------------------------------------------------
+    type(cubedsphere), intent(in) :: mesh
+    type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! parabola
     type(scalar_field), intent(inout) :: cy_pv   ! CFL number of V_pv_av
+
+    select case(py%mt)
+        case('mt0')
+            py%q_L(:,j0-1:jend+1,:) = py%q_L(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0-1:jend+1,:)
+            py%q_R(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0:jend+2,:)
+            py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)*mesh%mt_pc(:,j0-1:jend+1,:)
+
+        case('pl07')
+            !py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
+
+        case default
+            print*, 'ERROR on numerical_flux_ppm_pv: invalid 1D metric tensor method: ', py%mt
+            stop
+    end select
+
+    ! Compute the polynomial coefs
+    ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
+    py%dq(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:) - py%q_L(:,j0-1:jend+1,:)
+    py%q6(:,j0-1:jend+1,:) = 6._r8*py%Q%f(:,j0-1:jend+1,:) - 3._r8*(py%q_R(:,j0-1:jend+1,:) + py%q_L(:,j0-1:jend+1,:))
+
 
     ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
     ! Flux at left edges
@@ -154,12 +201,13 @@ subroutine numerical_flux_ppm_pv(py,  cy_pv)
 end subroutine numerical_flux_ppm_pv
 
 
-subroutine upwind_flux_pu(px, V_pu_av, cx_pu)
+subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PU
     !
     ! Given the fluxes at right and left, this routine computes the upwind flux at pu
     !--------------------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
     type(ppm_parabola), intent(inout) :: px    ! flux values at edges (pu points)
     type(scalar_field), intent(in) :: V_pu_av  ! time averaged u (contravariant velocity) at pu points 
     type(scalar_field), intent(in) :: cx_pu  ! cfl of u (contravariant velocity) at pu points 
@@ -180,12 +228,13 @@ subroutine upwind_flux_pu(px, V_pu_av, cx_pu)
     end do
 end subroutine upwind_flux_pu
 
-subroutine upwind_flux_pv(py, V_pv_av, cy_pv)
+subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh)
     !---------------------------------------------------------------------------------
     ! UPWIND_FLUX_PPM_PV
     !
     ! Given the fluxes at right and left, this routine computes the upwind flux at pv
     !--------------------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
     type(ppm_parabola), intent(inout) :: py
     type(scalar_field), intent(in) :: V_pv_av  ! time averaged v (contravariant velocity) at pu points 
     type(scalar_field), intent(in) :: cy_pv ! cfl of v (contravariant velocity) at pv points 

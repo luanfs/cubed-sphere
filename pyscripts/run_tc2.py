@@ -22,11 +22,11 @@ from errors             import plot_errors_loglog, plot_convergence_rate
 import subprocess
 
 # Parameters
-N = (16, 32, 64, 128, 256, 512) # Values of N
-#N = (16,32,64) # Values of N
-
+#N = (16, )
+N = (16,32,64,128,256,512) # Values of N
 reconmethods = ('ppm','hyppm') # reconstruction methods
 splitmethods = ('avlt','avlt') # splitting
+mtmethods = ('mt0', 'mt0') # metric tensor formulation
 
 # Program to be run
 program = "./main"
@@ -43,8 +43,12 @@ def main():
     # Define divergence test in mesh.par'
     replace_line(pardir+'mesh.par', '2', 11)
 
+    # Define velocity
+    vf = '1'
+    replace_line(pardir+'advection.par', vf, 5)
+
     # Get adv parameters
-    ic, vf, recon = get_adv_parameters()
+    ic, _, recon = get_adv_parameters()
 
     # time steps
     dt = np.zeros(len(N))
@@ -78,12 +82,16 @@ def main():
         # Method parameters
         opsplit = splitmethods[i]
         recon = reconmethods[i]
+        mt = mtmethods[i]
 
         # Update reconstruction method in advection.par
         replace_line(pardir+'advection.par', recon, 9)
 
         # Update splitting method in advection.par
-        replace_line(pardir+'advection.par', opsplit,11)
+        replace_line(pardir+'advection.par', opsplit, 11)
+
+        # Update metric tensor  method in advection.par
+        replace_line(pardir+'advection.par', mt, 13)
 
         k = 0
         for n in N:
@@ -94,7 +102,7 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_vf"+vf+"_"+recon+"_"+opsplit
+            div_name = "div_vf"+vf+"_"+recon+"_"+opsplit+"_"+mt
 
             # File to be opened
             filename = datadir+div_name+"_"+grid_name+"_errors.txt"
@@ -128,7 +136,7 @@ def main():
             if vf == '4':
                 # Plot divergence
                 # Open the file and reshape
-                fname = div_name+grid_name
+                fname = div_name+'_'+grid_name
                 f = open(datadir+fname+'.dat', 'rb')
                 data = np.fromfile(f, dtype=np.float64)
                 data = np.reshape(data, (Nlat+1, Nlon+1))

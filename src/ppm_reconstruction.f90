@@ -84,8 +84,8 @@ subroutine ppm_reconstruction_x(Q, px)
  
         ! Compute the polynomial coefs
         ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
-        px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
-        px%q6(i0-1:iend+1,:,:) = 6._r8*Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
+        !px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
+        !px%q6(i0-1:iend+1,:,:) = 6._r8*Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
 
        return 
 
@@ -140,8 +140,8 @@ subroutine ppm_reconstruction_y(Q, py)
  
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
-    py%dq(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:) - py%q_L(:,i0-1:iend+1,:)
-    py%q6(:,i0-1:iend+1,:) = 6._r8*Q%f(:,i0-1:iend+1,:) - 3._r8*(py%q_R(:,i0-1:iend+1,:) + py%q_L(:,i0-1:iend+1,:))
+    !py%dq(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:) - py%q_L(:,i0-1:iend+1,:)
+    !py%q6(:,i0-1:iend+1,:) = 6._r8*Q%f(:,i0-1:iend+1,:) - 3._r8*(py%q_R(:,i0-1:iend+1,:) + py%q_L(:,i0-1:iend+1,:))
     return 
 
 end subroutine ppm_reconstruction_y
