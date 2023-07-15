@@ -52,10 +52,9 @@ use advection_ic, only: &
     init_adv_vars, &
     compute_exact_div
 
-! Discrete operators
-use discrete_operators, only: &
-    cfl_x, cfl_y, &
-    divergence
+! Advection timestep
+use advection_timestep, only: &
+    adv_timestep
 
 ! Linear algebra
 use linear_algebra, only: &
@@ -142,16 +141,11 @@ subroutine div_test(mesh)
     advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//&
     "_"//trim(advsimul%opsplit)//"_"//trim(advsimul%mt)
 
-    ! CFL number
-    call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
-    call cfl_y(mesh, wind_pv, cy_pv, advsimul%dt)
-
     ! Multiply Q by the metric tensor
     Q%f = 1._r8
 
-    ! Compute the divergence
-    call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
-        px, py, Qx, Qy, advsimul, mesh)
+    ! Compute the divergence obtained in one timestep
+    call adv_timestep(mesh)
 
     ! Exact divergence
     call compute_exact_div(div_ugq_exact, mesh, advsimul)

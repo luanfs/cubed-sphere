@@ -26,13 +26,50 @@ use datastruct, only: &
   scalar_field, &
   vector_field
 
+! Discrete operators 
+use discrete_operators, only: &
+    divergence, &
+    cfl_x, cfl_y
+
 ! Advection initial condition
 use advection_ic, only: &
   velocity_adv
 
+! Model variables
+use advection_vars
+
 implicit none
 
 contains 
+
+subroutine adv_timestep(mesh)
+    use advection_vars
+    !--------------------------------------------------
+    ! Compute the velocity update needed in a timestep 
+    ! for the advection problem on the sphere
+    !
+    ! ic - initial conditions
+    ! vf - velocity field
+    !
+    ! Q - scalar field average values on cells
+    ! V_pu - velocity at pu
+    ! V_pv - velocity at pv
+    !
+    !--------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    
+    ! CFL number
+    call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
+    call cfl_y(mesh, wind_pv, cy_pv, advsimul%dt)
+
+    ! Discrete divergence
+    call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
+                      px, py, Qx, Qy, advsimul, mesh)
+
+    ! Update the solution
+    Q%f = Q%f - advsimul%dt*div_ugq%f
+end subroutine adv_timestep
+
 
 subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !--------------------------------------------------
