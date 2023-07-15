@@ -25,6 +25,7 @@ bin/output.obj \
 bin/input.obj \
 bin/cubed_sphere.obj \
 bin/diagnostics.obj \
+bin/departure_point.obj \
 bin/advection_ic.obj \
 bin/advection_timestep.obj \
 bin/simulpack.obj \
@@ -103,6 +104,11 @@ bin/cubed_sphere.obj: src/cubed_sphere.f90
 bin/diagnostics.obj: src/diagnostics.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv diagnostics.mod bin/.
+
+#Departure point
+bin/departure_point.obj: src/departure_point.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv departure_point.mod bin/.
 
 #PPM flux
 bin/ppm_flux.obj: src/ppm_flux.f90

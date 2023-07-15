@@ -6,11 +6,13 @@
 #Time step
 0.00078125
 #1D reconstruction (ppm or hyppm)
-hyppm
+ppm
 #2D operator splitting (avlt or pl07)
-avlt
-#metric tensor treatment (pl07 or mt0)
-mt0
+pl07
+#Metric tensor treatment (pl07 or mt0)
+pl07
+#Departure point scheme (rk1 or rk2)
+rk1
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
@@ -29,3 +31,6 @@ mt0
 #Possible metric tensor formulation
 #  case(pl07) - assume a constant metric tensor in each 1D integration domain
 #  case(mt0)  - incorporates the metric tensor in PPM reconstruction
+#Possible departure point computation
+#  case(1) - Euler
+#  case(2) - Second-order Runge Kutta
