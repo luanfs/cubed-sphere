@@ -32,9 +32,6 @@ type(scalar_field) :: div_ugq
 type(scalar_field) :: div_ugq_exact
 type(scalar_field) :: div_ugq_error
 
-! Metric tensor x Q
-type(scalar_field) :: gQ
-
 ! Dimension splitting vars
 type(scalar_field) :: Qx
 type(scalar_field) :: Qy

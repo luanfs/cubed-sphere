@@ -11,7 +11,9 @@ use constants, only: &
     i4, &
     r8, &
     pi, &
-    nbfaces
+    nbfaces, &
+    i0, iend, &
+    j0, jend
 
 ! Spherical geometry
 use sphgeo, only: &
@@ -45,15 +47,8 @@ contains
 subroutine adv_timestep(mesh)
     use advection_vars
     !--------------------------------------------------
-    ! Compute the velocity update needed in a timestep 
-    ! for the advection problem on the sphere
-    !
-    ! ic - initial conditions
-    ! vf - velocity field
-    !
-    ! Q - scalar field average values on cells
-    ! V_pu - velocity at pu
-    ! V_pv - velocity at pv
+    ! Compute one time step for the advection
+    ! problem on the sphere
     !
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
@@ -90,7 +85,6 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     integer(i4), intent(in) :: ic, vf
 
     ! aux
-    integer(i4) :: i0, iend, j0, jend
     integer(i4) :: i, j, p
 
     !aux
