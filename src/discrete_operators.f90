@@ -118,7 +118,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
             (1._r8-(cx_pu%f(n0+1:,:,:)*mesh%mt_pu(n0+1:,:,:)-cx_pu%f(:nend,:,:)*mesh%mt_pu(:nend,:,:))))
 
         case default
-            print*, 'ERROR inner_f_operator: invalid operator splitting,  ', sp 
+            print*, 'ERROR in inner_f_operator: invalid operator splitting,  ', sp 
             stop
     end select
  
@@ -155,7 +155,7 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
             (1._r8-(cy_pv%f(:,n0+1:,:)*mesh%mt_pv(:,n0+1:,:)-cy_pv%f(:,:nend,:)*mesh%mt_pv(:,:nend,:))))
 
         case default
-            print*, 'ERROR inner_f_operator: invalid operator splitting,  ', sp 
+            print*, 'ERROR in inner_g_operator: invalid operator splitting,  ', sp 
             stop
     end select
  
@@ -206,7 +206,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         !Qy%f = Qy%f
 
     case default
-        print*, 'ERROR in divergence: invalid operator splitting,  ', advsimul%opsplit
+        print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
         stop
     end select
  
