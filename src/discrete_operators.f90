@@ -87,7 +87,7 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
 
 end subroutine G_operator
 
-subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
+subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
     !---------------------------------------------------
     ! Inner flux operator in x direction
     !---------------------------------------------------
@@ -97,6 +97,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(cubedsphere), intent(inout) :: mesh
     character(len=16) :: mt ! metric tensor formulation
+    character(len=16) :: sp ! splitting method
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
@@ -105,9 +106,25 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     ! F operator
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
 
+    ! Inner operator
+    select case (sp)
+        case ('avlt')
+            ! nothing to do here
+            !px%df = px%df
+
+        case ('pl07')
+            ! PL07 - equation 17 and 18
+            px%df = (-px%Q%f + (px%Q%f + px%df)/&
+            (1._r8-(cx_pu%f(n0+1:,:,:)*mesh%mt_pu(n0+1:,:,:)-cx_pu%f(:nend,:,:)*mesh%mt_pu(:nend,:,:))))
+
+        case default
+            print*, 'ERROR inner_f_operator: invalid operator splitting,  ', sp 
+            stop
+    end select
+ 
 end subroutine inner_f_operator
 
-subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
+subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
     !---------------------------------------------------
     ! Inner flux operator in y direction
     !---------------------------------------------------
@@ -117,6 +134,7 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
     type(cubedsphere), intent(inout) :: mesh
     character(len=16) :: mt ! metric tensor formulation
+    character(len=16) :: sp ! splitting method
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
@@ -125,6 +143,22 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     ! G operator
     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
 
+    ! Inner operator
+    select case (sp)
+        case ('avlt')
+            ! nothing to do here
+            !py%df = py%df
+
+        case ('pl07')
+            ! PL07 - equation 17 and 18
+            py%df = (-py%Q%f + (py%Q%f + py%df)/&
+            (1._r8-(cy_pv%f(:,n0+1:,:)*mesh%mt_pv(:,n0+1:,:)-cy_pv%f(:,:nend,:)*mesh%mt_pv(:,:nend,:))))
+
+        case default
+            print*, 'ERROR inner_f_operator: invalid operator splitting,  ', sp 
+            stop
+    end select
+ 
 end subroutine inner_g_operator
 
 
@@ -153,23 +187,23 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     wind_pv%vcontra_av%f = wind_pv%vcontra%f
  
     ! Dimension splitting operators
-    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt)
-    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
+    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
+    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
 
-    ! Splitting scheme
-    select case (advsimul%opsplit)
-    case ('avlt')
-        Qx%f = px%Q%f+0.5_r8*px%df
-        Qy%f = py%Q%f+0.5_r8*py%df
+    ! Compute next splitting input
+    Qx%f = px%Q%f+0.5_r8*px%df
+    Qy%f = py%Q%f+0.5_r8*py%df
+
+    ! Metric tensor scheme
+    select case (advsimul%mt)
+    case ('mt0')
         Qx%f = Qx%f/mesh%mt_pc
         Qy%f = Qy%f/mesh%mt_pc
 
     case ('pl07')
-        ! PL07 - equation 17 and 18
-        Qx%f = 0.5_r8*(px%Q%f + (px%Q%f + px%df)/&
-        (1._r8-(cx_pu%f(n0+1:,:,:)*mesh%mt_pu(n0+1:,:,:)-cx_pu%f(:nend,:,:)*mesh%mt_pu(:nend,:,:))))
-        Qy%f = 0.5_r8*(py%Q%f + (py%Q%f + py%df)/&
-        (1._r8-(cy_pv%f(:,n0+1:,:)*mesh%mt_pv(:,n0+1:,:)-cy_pv%f(:,:nend,:)*mesh%mt_pv(:,:nend,:))))
+        ! Nothing to do here
+        !Qx%f = Qx%f
+        !Qy%f = Qy%f
 
     case default
         print*, 'ERROR in divergence: invalid operator splitting,  ', advsimul%opsplit
