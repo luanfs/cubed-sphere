@@ -24,9 +24,11 @@ import subprocess
 # Parameters
 #N = (16, )
 N = (16,32,64,128,256,512) # Values of N
-reconmethods = ('ppm','hyppm') # reconstruction methods
-splitmethods = ('avlt','avlt') # splitting
-mtmethods = ('mt0', 'mt0') # metric tensor formulation
+reconmethods = ('ppm','ppm') # reconstruction methods
+#splitmethods = ('avlt','avlt') # splitting
+splitmethods = ('avlt','pl07') # splitting
+mtmethods = ('mt0', 'pl07') # metric tensor formulation
+dpmethods = ('rk1', 'rk1') # departure point formulation
 
 # Program to be run
 program = "./main"
@@ -83,6 +85,7 @@ def main():
         opsplit = splitmethods[i]
         recon = reconmethods[i]
         mt = mtmethods[i]
+        dp = dpmethods[i]
 
         # Update reconstruction method in advection.par
         replace_line(pardir+'advection.par', recon, 9)
@@ -90,8 +93,12 @@ def main():
         # Update splitting method in advection.par
         replace_line(pardir+'advection.par', opsplit, 11)
 
-        # Update metric tensor  method in advection.par
+        # Update metric tensor method in advection.par
         replace_line(pardir+'advection.par', mt, 13)
+
+        # Update departure point  method in advection.par
+        replace_line(pardir+'advection.par', dp, 15)
+
 
         k = 0
         for n in N:

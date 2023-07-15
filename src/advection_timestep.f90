@@ -40,12 +40,15 @@ use advection_ic, only: &
 ! Model variables
 use advection_vars
 
+! Departure point
+use departure_point, only: &
+    adv_time_averaged_wind
+
 implicit none
 
 contains 
 
 subroutine adv_timestep(mesh)
-    use advection_vars
     !--------------------------------------------------
     ! Compute one time step for the advection
     ! problem on the sphere

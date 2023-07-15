@@ -449,6 +449,9 @@ subroutine getadvparameters(advsimul)
     read(fileunit,*)  advsimul%opsplit
     read(fileunit,*)  buffer
     read(fileunit,*)  advsimul%mt
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%dp
+ 
     close(fileunit)
     return
 end subroutine getadvparameters
