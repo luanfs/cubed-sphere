@@ -478,7 +478,6 @@ subroutine allocate_adv_vars(mesh)
     call scalar_field_allocation(div_ugq, mesh, 0)
     call scalar_field_allocation(div_ugq_exact, mesh, 0)
     call scalar_field_allocation(div_ugq_error, mesh, 0)
-    call scalar_field_allocation(gQ, mesh, 0)
 
     !Operator splitting variables
     call scalar_field_allocation(Qx, mesh, 0)
