@@ -202,6 +202,10 @@ type vector_field
     type(scalar_field) :: ucontra
     type(scalar_field) :: vcontra
 
+    ! Contravariant components from previous time step
+    type(scalar_field) :: ucontra_old
+    type(scalar_field) :: vcontra_old
+
     ! Contravariant time-averaged winds
     type(scalar_field) :: ucontra_av
     type(scalar_field) :: vcontra_av
