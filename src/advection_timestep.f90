@@ -57,7 +57,7 @@ subroutine adv_timestep(mesh)
     type(cubedsphere), intent(inout) :: mesh
         
     ! Compute time-averaged wind
-    call adv_time_averaged_wind(wind_pu, wind_pv, mesh, advsimul%dp)
+    call adv_time_averaged_wind(wind_pu, wind_pv, advsimul%dp, advsimul%dto2, mesh%dx)
 
     ! CFL number
     call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
