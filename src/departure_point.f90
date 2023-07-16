@@ -46,6 +46,8 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
             ! RK1
             wind_pu%ucontra_time_av%f = wind_pu%ucontra%f
             wind_pv%vcontra_time_av%f = wind_pv%vcontra%f
+            !wind_pu%ucontra_time_av%f = 1.5_r8*wind_pu%ucontra%f-0.5_r8*wind_pu%ucontra_old%f
+            !wind_pv%vcontra_time_av%f = 1.5_r8*wind_pv%vcontra%f-0.5_r8*wind_pv%vcontra_old%f
  
         case ('rk2')
             ! RK2
@@ -61,15 +63,15 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
 
                         ! Upwind linear interpolation
                         if (wind_pu%ucontra%f(i,j,p)>0._r8) then
-                            u1 = wind_pu%ucontra_time_centered%f(i,j,p)
-                            u2 = wind_pu%ucontra_time_centered%f(i+1,j,p)
-                            a1 = 1._r8-a
-                            a2 = a
-                        else
                             u1 = wind_pu%ucontra_time_centered%f(i-1,j,p)
                             u2 = wind_pu%ucontra_time_centered%f(i,j,p)
-                            a1 = -a
-                            a2 = 1._r8+a
+                            a1 = a
+                            a2 = 1._r8-a
+                        else
+                            u1 = wind_pu%ucontra_time_centered%f(i,j,p)
+                            u2 = wind_pu%ucontra_time_centered%f(i+1,j,p)
+                            a1 = 1._r8+a
+                            a2 = -a
                         end if
                         wind_pu%ucontra_time_av%f(i,j,p) = a1*u1 + a2*u2
                     end do
@@ -85,15 +87,15 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
 
                         ! Upwind linear interpolation
                         if (wind_pv%vcontra%f(i,j,p)>0._r8) then
-                            u1 = wind_pv%vcontra_time_centered%f(i,j,p)
-                            u2 = wind_pv%vcontra_time_centered%f(i,j+1,p)
-                            a1 = 1._r8-a
-                            a2 = a
-                        else
                             u1 = wind_pv%vcontra_time_centered%f(i,j-1,p)
                             u2 = wind_pv%vcontra_time_centered%f(i,j,p)
-                            a1 = -a
-                            a2 = 1._r8+a
+                            a1 = a
+                            a2 = 1._r8-a
+                        else
+                            u1 = wind_pv%vcontra_time_centered%f(i,j,p)
+                            u2 = wind_pv%vcontra_time_centered%f(i,j+1,p)
+                            a1 = 1._r8+a
+                            a2 = -a
                         end if
                         wind_pv%vcontra_time_av%f(i,j,p) = a1*u1 + a2*u2
                     end do
