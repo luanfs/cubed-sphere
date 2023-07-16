@@ -207,8 +207,12 @@ type vector_field
     type(scalar_field) :: vcontra_old
 
     ! Contravariant time-averaged winds
-    type(scalar_field) :: ucontra_av
-    type(scalar_field) :: vcontra_av
+    type(scalar_field) :: ucontra_time_av
+    type(scalar_field) :: vcontra_time_av
+
+    ! Contravariant time-averaged centered at time
+    type(scalar_field) :: ucontra_time_centered
+    type(scalar_field) :: vcontra_time_centered
 
     ! Covariant components
     type(scalar_field) :: ucovari
@@ -238,6 +242,7 @@ type simulation
 
     ! Time step
     real(r8):: dt
+    real(r8):: dto2
 
     ! Initial condition
     integer(i4) :: ic

@@ -51,7 +51,7 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh, mt)
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
 
     ! F operator
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
@@ -80,7 +80,7 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh, mt)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
 
     ! G operator
     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
@@ -101,7 +101,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_av, cx_pu, mesh, mt)
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
 
     ! F operator
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
@@ -138,7 +138,7 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_av, cy_pv, mesh, mt)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
 
     ! G operator
     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
@@ -182,10 +182,6 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(scalar_field), intent(inout) :: Qx ! variable to advect in x direction
     type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
 
-    ! initialize some vars
-    wind_pu%ucontra_av%f = wind_pu%ucontra%f
-    wind_pv%vcontra_av%f = wind_pv%vcontra%f
- 
     ! Dimension splitting operators
     call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
     call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)

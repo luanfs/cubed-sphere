@@ -196,6 +196,9 @@ subroutine init_adv_vars(mesh)
     ! Allocate the variables
     call allocate_adv_vars(mesh)
 
+    ! Time step over 2
+    advsimul%dto2 = advsimul%dt*0.5_r8
+
     ! Compute the initial conditions
     call compute_ic_adv(Q, wind_pu, wind_pv, mesh, advsimul)
 
