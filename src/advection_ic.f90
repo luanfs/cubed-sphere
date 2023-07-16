@@ -293,8 +293,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
         end do
     end do
 
-    V_pu%ucontra_old%f = V_pu%ucontra_old%f
-    V_pu%vcontra_old%f = V_pu%vcontra_old%f
+    V_pu%ucontra_old%f = V_pu%ucontra%f
+    V_pu%vcontra_old%f = V_pu%vcontra%f
  
     ! Vector field at pv
     do p = 1 , nbfaces
@@ -318,8 +318,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
         end do
     end do
 
-    V_pv%ucontra_old%f = V_pv%ucontra_old%f
-    V_pv%vcontra_old%f = V_pv%vcontra_old%f
+    V_pv%ucontra_old%f = V_pv%ucontra%f
+    V_pv%vcontra_old%f = V_pv%vcontra%f
     !print*,error
     !stop
 end subroutine compute_ic_adv
