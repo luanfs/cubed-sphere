@@ -207,11 +207,11 @@ subroutine init_adv_vars(mesh)
 
     ! Define wheter exact solution is available or not
     if(advsimul%vf == 1)then
-      advsimul%exactsolution = .true.
-    else if(advsimul%ic == 1 .and. advsimul%vf <= 3)then
-      advsimul%exactsolution = .true.
+        advsimul%exactsolution = .true.
+    else if(advsimul%ic == 1 .and. advsimul%vf <= 2)then
+        advsimul%exactsolution = .true.
     else
-      advsimul%exactsolution = .false.
+        advsimul%exactsolution = .false.
     end if
 
     ! Filename (for outputs)
