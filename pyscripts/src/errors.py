@@ -55,25 +55,30 @@ def plot_errors_loglog(N, errors, names, filename, title, emin=None, emax=None):
 ####################################################################################
 # Compute and plot the convergence rate
 ####################################################################################
-def plot_convergence_rate(N, error_linf, error_l1, error_l2, filename, title):
+def plot_convergence_rate(N, errors, names, filename, title, CRmin=None, CRmax=None):
     n = len(N)
 
-    CR_linf = np.abs(np.log(error_linf[1:n])-np.log(error_linf[0:n-1]))/np.log(2.0)
-    CR_l1   = np.abs(np.log(error_l1[1:n])  -np.log(error_l1[0:n-1]))/np.log(2.0)
-    CR_l2   = np.abs(np.log(error_l2[1:n])  -np.log(error_l2[0:n-1]))/np.log(2.0)
-    #plt.ylim(0,2)
-    plt.xscale('log')
-    plt.plot(N[1:n], CR_linf, color='green', marker='x', label = '$L_\infty$')
-    plt.plot(N[1:n], CR_l1, color='blue',  marker='o', label = '$L_1$')
-    plt.plot(N[1:n], CR_l2, color='red',   marker='D', label = '$L_2$')
+    if (CRmin and CRmax):
+        plt.ylim(0.98*CRmin, 1.02*CRmax)
 
-    plt.xlabel('N (number of cells)')
+    plt.xscale('log')
+    colors = ('green', 'red', 'blue', 'purple', 'orange', 'black', 'brown', 'gray')
+    markers = ('*','+','x','*', '+', 'x', '*', '+')
+    lines_style = ('--','-.',':',':','-.','--',':', '--','-.',':')
+    for k in range(0,len(errors)):
+        error = errors[k]
+        CR = np.abs(np.log(error[1:n])-np.log(error[0:n-1]))/np.log(2.0)
+
+        plt.plot(N[1:n], CR, lines_style[k], color=colors[k], marker=markers[k], label = names[k])
+
+    plt.xlabel(r'$N$ (number of cells in $x$ direction)')
     plt.ylabel('Convergence rate')
     plt.legend()
     plt.grid(True, which="both")
     plt.title(title)
-    plt.savefig(filename, format='png')
+    plt.savefig(filename, format='pdf')
     plt.close()
+
 
 ####################################################################################
 # Print the errors of the ith simulation
