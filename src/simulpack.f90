@@ -137,9 +137,7 @@ subroutine div_test(mesh)
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
 
-    ! Test name
-    advsimul%name = "div_"//"vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)//&
-    "_"//trim(advsimul%opsplit)//"_"//trim(advsimul%mt)
+    advsimul%name = "div_"//trim(advsimul%name)
 
     ! Multiply Q by the metric tensor
     Q%f = 1._r8

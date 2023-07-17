@@ -221,8 +221,9 @@ subroutine init_adv_vars(mesh)
     write (advsimul%vf_name, *) advsimul%vf
     advsimul%vf_name = adjustl(advsimul%vf_name)
 
-    advsimul%name = "adv_"//"ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%recon1d)
-    !print*, trim(advsimul%name)
+    advsimul%name = "ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%opsplit) &
+    //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp)
+
 end subroutine init_adv_vars
 
 subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
