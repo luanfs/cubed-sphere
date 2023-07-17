@@ -28,11 +28,11 @@ reconmethods = ('ppm','ppm') # reconstruction methods
 #splitmethods = ('avlt','avlt') # splitting
 splitmethods = ('avlt','pl07') # splitting
 mtmethods = ('mt0', 'pl07') # metric tensor formulation
-dpmethods = ('rk1', 'rk1') # departure point formulation
+dpmethods = ('rk2', 'rk1') # departure point formulation
 
 # Program to be run
 program = "./main"
-run = True # Run the simulation?
+run = False # Run the simulation?
 
 # Plotting parameters
 colormap = 'seismic'
@@ -58,8 +58,10 @@ def main():
     # Initial time step
     if vf=='1':
         dt[0] = 0.025
-    elif vf=='2' or vf=='3' or vf=='4':
+    elif vf=='2'or vf=='4':
         dt[0] = 0.0125
+    elif vf=='3':
+        dt[0] = 0.00625
     else:
         print('Error - invalid vf')
         exit()
@@ -109,7 +111,7 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_vf"+vf+"_"+recon+"_"+opsplit+"_"+mt
+            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp
 
             # File to be opened
             filename = datadir+div_name+"_"+grid_name+"_errors.txt"
@@ -156,6 +158,35 @@ def main():
     error_list = [error_linf, error_l1, error_l2]
     norm_list  = ['linf','l1','l2']
     norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
+
+    e = 0
+    for error in error_list:
+        emin, emax = np.amin(error[:]), np.amax(error[:])
+
+        # convergence rate min/max
+        n = len(error)
+        CR = np.abs(np.log(error[1:n])-np.log(error[0:n-1]))/np.log(2.0)
+        CRmin, CRmax = np.amin(CR), np.amax(CR)
+        errors = []
+        fname = []
+        for k in range(0, len(reconmethods)):
+            errors.append(error[:,k])
+            opsplit = splitmethods[k]
+            recon = reconmethods[k]
+            mt = mtmethods[k]
+            dp = dpmethods[k]
+            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp)
+
+        title = 'Divergence error, vf='+ str(vf)+', norm='+norm_title[e]
+        filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
+
+        plot_errors_loglog(N, errors, fname, filename, title, emin, emax)
+
+        # Plot the convergence rate
+        title = 'Convergence rate, vf=' + str(vf)+', norm='+norm_title[e]
+        filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
+        plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
+        e = e+1
 
 if __name__ == '__main__':
     main()
