@@ -159,6 +159,6 @@ def plot_fields_list(fields, grid_name, colormap, map_projection):
         data = np.reshape(data, (Nlat+1, Nlon+1))
         data = np.transpose(data)
         plot_scalar_field(data, lats, lons, \
-                         colormap, map_projection, name)
+                         colormap, map_projection, name, field)
 
 
