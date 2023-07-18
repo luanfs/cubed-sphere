@@ -13,7 +13,8 @@ use constants, only: &
     pi, &
     nbfaces, &
     i0, iend, &
-    j0, jend
+    j0, jend, &
+    n0, nend
 
 ! Spherical geometry
 use sphgeo, only: &
@@ -106,8 +107,8 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
 
     ! Vector field at pu
     do p = 1 , nbfaces
-        do i = i0-1, iend
-            do j = j0, jend
+        do i = n0, nend+1
+            do j = n0, nend
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
@@ -121,8 +122,8 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
 
     ! Vector field at pv
     do p = 1 , nbfaces
-        do i = i0, iend
-            do j = j0-1, jend
+        do i = n0, nend
+            do j = n0, nend+1
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 

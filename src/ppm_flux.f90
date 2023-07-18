@@ -67,10 +67,8 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
             call ppm_reconstruction_x(Q, px)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
+            call numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
 
-            ! Get upwind flux
-            call upwind_flux_pu(px, V_pu_av, cx_pu, mesh, mt)
         case default
             print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
             stop
@@ -102,10 +100,7 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
             call ppm_reconstruction_y(Q, py)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
-
-            ! Get upwind flux
-            call upwind_flux_pv(py, V_pv_av, cy_pv, mesh, mt)
+            call numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
 
         case default
             print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
@@ -115,18 +110,20 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
 
 end subroutine ppm_flux_pv
 
-subroutine numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
+subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PU
     !
     ! Given the ppm coefficients, this routine computes the fluxes
     ! at pu points
     !--------------------------------------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(scalar_field), intent(inout) :: Q
+    type(cubedsphere), intent(in) :: mesh
+    type(scalar_field), intent(in) :: Q
     type(ppm_parabola), intent(inout) :: px ! parabola
-    type(scalar_field), intent(inout) :: cx_pu   ! CFL number of V_pu_av
-    integer(i4) :: N
+    type(scalar_field), intent(in) :: V_pu_av ! time averaged wind at pu points 
+    type(scalar_field), intent(in) :: cx_pu   ! CFL number of V_pu_av
+    character(len=16) :: mt ! metric tensor formulation
+    integer(i4) :: i, j, p
 
     select case(px%mt)
         case('mt0')
@@ -156,10 +153,29 @@ subroutine numerical_flux_ppm_pu(Q, px, cx_pu, mesh)
     px%f_R(i0:iend+1,:,:) = px%q_L(i0:iend+1,:,:) - cx_pu%f(i0:iend+1,:,:)*0.5*&
     (px%dq(i0:iend+1,:,:) + (1.0+(2.0/3.0)*cx_pu%f(i0:iend+1,:,:) )*px%q6(i0:iend+1,:,:))
 
+    ! Upwind fluxes
+    do p = 1, nbfaces
+        do i = i0, iend+1
+            do j = n0, nend
+                ! Upwind flux
+                if(cx_pu%f(i,j,p) >= 0._r8)then
+                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_L(i,j,p)
+                else
+                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_R(i,j,p)
+                end if
+            end do
+        end do
+    end do
+
+    ! metric tensor multiplication
+    if (mt == 'pl07') then
+        px%f_upw(:,:,:) = px%f_upw(:,:,:)*mesh%mt_pu(:,:,:)
+    end if
+
     return 
 end subroutine numerical_flux_ppm_pu
 
-subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
+subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PV
     !
@@ -167,9 +183,12 @@ subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
     ! at pv points
     !--------------------------------------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(scalar_field), intent(inout) :: Q
+    type(scalar_field), intent(in) :: Q
     type(ppm_parabola), intent(inout) :: py ! parabola
-    type(scalar_field), intent(inout) :: cy_pv   ! CFL number of V_pv_av
+    type(scalar_field), intent(in) :: V_pv_av ! time averaged wind at pv points 
+    type(scalar_field), intent(in) :: cy_pv   ! CFL number of V_pv_av
+    character(len=16) :: mt ! metric tensor formulation
+    integer(i4) :: i, j, p
 
     select case(py%mt)
         case('mt0')
@@ -200,56 +219,7 @@ subroutine numerical_flux_ppm_pv(Q, py, cy_pv, mesh)
     py%f_R(:,j0:jend+1,:) = py%q_L(:,j0:jend+1,:) - cy_pv%f(:,j0:jend+1,:)*0.5*(py%dq(:,j0:jend+1,:) + &
     (1.0+(2.0/3.0)*cy_pv%f(:,j0:jend+1,:))*py%q6(:,j0:jend+1,:))
 
-end subroutine numerical_flux_ppm_pv
-
-
-subroutine upwind_flux_pu(px, V_pu_av, cx_pu, mesh, mt)
-    !---------------------------------------------------------------------------------
-    ! UPWIND_FLUX_PPM_PU
-    !
-    ! Given the fluxes at right and left, this routine computes the upwind flux at pu
-    !--------------------------------------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(ppm_parabola), intent(inout) :: px    ! flux values at edges (pu points)
-    type(scalar_field), intent(in) :: V_pu_av  ! time averaged u (contravariant velocity) at pu points 
-    type(scalar_field), intent(in) :: cx_pu  ! cfl of u (contravariant velocity) at pu points 
-    character(len=16) :: mt ! metric tensor formulation
-    ! aux
-    integer(i4) :: i, j, p
-
-    do p = 1, nbfaces
-        do i = i0, iend+1
-            do j = n0, nend
-                ! Upwind flux
-                if(cx_pu%f(i,j,p) >= 0._r8)then
-                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_L(i,j,p)
-                else
-                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_R(i,j,p)
-                end if
-            end do
-        end do
-    end do
-
-    if (mt == 'pl07') then
-        px%f_upw(:,:,:) = px%f_upw(:,:,:)*mesh%mt_pu(:,:,:)
-    end if
-
-end subroutine upwind_flux_pu
-
-subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh, mt)
-    !---------------------------------------------------------------------------------
-    ! UPWIND_FLUX_PPM_PV
-    !
-    ! Given the fluxes at right and left, this routine computes the upwind flux at pv
-    !--------------------------------------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(ppm_parabola), intent(inout) :: py
-    type(scalar_field), intent(in) :: V_pv_av  ! time averaged v (contravariant velocity) at pu points 
-    type(scalar_field), intent(in) :: cy_pv ! cfl of v (contravariant velocity) at pv points 
-    character(len=16) :: mt ! metric tensor formulation
-    ! aux
-    integer(i4) :: i, j, p
-
+    ! Upwind fluxes
     do p = 1, nbfaces
         do i = n0, nend
             do j = j0, jend+1
@@ -263,10 +233,11 @@ subroutine upwind_flux_pv(py, V_pv_av, cy_pv, mesh, mt)
         end do
     end do
 
+    ! metric tensor multiplication
     if (mt == 'pl07') then
         py%f_upw(:,:,:) = py%f_upw(:,:,:)*mesh%mt_pv(:,:,:)
     end if
 
-end subroutine upwind_flux_pv
+end subroutine numerical_flux_ppm_pv
 
 end module ppm_flux
