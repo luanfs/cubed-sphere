@@ -91,7 +91,7 @@ def plot_grid(vert_lat, vert_lon, centers_lat, centers_lon, \
 
 
 def plot_scalar_field(data, lat, lon, \
-                      colormap, map_projection, name, dmin=None, dmax=None):
+                      colormap, map_projection, name, title, dmin=None, dmax=None):
     # Figure format
     fig_format = 'png'
 
@@ -128,6 +128,10 @@ def plot_scalar_field(data, lat, lon, \
 
     # Add coastlines
     ax.coastlines()
+
+    # add title
+    if title:
+        plt.title(title)
 
     # Plot colorbar
     plt.colorbar(orientation='vertical',fraction=0.046, pad=0.04, format='%.1e')
