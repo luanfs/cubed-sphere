@@ -127,41 +127,49 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
 
     select case(px%mt)
         case('mt0')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(px, Q, mesh, i0, iend)
             px%q_L(i0-1:iend+1,:,:) = px%q_L(i0-1:iend+1,:,:)*mesh%mt_pu(i0-1:iend+1,:,:)
             px%q_R(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:)*mesh%mt_pu(i0:iend+2,:,:)
             px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)*mesh%mt_pc(i0-1:iend+1,:,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case('pl07')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(px, Q, i0, iend)
             px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR on numerical_flux_ppm_pu: invalid 1D metric tensor method: ', px%mt
             stop
     end select
 
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(px, i0, iend)
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
     px%q6(i0-1:iend+1,:,:) = 6._r8*px%Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
-
-    ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
-    ! Flux at left edges
-    px%f_L(i0:iend+1,:,:) = px%q_R(i0-1:iend,:,:) - cx_pu%f(i0:iend+1,:,:)*0.5*&
-    (px%dq(i0-1:iend,:,:) - (1.0-(2.0/3.0)*cx_pu%f(i0:iend+1,:,:))*px%q6(i0-1:iend,:,:))
-
-    ! Flux at right edges
-    px%f_R(i0:iend+1,:,:) = px%q_L(i0:iend+1,:,:) - cx_pu%f(i0:iend+1,:,:)*0.5*&
-    (px%dq(i0:iend+1,:,:) + (1.0+(2.0/3.0)*cx_pu%f(i0:iend+1,:,:) )*px%q6(i0:iend+1,:,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Upwind fluxes
     do p = 1, nbfaces
         do i = i0, iend+1
             do j = n0, nend
-                ! Upwind flux
+                ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
                 if(cx_pu%f(i,j,p) >= 0._r8)then
-                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_L(i,j,p)
+                    ! Flux at left edges
+                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*(px%q_R(i-1,j,p) + &
+                    0.5_r8*cx_pu%f(i,j,p)*(px%q6(i-1,j,p) - px%dq(i-1,j,p)) - &
+                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3._r8)*px%q6(i-1,j,p))
+
                 else
-                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*px%f_R(i,j,p)
+                    ! Flux at right edges
+                    px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*(px%q_L(i,j,p) - &
+                    0.5_r8*cx_pu%f(i,j,p)*(px%q6(i,j,p) + px%dq(i,j,p)) - &
+                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3._r8)*px%q6(i,j,p))
+
                 end if
             end do
         end do
@@ -169,7 +177,10 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
 
     ! metric tensor multiplication
     if (mt == 'pl07') then
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(px, mesh)
         px%f_upw(:,:,:) = px%f_upw(:,:,:)*mesh%mt_pu(:,:,:)
+        !$OMP END PARALLEL WORKSHARE
     end if
 
     return 
@@ -192,42 +203,48 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
 
     select case(py%mt)
         case('mt0')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(py, Q, mesh, j0, jend)
             py%q_L(:,j0-1:jend+1,:) = py%q_L(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0-1:jend+1,:)
             py%q_R(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0:jend+2,:)
             py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)*mesh%mt_pc(:,j0-1:jend+1,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case('pl07')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(py, Q, j0, jend)
             py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR on numerical_flux_ppm_pv: invalid 1D metric tensor method: ', py%mt
             stop
     end select
 
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(py, j0, jend)
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     py%dq(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:) - py%q_L(:,j0-1:jend+1,:)
     py%q6(:,j0-1:jend+1,:) = 6._r8*py%Q%f(:,j0-1:jend+1,:) - 3._r8*(py%q_R(:,j0-1:jend+1,:) + py%q_L(:,j0-1:jend+1,:))
+    !$OMP END PARALLEL WORKSHARE
 
-
-    ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
-    ! Flux at left edges
-    py%f_L(:,j0:jend+1,:) = py%q_R(:,j0-1:jend,:) - cy_pv%f(:,j0:jend+1,:)*0.5*(py%dq(:,i0-1:iend,:) - &
-    (1.0-(2.0/3.0)*cy_pv%f(:,j0-1:jend,:))*py%q6(:,j0-1:jend,:))
-
-    ! Flux at right edges
-    py%f_R(:,j0:jend+1,:) = py%q_L(:,j0:jend+1,:) - cy_pv%f(:,j0:jend+1,:)*0.5*(py%dq(:,j0:jend+1,:) + &
-    (1.0+(2.0/3.0)*cy_pv%f(:,j0:jend+1,:))*py%q6(:,j0:jend+1,:))
-
-    ! Upwind fluxes
     do p = 1, nbfaces
         do i = n0, nend
             do j = j0, jend+1
-                ! Upwind flux
+                ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
                 if(cy_pv%f(i,j,p) >= 0._r8)then
-                    py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*py%f_L(i,j,p)
+                    ! Flux at left edges
+                    py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*(py%q_R(i,j-1,p) + &
+                    0.5_r8*cy_pv%f(i,j,p)*(py%q6(i,j-1,p) - py%dq(i,j-1,p)) - &
+                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3._r8)*py%q6(i,j-1,p))
+
                 else
-                    py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*py%f_R(i,j,p)
+                    ! Flux at right edges
+                    py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*(py%q_L(i,j,p) - &
+                    0.5_r8*cy_pv%f(i,j,p)*(py%q6(i,j,p) + py%dq(i,j,p)) - &
+                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3._r8)*py%q6(i,j,p))
+
                 end if
             end do
         end do
@@ -235,7 +252,10 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
 
     ! metric tensor multiplication
     if (mt == 'pl07') then
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(py, mesh) 
         py%f_upw(:,:,:) = py%f_upw(:,:,:)*mesh%mt_pv(:,:,:)
+        !$OMP END PARALLEL WORKSHARE
     end if
 
 end subroutine numerical_flux_ppm_pv

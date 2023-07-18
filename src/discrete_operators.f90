@@ -54,7 +54,10 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
 
     ! F operator
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(px, mesh, i0, iend, dt)
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
+    !$OMP END PARALLEL WORKSHARE
 
 end subroutine F_operator
 
@@ -83,7 +86,10 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
 
     ! G operator
-    py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(py, mesh, j0, jend, dt)
+     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
+    !$OMP END PARALLEL WORKSHARE
 
 end subroutine G_operator
 
@@ -104,7 +110,10 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
     call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
 
     ! F operator
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(px, mesh, i0, iend, dt)
     px%df(i0:iend,:,:) = -(dt/mesh%dx)*(px%f_upw(i0+1:iend+1,:,:)-px%f_upw(i0:iend,:,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Inner operator
     select case (sp)
@@ -114,8 +123,11 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
 
         case ('pl07')
             ! PL07 - equation 17 and 18
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(px, mesh, n0, nend, cx_pu, dt)
             px%df = (-px%Q%f + (px%Q%f + px%df)/&
             (1._r8-(cx_pu%f(n0+1:,:,:)*mesh%mt_pu(n0+1:,:,:)-cx_pu%f(:nend,:,:)*mesh%mt_pu(:nend,:,:))))
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR in inner_f_operator: invalid operator splitting,  ', sp 
@@ -140,8 +152,11 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
     ! Compute fluxes
     call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
 
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(py, mesh, j0, jend, dt)
     ! G operator
     py%df(:,j0:jend,:) = -(dt/mesh%dy)*(py%f_upw(:,j0+1:jend+1,:)-py%f_upw(:,j0:jend,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Inner operator
     select case (sp)
@@ -151,8 +166,11 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
 
         case ('pl07')
             ! PL07 - equation 17 and 18
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(py, mesh, n0, nend, cy_pv, dt)
             py%df = (-py%Q%f + (py%Q%f + py%df)/&
             (1._r8-(cy_pv%f(:,n0+1:,:)*mesh%mt_pv(:,n0+1:,:)-cy_pv%f(:,:nend,:)*mesh%mt_pv(:,:nend,:))))
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR in inner_g_operator: invalid operator splitting,  ', sp 
@@ -187,15 +205,20 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
 
     ! Compute next splitting input
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, px, py)
     Qx%f = px%Q%f+0.5_r8*px%df
     Qy%f = py%Q%f+0.5_r8*py%df
+    !$OMP END PARALLEL WORKSHARE
 
     ! Metric tensor scheme
     select case (advsimul%mt)
     case ('mt0')
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(Qx, Qy, mesh)
         Qx%f = Qx%f/mesh%mt_pc
         Qy%f = Qy%f/mesh%mt_pc
-
+        !$OMP END PARALLEL WORKSHARE
     case ('pl07')
         ! Nothing to do here
         !Qx%f = Qx%f
@@ -211,8 +234,10 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
 
     ! Compute the divergence
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
     div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
-
+    !$OMP END PARALLEL WORKSHARE
 end subroutine divergence
 
 
@@ -227,7 +252,10 @@ subroutine cfl_x(mesh, wind_pu, cx_pu, dt)
     real(r8), intent(in)::dt
 
     ! Compute CFL
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(cx_pu, wind_pu, dt, mesh)
     cx_pu%f = wind_pu%ucontra%f*(dt/mesh%dx)
+    !$OMP END PARALLEL WORKSHARE
 
 end subroutine cfl_x
 
@@ -243,7 +271,10 @@ subroutine cfl_y(mesh, wind_pv, cy_pv, dt)
     real(r8), intent(in)::dt
 
     ! Compute CFL
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(cy_pv, wind_pv, dt, mesh)
     cy_pv%f = wind_pv%vcontra%f*(dt/mesh%dy)
+    !$OMP END PARALLEL WORKSHARE
 
 end subroutine cfl_y
 

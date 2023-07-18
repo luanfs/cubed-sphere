@@ -57,11 +57,14 @@ subroutine ppm_reconstruction_x(Q, px)
             a3 = -1._r8/12._r8
             a4 = a3
 
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(px, Q, a1, a2, a3, a4, i0, iend)
             ! Assign values of q_R and q_L
             px%q_R(i0-2:iend+2,:,:) = a1*Q%f(i0-2:iend+2,:,:) + a2*Q%f(i0-3:iend+1,:,:)&
                                     + a3*Q%f(i0-1:iend+3,:,:) + a4*Q%f(i0-4:iend,:,:)
             px%q_L(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:)
             px%q_R(i0-1:iend+1,:,:) = px%q_R(i0:iend+2,:,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case('hyppm') !Hybrid PPM from PL07
             ! coeffs from equations 41 and 42 from Putman and Lin 2007
@@ -71,11 +74,14 @@ subroutine ppm_reconstruction_x(Q, px)
             a4 =  27._r8/60._r8
             a5 =  -3._r8/60._r8
 
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(px, Q, a1, a2, a3, a4, a5, i0, iend)
             ! Assign values of Q_R and Q_L
             px%q_R(i0-1:iend+1,:,:) = a1*Q%f(i0-3:iend-1,:,:) + a2*Q%f(i0-2:iend,:,:) + a3*Q%f(i0-1:iend+1,:,:)&
                                     + a4*Q%f(i0:iend+2,:,:) + a5*Q%f(i0+1:iend+3,:,:)
             px%q_L(i0-1:iend+1,:,:) = a5*Q%f(i0-3:iend-1,:,:) + a4*Q%f(i0-2:iend,:,:) + a3*Q%f(i0-1:iend+1,:,:)&
                                     + a2*Q%f(i0:iend+2,:,:) + a1*Q%f(i0+1:iend+3,:,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR on ppm_reconstruction_x: invalid 1D reconstruction method: ', px%recon 
@@ -113,11 +119,14 @@ subroutine ppm_reconstruction_y(Q, py)
             a3 = -1._r8/12._r8
             a4 = a3
 
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(py, Q, a1, a2, a3, a4, j0, jend)
             ! Assign values of q_R and q_L
-            py%q_R(:,i0-2:iend+2,:) = a1*Q%f(:,i0-2:iend+2,:) + a2*Q%f(:,i0-3:iend+1,:)&
-                                    + a3*Q%f(:,i0-1:iend+3,:) + a4*Q%f(:,i0-4:iend,:)
-            py%q_L(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:)
-            py%q_R(:,i0-1:iend+1,:) = py%q_R(:,i0:iend+2,:)
+            py%q_R(:,j0-2:jend+2,:) = a1*Q%f(:,j0-2:jend+2,:) + a2*Q%f(:,j0-3:jend+1,:)&
+                                    + a3*Q%f(:,j0-1:jend+3,:) + a4*Q%f(:,j0-4:jend,:)
+            py%q_L(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:)
+            py%q_R(:,j0-1:jend+1,:) = py%q_R(:,j0:jend+2,:)
+            !$OMP END PARALLEL WORKSHARE
 
         case('hyppm') !Hybrid PPM from PL07
             ! coeffs from equations 41 and 42 from Putman and Lin 2007
@@ -127,11 +136,15 @@ subroutine ppm_reconstruction_y(Q, py)
             a4 =  27._r8/60._r8
             a5 =  -3._r8/60._r8
 
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(py, Q, a1, a2, a3, a4, a5, j0, jend)
             ! Assign values of Q_R and Q_L
-            py%q_R(:,i0-1:iend+1,:) = a1*Q%f(:,i0-3:iend-1,:) + a2*Q%f(:,i0-2:iend,:) + a3*Q%f(:,i0-1:iend+1,:)&
-                                    + a4*Q%f(:,i0:iend+2,:) + a5*Q%f(:,i0+1:iend+3,:)
-            py%q_L(:,i0-1:iend+1,:) = a5*Q%f(:,i0-3:iend-1,:) + a4*Q%f(:,i0-2:iend,:) + a3*Q%f(:,i0-1:iend+1,:)& 
-                                    + a2*Q%f(:,i0:iend+2,:) + a1*Q%f(:,i0+1:iend+3,:)
+            py%q_R(:,j0-1:jend+1,:) = a1*Q%f(:,j0-3:jend-1,:) + a2*Q%f(:,j0-2:jend,:) + a3*Q%f(:,j0-1:jend+1,:)&
+                                    + a4*Q%f(:,j0:jend+2,:) + a5*Q%f(:,j0+1:jend+3,:)
+            py%q_L(:,j0-1:jend+1,:) = a5*Q%f(:,j0-3:jend-1,:) + a4*Q%f(:,j0-2:jend,:) + a3*Q%f(:,j0-1:jend+1,:)& 
+                                    + a2*Q%f(:,j0:jend+2,:) + a1*Q%f(:,j0+1:jend+3,:)
+
+            !$OMP END PARALLEL WORKSHARE
 
         case default
             print*, 'ERROR on ppm_reconstruction_y: invalid 1D reconstruction method: ', py%recon
