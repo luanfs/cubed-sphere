@@ -241,7 +241,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
     !
     !--------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(simulation), intent(in) :: advsimul
+    type(simulation), intent(inout) :: advsimul
     type(scalar_field), intent(inout) :: Q
     type(vector_field), intent(inout) :: V_pu, V_pv
 
@@ -321,6 +321,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
 
     V_pv%ucontra_old%f = V_pv%ucontra%f
     V_pv%vcontra_old%f = V_pv%vcontra%f
+
+    ! CFL number
+    advsimul%cfl = maxval(abs(V_pu%ucontra%f))
+    advsimul%cfl = max(advsimul%cfl, maxval(abs(V_pv%vcontra%f)))
+    advsimul%cfl = advsimul%cfl*advsimul%dt/mesh%dx
     !print*,error
     !stop
 end subroutine compute_ic_adv

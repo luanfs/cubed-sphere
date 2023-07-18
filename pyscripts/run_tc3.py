@@ -32,7 +32,7 @@ dpmethods = ('rk2', 'rk1') # departure point formulation
 
 # Program to be run
 program = "./main"
-run = False # Run the simulation?
+run = True # Run the simulation?
 
 # Plotting parameters
 colormap = 'seismic'
@@ -46,7 +46,7 @@ def main():
     replace_line(pardir+'mesh.par', '2', 11)
 
     # Define velocity
-    vf = '1'
+    vf = '2'
     replace_line(pardir+'advection.par', vf, 5)
 
     # Get adv parameters
@@ -128,6 +128,8 @@ def main():
             error_linf[k,i] = errors[0]
             error_l1[k,i] = errors[1]
             error_l2[k,i] = errors[2]
+            cfl = errors[3]
+            cfl = str("{:.2e}".format(cfl))
             k = k+1
 
             #--------------------------------------------------------
@@ -140,8 +142,12 @@ def main():
             data = np.transpose(data)
             qabs_max = np.amax(abs(data))
             qmin, qmax = -qabs_max, qabs_max
+            title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+', sp = '\
+            +str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
+            +str(mt)+'\n \n'
+
             plot_scalar_field(data, lats, lons, \
-                             colormap, map_projection, fname, qmin, qmax)
+                             colormap, map_projection, fname, title, qmin, qmax)
             if vf == '4':
                 # Plot divergence
                 # Open the file and reshape

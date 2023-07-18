@@ -243,6 +243,7 @@ type simulation
     ! Time step
     real(r8):: dt
     real(r8):: dto2
+    real(r8):: cfl
 
     ! Initial condition
     integer(i4) :: ic
