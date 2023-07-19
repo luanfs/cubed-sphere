@@ -68,7 +68,9 @@ function q0_adv(lat, lon, ic)
     real(r8) :: x1, y1, z1 ! r3 coordinates of center point
     real(r8) :: lat0, lon0 ! latlon coordinates of center point
     real(r8) :: lat1, lon1 ! latlon coordinates of center point
-    real(r8) :: b0 ! Gaussian width 
+    real(r8) :: b0 ! Gaussian width
+    real(r8) :: u0, f
+    integer(i4):: m, n
 
     select case(ic)
         case(1) ! constant scalar field
@@ -96,6 +98,21 @@ function q0_adv(lat, lon, ic)
             q0_adv = dexp(-b0*((x-x1)**2+ (y-y1)**2 + (z-z1)**2)) + &
                      dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
 
+        case(4) ! steady state from will92
+            alpha = -45._r8*deg2rad ! Rotation angle
+            u0 = 2._r8*pi/5._r8     ! Wind speed
+            f = (-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))
+            q0_adv = 1.0 - f*f
+
+        case(5) ! Trigonometric field
+            m = 1
+            n = 1
+            q0_adv = -(-dcos(lon) * dsin(m * lon) * m * dcos(n * lat) ** 4 / dcos(lat) - &
+            dsin(lon) * dcos(m * lon) * m ** 2 * dcos(n * lat) ** 4 / dcos(lat) + &
+            12.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 2 * dsin(n *lat) ** 2 * n ** 2 * dcos(lat) - &
+            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 4 * n ** 2 * dcos(lat) + &
+            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 3 * dsin(n * lat) * n * dsin(lat)) / dcos(lat)
+
         case default
             print*, "ERROR on q0_adv: invalid initial condition."
             stop
@@ -109,7 +126,7 @@ subroutine velocity_adv(ulon, vlat, lat, lon, time, vf)
     ! problem on the sphere
     ! 
     ! Possible velocity fields (vf)
-    ! 1 - zonal wind
+
     ! 2 - rotated zonal wind
     ! 3 - non divergent
     ! 4 - non divergent
