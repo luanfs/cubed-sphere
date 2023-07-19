@@ -251,6 +251,9 @@ type simulation
     ! Velocity field
     integer(i4) :: vf
 
+    ! Degree of interpolation at ghost cells
+    integer(i4) :: interp_degree
+
     ! Logical for exact solution
     logical :: exactsolution
 

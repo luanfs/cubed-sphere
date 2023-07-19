@@ -31,7 +31,8 @@ use input, only: &
 !Simulation routines
 use simulpack, only: &
    grid_quality, &
-   div_test
+   div_test, &
+   interpolation_test
 
 !Deallocation routines
 use deallocation, only: &
@@ -58,7 +59,10 @@ select case(simulcase)
     case(1) ! Grid generation, storage and quality
         call grid_quality(mesh)
 
-    case(2) ! Divergence test
+    case(2) ! Ghost cell interpolation testing
+        call interpolation_test(mesh)
+
+    case(3) ! Divergence test
         call div_test(mesh)
 
     case default
