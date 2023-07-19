@@ -118,7 +118,6 @@ subroutine i4_2darray_allocation(data, i0, iend, j0, jend)
 end subroutine i4_2darray_allocation 
 
 
-
 subroutine r8_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
     ! r8_3DARRAY_ALLOCATION
@@ -180,6 +179,7 @@ subroutine point_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     return
 end subroutine point_3darray_allocation 
 
+
 subroutine point_2darray_allocation(data, i0, iend, j0, jend)
     !---------------------------------------------------
     ! POINT_2DARRAY_ALLOCATION
@@ -208,6 +208,7 @@ subroutine point_2darray_allocation(data, i0, iend, j0, jend)
     end if
     return
 end subroutine point_2darray_allocation 
+
 
 subroutine vector_3darray_allocation(data, i0, iend, j0, jend, k0, kend)
     !---------------------------------------------------
@@ -445,13 +446,9 @@ subroutine ppm_parabola_allocation(p, mesh)
     ! Allocate the cubed-sphere points
     select case(p%dir)
         case(1) ! x direction
-            call r8_3darray_allocation(p%f_L,   n0, nend+1, n0, nend, 1, nbfaces) 
-            call r8_3darray_allocation(p%f_R,   n0, nend+1, n0, nend, 1, nbfaces) 
             call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend, 1, nbfaces) 
 
       case(2) ! y direction
-            call r8_3darray_allocation(p%f_L,   n0, nend, n0, nend+1, 1, nbfaces) 
-            call r8_3darray_allocation(p%f_R,   n0, nend, n0, nend+1, 1, nbfaces) 
             call r8_3darray_allocation(p%f_upw, n0, nend, n0, nend+1, 1, nbfaces) 
 
       case default

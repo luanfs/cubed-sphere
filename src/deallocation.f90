@@ -68,10 +68,8 @@ subroutine adv_deallocation()
     deallocate(div_ugq_error%f)
     deallocate(Qx%f, Qy%f)
 
-    deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_L, px%f_R, &
-               px%f_upw, px%df, px%Q%f)
-    deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_L, py%f_R, &
-               py%f_upw, py%df, py%Q%f)
+    deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
+    deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)
 
     deallocate(wind_pu%u%f)
     deallocate(wind_pu%v%f)
