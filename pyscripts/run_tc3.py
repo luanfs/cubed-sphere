@@ -13,7 +13,6 @@ import sys
 import os.path
 sys.path.append(srcdir)
 
-
 import numpy as np
 from configuration      import get_parameters, get_adv_parameters, gridname, replace_line
 from plot               import plot_scalar_field
@@ -23,12 +22,18 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16,32,64,128,256,512) # Values of N
-reconmethods = ('ppm','ppm') # reconstruction methods
-#splitmethods = ('avlt','avlt') # splitting
-splitmethods = ('avlt','pl07') # splitting
-mtmethods = ('mt0', 'pl07') # metric tensor formulation
-dpmethods = ('rk2', 'rk1') # departure point formulation
+N = (16, 32, 64, 128, 256, ) # Values of N
+reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
+splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
+mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
+dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
+mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
+
+#reconmethods = ('hyppm',) # reconstruction methods
+#splitmethods = ('avlt',) # splitting
+#mtmethods = ('mt0',) # metric tensor formulation
+#dpmethods = ('rk2',) # departure point formulation
+#mfixers = ('af',) # mass fixers 
 
 # Program to be run
 program = "./main"
@@ -43,10 +48,10 @@ def main():
     _, kind  = get_parameters()
 
     # Define divergence test in mesh.par'
-    replace_line(pardir+'mesh.par', '2', 11)
+    replace_line(pardir+'mesh.par', '3', 11)
 
     # Define velocity
-    vf = '2'
+    vf = '1'
     replace_line(pardir+'advection.par', vf, 5)
 
     # Get adv parameters
@@ -88,6 +93,7 @@ def main():
         recon = reconmethods[i]
         mt = mtmethods[i]
         dp = dpmethods[i]
+        mf = mfixers[i]
 
         # Update reconstruction method in advection.par
         replace_line(pardir+'advection.par', recon, 9)
@@ -98,9 +104,11 @@ def main():
         # Update metric tensor method in advection.par
         replace_line(pardir+'advection.par', mt, 13)
 
-        # Update departure point  method in advection.par
+        # Update departure point method in advection.par
         replace_line(pardir+'advection.par', dp, 15)
 
+        # Update mass fixer in advection.par
+        replace_line(pardir+'advection.par', mf, 17)
 
         k = 0
         for n in N:
@@ -111,7 +119,7 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp
+            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf
 
             # File to be opened
             filename = datadir+div_name+"_"+grid_name+"_errors.txt"
@@ -144,7 +152,7 @@ def main():
             qmin, qmax = -qabs_max, qabs_max
             title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+', sp = '\
             +str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
-            +str(mt)+'\n \n'
+            +str(mt)+', mf = '+str(mf) +'\n \n'
 
             plot_scalar_field(data, lats, lons, \
                              colormap, map_projection, fname, title, qmin, qmax)
@@ -181,7 +189,8 @@ def main():
             recon = reconmethods[k]
             mt = mtmethods[k]
             dp = dpmethods[k]
-            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp)
+            mf = mfixers[k]
+            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf)
 
         title = 'Divergence error, vf='+ str(vf)+', norm='+norm_title[e]
         filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'

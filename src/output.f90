@@ -417,6 +417,7 @@ subroutine write_final_errors(advsimul, mesh, filename)
     write(iunit, *) advsimul%l1_error
     write(iunit, *) advsimul%l2_error
     write(iunit, *) advsimul%cfl
+    write(iunit, *) advsimul%mass_variation
     close(iunit)
 end subroutine write_final_errors
 

@@ -51,7 +51,8 @@ use input, only: &
 ! Initial conditions
 use advection_ic, only: &
     init_adv_vars, &
-    compute_exact_div
+    compute_exact_div, &
+    compute_ic_adv
 
 ! Advection timestep
 use advection_timestep, only: &
@@ -62,6 +63,10 @@ use linear_algebra, only: &
     error_norm_max_rel, &
     error_norm_1_rel, &
     error_norm_2_rel
+
+! Diagnostics 
+use diagnostics, only: &
+    mass_computation
 
 implicit none
 
@@ -221,6 +226,7 @@ subroutine div_test(mesh)
     ! Plot scalar fields
     call plot_scalarfield(div_ugq, mesh)
     call plot_scalarfield(div_ugq_error, mesh)
+    advsimul%mass_variation = mass_computation(div_ugq, mesh)
 
     ! Deallocate vars
     call adv_deallocation()
@@ -228,10 +234,10 @@ subroutine div_test(mesh)
     ! Print errors on screen
     print*
     print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
-
+    print '(a22, 1e16.8)','div mass:', advsimul%mass_variation
     ! Write errors in a file
     filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
-    call  write_final_errors(advsimul, mesh, filename) 
+    call write_final_errors(advsimul, mesh, filename) 
 
 end subroutine div_test
 

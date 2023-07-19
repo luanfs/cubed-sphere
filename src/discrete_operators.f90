@@ -25,10 +25,9 @@ use ppm_flux, only: &
   ppm_flux_pu, &
   ppm_flux_pv
 
-! Diagnostics
-use diagnostics, only: &
-  mass_computation
- 
+! Mass fixer
+use mass_fixer
+
 implicit none
 
 contains 
@@ -232,11 +231,16 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
         stop
     end select
- 
+
     ! Compute fluxes
     call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt)
     call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
 
+    ! Applies mass fixer (average at cube interfaces)
+    if (advsimul%mf=='af') then
+        call average_flux_at_cube_intefaces(px, py, mesh%dx, mesh%dy, advsimul%dt)
+    end if
+ 
     ! Compute the divergence
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
@@ -245,12 +249,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
 
     ! Applies mass fixer (project divergence in nullspace)
     if (advsimul%mf=='pr') then
-        advsimul%mass = mass_computation(div_ugq, mesh)
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(div_ugq, i0, iend, j0, jend, advsimul, mesh)
-        div_ugq%f(i0:iend,j0:jend,:) = div_ugq%f(i0:iend,j0:jend,:) - &
-        mesh%mt_pc(i0:iend,j0:jend,:)*advsimul%mass/advsimul%a2
-        !$OMP END PARALLEL WORKSHARE
+        call divergence_projection(div_ugq, advsimul, mesh)
     end if
 
 end subroutine divergence

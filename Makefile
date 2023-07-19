@@ -17,6 +17,7 @@ bin/linear_algebra.obj \
 bin/sphgeo.obj \
 bin/diagnostics.obj \
 bin/ppm_reconstruction.obj \
+bin/mass_fixer.obj \
 bin/ppm_flux.obj \
 bin/advection_vars.obj \
 bin/discrete_operators.obj \
@@ -119,6 +120,11 @@ bin/ppm_flux.obj: src/ppm_flux.f90
 bin/ppm_reconstruction.obj: src/ppm_reconstruction.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv ppm_reconstruction.mod bin/.
+
+#Mass fixer
+bin/mass_fixer.obj: src/mass_fixer.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv mass_fixer.mod bin/.
 
 #Discrete operators
 bin/discrete_operators.obj: src/discrete_operators.f90
