@@ -452,7 +452,8 @@ subroutine getadvparameters(advsimul)
     read(fileunit,*)  advsimul%dp
     read(fileunit,*)  buffer
     read(fileunit,*)  advsimul%mf
- 
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%interp_degree
     close(fileunit)
     return
 end subroutine getadvparameters
