@@ -243,7 +243,12 @@ type simulation
     ! Time step
     real(r8):: dt
     real(r8):: dto2
+
+    ! CFL
     real(r8):: cfl
+
+    ! var used in mass fixer
+    real(r8):: a2
 
     ! Initial condition
     integer(i4) :: ic
@@ -272,6 +277,9 @@ type simulation
     ! Metric tensor scheme
     character(len=16) :: mt
 
+    ! Mass fixer scheme
+    character(len=16) :: mf
+
     ! Departure point scheme
     character(len=16) :: dp
 
@@ -293,8 +301,6 @@ type ppm_parabola
     real (r8), allocatable  :: q6(:,:,:)
 
     ! parabola fluxes
-    real (r8), allocatable  :: f_L(:,:,:) ! flux from left
-    real (r8), allocatable  :: f_R(:,:,:) ! flux from right
     real (r8), allocatable  :: f_upw(:,:,:)  ! upwind flux
 
     ! Divergence of flux

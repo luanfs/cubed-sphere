@@ -6,13 +6,15 @@
 #Time step
 0.00078125
 #1D reconstruction (ppm or hyppm)
-ppm
+hyppm
 #2D operator splitting (avlt or pl07)
-pl07
+avlt
 #Metric tensor treatment (pl07 or mt0)
-pl07
+mt0
 #Departure point scheme (rk1 or rk2)
-rk1
+rk2
+#Mass fixer (none, af, pr)
+pr
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
@@ -31,6 +33,11 @@ rk1
 #Possible metric tensor formulation
 #  case(pl07) - assume a constant metric tensor in each 1D integration domain
 #  case(mt0)  - incorporates the metric tensor in PPM reconstruction
+#Possible mass fixers
+#  case(none) - none
+#  case(af) - average flux at cube edges
+#  case(pr) - divergence projection
 #Possible departure point computation
 #  case(1) - Euler
 #  case(2) - Second-order Runge Kutta
+#

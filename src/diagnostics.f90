@@ -8,7 +8,9 @@ module diagnostics
 use constants, only: &
     i4, &
     r8, &
-    nbfaces
+    nbfaces, &
+    i0, iend, &
+    j0, jend
 
 ! Data structures
 use datastruct, only: &
@@ -24,13 +26,6 @@ function mass_computation(Q, mesh)
     type(cubedsphere)  :: mesh
     type(scalar_field) :: Q
     real(r8) :: mass_computation
-    integer :: i0, iend, j0, jend
-
-    ! Interior of panel grid
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
 
     !---------------------------------------------------------
     ! Computes the mass of the scalar field Q
@@ -38,7 +33,7 @@ function mass_computation(Q, mesh)
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(Q,mesh) &
     !$OMP SHARED(i0,iend,j0,jend)
-    mass_computation = sum(Q%f(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))
+    mass_computation = sum(Q%f(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
     !$OMP END PARALLEL WORKSHARE
 
 end function mass_computation

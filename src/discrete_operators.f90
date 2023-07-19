@@ -25,6 +25,10 @@ use ppm_flux, only: &
   ppm_flux_pu, &
   ppm_flux_pv
 
+! Diagnostics
+use diagnostics, only: &
+  mass_computation
+ 
 implicit none
 
 contains 
@@ -188,7 +192,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     ! dimension splliting method
     !---------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
-    type(simulation), intent(in) :: advsimul
+    type(simulation), intent(inout) :: advsimul
     type(vector_field), intent(inout) :: wind_pu
     type(vector_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cx_pu
@@ -238,6 +242,17 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
     div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
     !$OMP END PARALLEL WORKSHARE
+
+    ! Applies mass fixer (project divergence in nullspace)
+    if (advsimul%mf=='pr') then
+        advsimul%mass = mass_computation(div_ugq, mesh)
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_ugq, i0, iend, j0, jend, advsimul, mesh)
+        div_ugq%f(i0:iend,j0:jend,:) = div_ugq%f(i0:iend,j0:jend,:) - &
+        mesh%mt_pc(i0:iend,j0:jend,:)*advsimul%mass/advsimul%a2
+        !$OMP END PARALLEL WORKSHARE
+    end if
+
 end subroutine divergence
 
 

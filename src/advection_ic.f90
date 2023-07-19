@@ -191,7 +191,6 @@ subroutine init_adv_vars(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
     ! aux
-    integer(i4) :: i0, iend, j0, jend
     integer(i4) :: i, j, p
 
     ! ppm direction
@@ -222,6 +221,9 @@ subroutine init_adv_vars(mesh)
     ! Compute initial mass
     advsimul%mass0 = mass_computation(Q, mesh)
 
+    ! var used in pr mass fixer
+    advsimul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
+
     ! Define wheter exact solution is available or not
     if(advsimul%vf == 1)then
         advsimul%exactsolution = .true.
@@ -239,7 +241,8 @@ subroutine init_adv_vars(mesh)
     advsimul%vf_name = adjustl(advsimul%vf_name)
 
     advsimul%name = "ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%opsplit) &
-    //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp)
+    //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp) &
+    //"_mf"//trim(advsimul%mf)
 
 end subroutine init_adv_vars
 

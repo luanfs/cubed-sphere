@@ -8,7 +8,7 @@ equiangular
 !Show ongoing process details on screen? 0-No; 1-Yes
 1
 !Test case to be done - uncomment method to be used in imodel.f90
-2
+3
 !If mesh read from file give filename (Extensions: .xyz)
 file.xyz
 
@@ -17,4 +17,6 @@ file.xyz
 !   equiangular
 
 !Possible test cases
-!  case(1) ! Grid generation and storage
+!  case(1) ! Grid generation, storage and quality (see plotgrid.py and plot_tc1.py for outputs)
+!  case(2) ! Interpolation at ghost cell errors (see interpolation.par and run_tc2.py)
+!  case(3) ! Divergence error testing (see advection.par and run_tc3.py)

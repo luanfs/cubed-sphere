@@ -45,7 +45,8 @@ use output, only: &
 
 ! Input
 use input, only: &
-    getadvparameters
+    getadvparameters, &
+    getinterp_parameters
 
 ! Initial conditions
 use advection_ic, only: &
@@ -114,6 +115,67 @@ subroutine grid_quality(mesh)
 
     deallocate(area%f, length%f, mt_pc%f)
 end subroutine grid_quality 
+
+
+subroutine interpolation_test(mesh)
+    use advection_vars
+    !---------------------------------------------------
+    ! INTEPORLATION_TEST
+    ! routine to test the lagrange interpolation
+    ! at ghost cell positions
+    !--------------------------------------------------
+    type(cubedsphere),intent(inout):: mesh
+
+    ! aux integer
+    integer(i4) :: i, j, p
+
+    !File name for output
+    character (len=256):: filename
+
+    ! Get test parameter from par/interpolation.par
+    call getinterp_parameters(advsimul)
+
+    print*,'hiiiiiiii'
+
+    ! Initialize the variables (allocation, initial condition,...)
+    !call init_adv_vars(mesh)
+
+    !advsimul%name = "div_"//trim(advsimul%name)
+
+    ! Multiply Q by the metric tensor
+    !Q%f = 1._r8
+
+    ! Compute the divergence obtained in one timestep
+    !call adv_timestep(mesh)
+
+    ! Exact divergence
+    !call compute_exact_div(div_ugq_exact, mesh, advsimul)
+
+    ! Compute the errors
+    !call compute_errors_field(div_ugq, div_ugq_exact, div_ugq_error, &
+    !  advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
+
+    ! Name scalar fields
+    !div_ugq_error%name = trim(advsimul%name)//"_error"
+    !div_ugq%name = trim(advsimul%name)
+
+    ! Plot scalar fields
+    !call plot_scalarfield(div_ugq, mesh)
+    !call plot_scalarfield(div_ugq_error, mesh)
+
+    ! Deallocate vars
+    !call adv_deallocation()
+
+    ! Print errors on screen
+    !print*
+    !print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
+
+    ! Write errors in a file
+    !filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
+    !call  write_final_errors(advsimul, mesh, filename) 
+
+end subroutine interpolation_test
+
 
 subroutine div_test(mesh)
     use advection_vars

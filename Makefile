@@ -15,6 +15,7 @@ bin/datastruct.obj \
 bin/miscellaneous.obj \
 bin/linear_algebra.obj \
 bin/sphgeo.obj \
+bin/diagnostics.obj \
 bin/ppm_reconstruction.obj \
 bin/ppm_flux.obj \
 bin/advection_vars.obj \
@@ -24,7 +25,6 @@ bin/deallocation.obj \
 bin/output.obj \
 bin/input.obj \
 bin/cubed_sphere.obj \
-bin/diagnostics.obj \
 bin/departure_point.obj \
 bin/advection_ic.obj \
 bin/advection_timestep.obj \
@@ -75,6 +75,11 @@ bin/sphgeo.obj: src/sphgeo.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv sphgeo.mod bin/.
 
+#Diagnostics
+bin/diagnostics.obj: src/diagnostics.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv diagnostics.mod bin/.
+
 #Data allocation
 bin/allocation.obj: src/allocation.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
@@ -99,11 +104,6 @@ bin/input.obj: src/input.f90
 bin/cubed_sphere.obj: src/cubed_sphere.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv cubed_sphere.mod bin/.
-
-#Diagnostics
-bin/diagnostics.obj: src/diagnostics.f90
-	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
-	mv diagnostics.mod bin/.
 
 #Departure point
 bin/departure_point.obj: src/departure_point.f90
