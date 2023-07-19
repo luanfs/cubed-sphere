@@ -416,8 +416,7 @@ end subroutine
 subroutine getadvparameters(advsimul)
     !---------------------------------------------------
     ! GETADVPARAMETERS
-    !    Reads mesh parameters from file named "mesh.par"
-    !    Saves parameters on mesh structure
+    !    Reads advection parameters from file named "advection.par"
     !--------------------------------------------------
     type(simulation), intent(inout):: advsimul
     character (len=60):: filename
@@ -456,6 +455,41 @@ subroutine getadvparameters(advsimul)
     return
 end subroutine getadvparameters
 
+
+subroutine getinterp_parameters(advsimul)
+    !---------------------------------------------------
+    ! GETINTERP_PARAMETERS
+    !    Reads advection parameters from file named "advection.par"
+    !--------------------------------------------------
+    type(simulation), intent(inout):: advsimul
+    character (len=60):: filename
+    character (len=300):: buffer
+    integer (i4):: fileunit
+    integer:: i
+    integer:: n
+
+    !Standard advection parameters file
+    filename=trim(pardir)//"interpolation.par"
+
+    print*,"Interpolation parameters: ", trim(filename)
+    print*
+    call getunit(fileunit)
+
+    !A parameters file must exist 
+    open(fileunit,file=filename,status='old')
+
+    read(fileunit,*)  buffer
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%ic
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%vf
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%interp_degree
+    read(fileunit,*)  buffer
+ 
+    close(fileunit)
+    return
+end subroutine getinterp_parameters
 
 end module input 
 
