@@ -39,6 +39,7 @@ type(scalar_field) :: Qy
 ! PPM fields
 type(ppm_parabola) :: px ! ppm in x direction
 type(ppm_parabola) :: py ! ppm in y direction
+
 contains 
 
 end module advection_vars

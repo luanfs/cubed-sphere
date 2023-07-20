@@ -153,10 +153,16 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     px%q6(i0-1:iend+1,:,:) = 6._r8*px%Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
     !$OMP END PARALLEL WORKSHARE
 
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pu_av, cx_pu, px) & 
+    !$OMP SHARED(n0, nend, i0, iend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     ! Upwind fluxes
-    do p = 1, nbfaces
-        do i = i0, iend+1
-            do j = n0, nend
+    do i = i0, iend+1
+        do j = n0, nend
+            do p = 1, nbfaces
                 ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
                 if(cx_pu%f(i,j,p) >= 0._r8)then
                     ! Flux at left edges
@@ -174,6 +180,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! metric tensor multiplication
     if (mt == 'pl07') then
@@ -229,9 +236,15 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
     py%q6(:,j0-1:jend+1,:) = 6._r8*py%Q%f(:,j0-1:jend+1,:) - 3._r8*(py%q_R(:,j0-1:jend+1,:) + py%q_L(:,j0-1:jend+1,:))
     !$OMP END PARALLEL WORKSHARE
 
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = j0, jend+1
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pv_av, cy_pv, py) & 
+    !$OMP SHARED(n0, nend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
+    do i = n0, nend
+        do j = j0, jend+1
+            do p = 1, nbfaces
                 ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
                 if(cy_pv%f(i,j,p) >= 0._r8)then
                     ! Flux at left edges
@@ -249,6 +262,7 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! metric tensor multiplication
     if (mt == 'pl07') then

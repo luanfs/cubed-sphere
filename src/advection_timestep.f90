@@ -98,17 +98,16 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     real(r8) :: lat, lon
     real(r8) :: ulon, vlat, ucontra, vcontra
     
-
-    ! interior grid indexes
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
-
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pu, mesh) & 
+    !$OMP SHARED(n0, nend, nbfaces, vf) &
+    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !$OMP SCHEDULE(static) 
     ! Vector field at pu
-    do p = 1 , nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
+    do i = n0, nend+1
+        do j = n0, nend
+            do p = 1, nbfaces
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
@@ -119,11 +118,18 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
             end do
         end do
     end do    
+    !$OMP END PARALLEL DO
 
     ! Vector field at pv
-    do p = 1 , nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pv, mesh) & 
+    !$OMP SHARED(n0, nend, nbfaces, vf) &
+    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !$OMP SCHEDULE(static) 
+    do i = n0, nend
+        do j = n0, nend+1
+            do p = 1, nbfaces
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
@@ -134,7 +140,7 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
             end do
         end do
     end do
- 
+    !$OMP END PARALLEL DO
 end subroutine adv_update
 
 end module advection_timestep

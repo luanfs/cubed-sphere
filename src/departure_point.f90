@@ -44,20 +44,34 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
     select case (dp)
         case ('rk1')
             ! RK1
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(wind_pu, wind_pv)
             wind_pu%ucontra_time_av%f = wind_pu%ucontra%f
             wind_pv%vcontra_time_av%f = wind_pv%vcontra%f
             !wind_pu%ucontra_time_av%f = 1.5_r8*wind_pu%ucontra%f-0.5_r8*wind_pu%ucontra_old%f
             !wind_pv%vcontra_time_av%f = 1.5_r8*wind_pv%vcontra%f-0.5_r8*wind_pv%vcontra_old%f
- 
+            !$OMP END PARALLEL WORKSHARE
         case ('rk2')
             ! RK2
             ! time extrapolation to obtaind the wind centererd at time
+
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(wind_pu, wind_pv)
             wind_pu%ucontra_time_centered%f = 1.5_r8*wind_pu%ucontra%f-0.5_r8*wind_pu%ucontra_old%f
             wind_pv%vcontra_time_centered%f = 1.5_r8*wind_pv%vcontra%f-0.5_r8*wind_pv%vcontra_old%f
+            !$OMP END PARALLEL WORKSHARE
+
             ! wind for dp in x direction
-            do p =1, nbfaces
-                do j = n0, nend
-                    do i = i0, iend+1
+            !$OMP PARALLEL DO &
+            !$OMP DEFAULT(NONE) & 
+            !$OMP SHARED(wind_pu) & 
+            !$OMP SHARED(a, a1, a2, u1, u2, dto2, dx) &
+            !$OMP SHARED(n0, nend, i0, iend, nbfaces) &
+            !$OMP PRIVATE(i, j, p) &
+            !$OMP SCHEDULE(static)
+            do j = n0, nend
+                do i = i0, iend+1
+                    do p = 1, nbfaces
                         ! Linear interpolation weight
                         a = wind_pu%ucontra%f(i,j,p)*dto2/dx
 
@@ -77,11 +91,19 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
                     end do
                 end do
             end do
+            !$OMP END PARALLEL DO
 
             ! wind for dp in y direction
-            do p =1, nbfaces
-                do i = n0, nend
-                    do j = j0, jend+1
+            !$OMP PARALLEL DO &
+            !$OMP DEFAULT(NONE) & 
+            !$OMP SHARED(wind_pv) & 
+            !$OMP SHARED(a, a1, a2, u1, u2, dto2, dx) &
+            !$OMP SHARED(n0, nend, j0, jend, nbfaces) &
+            !$OMP PRIVATE(i, j, p) &
+            !$OMP SCHEDULE(static)
+            do i = n0, nend
+                do j = j0, jend+1
+                    do p = 1, nbfaces
                         ! Linear interpolation weight
                         a = wind_pv%vcontra%f(i,j,p)*dto2/dx
 
@@ -101,6 +123,7 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx)
                     end do
                 end do
             end do
+            !$OMP END PARALLEL DO
 
         case default
             print*, 'ERROR in adv_time_averaged_wind: invalid operator splitting,  ', dp
