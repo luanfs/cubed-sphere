@@ -4,17 +4,19 @@
 #Vector field
 1
 #Time step
-0.00078125
+0.0015625
 #1D reconstruction (ppm or hyppm)
 hyppm
 #2D operator splitting (avlt or pl07)
-avlt
+pl07
 #Metric tensor treatment (pl07 or mt0)
-mt0
+pl07
 #Departure point scheme (rk1 or rk2)
-rk2
+rk1
 #Mass fixer (none, af, pr)
-pr
+none
+#Ghost cells interpolation degree
+3
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow

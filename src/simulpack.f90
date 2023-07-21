@@ -68,6 +68,10 @@ use linear_algebra, only: &
 use diagnostics, only: &
     mass_computation
 
+! Duogrid interpolation
+use duogrid_interpolation, only: &
+    dg_interp
+
 implicit none
 
 contains 
@@ -137,15 +141,24 @@ subroutine interpolation_test(mesh)
     !File name for output
     character (len=256):: filename
 
+    !Errors
+    real(r8) :: es, en, ew, ee
+
     ! Get test parameter from par/interpolation.par
     call getinterp_parameters(advsimul)
 
-    print*,'hiiiiiiii'
-
     ! Initialize the variables (allocation, initial condition,...)
-    !call init_adv_vars(mesh)
-
+    call init_adv_vars(mesh)
     !advsimul%name = "div_"//trim(advsimul%name)
+
+    ! Duogrid nterpolation of the scalar field Q 
+    call dg_interp(Q, mesh, advsimul)
+
+    ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1)-Q%f(iend+1:,j0:jend,1)))
+    ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1)-Q%f(:i0-1,j0:jend,1)))
+    en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1)-Q%f(i0:iend,jend+1:,1)))
+    es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1)-Q%f(i0:iend,:j0-1,1)))
+    print*,ee, ew, en, es
 
     ! Multiply Q by the metric tensor
     !Q%f = 1._r8

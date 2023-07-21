@@ -1,13 +1,13 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-512
+256
 !Kind of mesh use: equiangular
 equiangular
 !Loadable grid? 0-No; 1-Yes
 1
 !Show ongoing process details on screen? 0-No; 1-Yes
 1
-!Test case to be done - uncomment method to be used in imodel.f90
+!Test case to be done
 3
 !If mesh read from file give filename (Extensions: .xyz)
 file.xyz

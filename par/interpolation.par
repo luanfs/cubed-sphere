@@ -4,7 +4,7 @@
 #Vector field
 1
 #Interpolation degree
-3
+5
 #-----------Description of parameters -------------------------------------
 #Possible scalar fields
 #  case(1) - constant flow

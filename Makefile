@@ -18,6 +18,7 @@ bin/sphgeo.obj \
 bin/diagnostics.obj \
 bin/ppm_reconstruction.obj \
 bin/mass_fixer.obj \
+bin/duogrid_interpolation.obj \
 bin/ppm_flux.obj \
 bin/advection_vars.obj \
 bin/discrete_operators.obj \
@@ -125,6 +126,11 @@ bin/ppm_reconstruction.obj: src/ppm_reconstruction.f90
 bin/mass_fixer.obj: src/mass_fixer.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv mass_fixer.mod bin/.
+
+#Duogrid interpolation
+bin/duogrid_interpolation.obj: src/duogrid_interpolation.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv duogrid_interpolation.mod bin/.
 
 #Discrete operators
 bin/discrete_operators.obj: src/discrete_operators.f90

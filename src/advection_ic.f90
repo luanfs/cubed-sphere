@@ -216,7 +216,8 @@ subroutine init_adv_vars(mesh)
     advsimul%dto2 = advsimul%dt*0.5_r8
 
     ! Compute the initial conditions
-    call compute_ic_adv(Q, wind_pu, wind_pv, mesh, advsimul)
+    call compute_ic_adv(Q_exact, wind_pu, wind_pv, mesh, advsimul)
+    Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
 
     ! Compute initial mass
     advsimul%mass0 = mass_computation(Q, mesh)
@@ -283,8 +284,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
 
     ! Scalar field at pc
     do p = 1, nbfaces
-        do i = i0, iend
-            do j = j0, jend
+        do i = n0, nend
+            do j = n0, nend
                 lat  = mesh%pc(i,j,p)%lat
                 lon  = mesh%pc(i,j,p)%lon
                 Q%f(i,j,p) = q0_adv(lat, lon, advsimul%ic)
