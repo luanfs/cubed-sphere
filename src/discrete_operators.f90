@@ -32,7 +32,7 @@ implicit none
 
 contains 
 
-subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
+subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt)
     !---------------------------------------------------
     !
     ! Dimension splitting operators implementation
@@ -50,11 +50,10 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(cubedsphere), intent(inout) :: mesh
-    character(len=16) :: mt ! metric tensor formulation
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
 
     ! F operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -64,7 +63,7 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt)
 
 end subroutine F_operator
 
-subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
+subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt)
     !---------------------------------------------------
     !
     ! Dimension splitting operators implementation
@@ -82,11 +81,10 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
     type(cubedsphere), intent(inout) :: mesh
-    character(len=16) :: mt ! metric tensor formulation
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
 
     ! G operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -96,7 +94,7 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt)
 
 end subroutine G_operator
 
-subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
+subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, sp)
     !---------------------------------------------------
     ! Inner flux operator in x direction
     !---------------------------------------------------
@@ -105,12 +103,11 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(cubedsphere), intent(inout) :: mesh
-    character(len=16) :: mt ! metric tensor formulation
     character(len=16) :: sp ! splitting method
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh, mt)
+    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
 
     ! F operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -139,7 +136,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, mt, sp)
  
 end subroutine inner_f_operator
 
-subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
+subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, sp)
     !---------------------------------------------------
     ! Inner flux operator in y direction
     !---------------------------------------------------
@@ -148,12 +145,11 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, mt, sp)
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
     type(cubedsphere), intent(inout) :: mesh
-    character(len=16) :: mt ! metric tensor formulation
     character(len=16) :: sp ! splitting method
     real(r8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh, mt)
+    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(py, mesh, j0, jend, dt)
@@ -204,8 +200,8 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
 
     ! Dimension splitting operators
-    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
-    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt, advsimul%opsplit)
+    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
+    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
 
     ! Compute next splitting input
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -233,8 +229,8 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     end select
 
     ! Compute fluxes
-    call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%mt)
-    call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%mt)
+    call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
+    call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
 
     ! Applies mass fixer (average at cube interfaces)
     if (advsimul%mf=='af') then

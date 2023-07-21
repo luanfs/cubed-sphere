@@ -45,7 +45,7 @@ implicit none
 
 contains 
 
-subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
+subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PU
     !
@@ -67,7 +67,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
             call ppm_reconstruction_x(Q, px)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
+            call numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
 
         case default
             print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
@@ -78,7 +78,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
 end subroutine ppm_flux_pu
 
 
-subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
+subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
     !---------------------------------------------------------------------------------
     ! PPM_FLUX_PV
     !
@@ -100,7 +100,7 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
             call ppm_reconstruction_y(Q, py)
 
             ! Compute the fluxes
-            call numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
+            call numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
 
         case default
             print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
@@ -110,7 +110,7 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
 
 end subroutine ppm_flux_pv
 
-subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
+subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PU
     !
@@ -122,7 +122,6 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     type(ppm_parabola), intent(inout) :: px ! parabola
     type(scalar_field), intent(in) :: V_pu_av ! time averaged wind at pu points 
     type(scalar_field), intent(in) :: cx_pu   ! CFL number of V_pu_av
-    character(len=16) :: mt ! metric tensor formulation
     integer(i4) :: i, j, p
 
     select case(px%mt)
@@ -183,7 +182,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     !$OMP END PARALLEL DO
 
     ! metric tensor multiplication
-    if (mt == 'pl07') then
+    if (px%mt == 'pl07') then
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(px, mesh)
         px%f_upw(:,:,:) = px%f_upw(:,:,:)*mesh%mt_pu(:,:,:)
@@ -193,7 +192,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh, mt)
     return 
 end subroutine numerical_flux_ppm_pu
 
-subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
+subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
     !---------------------------------------------------------------------------------
     ! NUMERICAL_FLUX_PPM_PV
     !
@@ -205,7 +204,6 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
     type(ppm_parabola), intent(inout) :: py ! parabola
     type(scalar_field), intent(in) :: V_pv_av ! time averaged wind at pv points 
     type(scalar_field), intent(in) :: cy_pv   ! CFL number of V_pv_av
-    character(len=16) :: mt ! metric tensor formulation
     integer(i4) :: i, j, p
 
     select case(py%mt)
@@ -265,7 +263,7 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh, mt)
     !$OMP END PARALLEL DO
 
     ! metric tensor multiplication
-    if (mt == 'pl07') then
+    if (py%mt == 'pl07') then
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(py, mesh) 
         py%f_upw(:,:,:) = py%f_upw(:,:,:)*mesh%mt_pv(:,:,:)
