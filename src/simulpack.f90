@@ -154,12 +154,13 @@ subroutine interpolation_test(mesh)
     ! Duogrid nterpolation of the scalar field Q 
     call dg_interp(Q, mesh, advsimul)
 
-    ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1)-Q%f(iend+1:,j0:jend,1)))
-    ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1)-Q%f(:i0-1,j0:jend,1)))
-    en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1)-Q%f(i0:iend,jend+1:,1)))
-    es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1)-Q%f(i0:iend,:j0-1,1)))
+    p=6
+    ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1:p)-Q%f(iend+1:,j0:jend,1:p)))
+    ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1:p)-Q%f(:i0-1,j0:jend,1:p)))
+    en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1:p)-Q%f(i0:iend,jend+1:,1:p)))
+    es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1:p)-Q%f(i0:iend,:j0-1,1:p)))
     print*,ee, ew, en, es
-
+    stop
     ! Multiply Q by the metric tensor
     !Q%f = 1._r8
 
