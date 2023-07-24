@@ -71,6 +71,10 @@ subroutine adv_deallocation()
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
     deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)
 
+    deallocate(L_pc%y_support, L_pc%f_support, L_pc%x_nodes, L_pc%y_nodes)
+    deallocate(L_pc%p_nodes, L_pc%f_nodes, L_pc%k0, L_pc%kend) 
+
+
     deallocate(wind_pu%u%f)
     deallocate(wind_pu%v%f)
     deallocate(wind_pu%ucontra%f)
@@ -96,7 +100,7 @@ subroutine adv_deallocation()
     deallocate(wind_pv%vcontra_time_centered%f) 
     deallocate(wind_pv%ucovari%f)
     deallocate(wind_pv%vcovari%f)
-
+ 
 end subroutine adv_deallocation
 end module deallocation 
 

@@ -364,6 +364,59 @@ subroutine inverse_equiangular_gnomonic_map(x, y, panel, p, mesh)
 end subroutine inverse_equiangular_gnomonic_map
 
 
+
+subroutine inverse_equiangular_gnomonic_map2(x, y, panel, p, mesh)
+    !---------------------------------------------------------------
+    ! this routine computes the inverse of the gnomonic mapping based on the equidistant projection
+    ! defined by rancic et al (96) for each panel
+    ! - returns the cube coordinates of the
+    ! projected points.
+    !
+    !---------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    
+    real(r8), intent(out) :: x ! local coordinates
+    real(r8), intent(out) :: y ! local coordinates
+    real(r8), intent(in) :: p(1:3) ! projected point
+
+    ! aux vars
+    real(r8) :: tanx, tany
+
+    ! panel
+    integer(i4), intent(inout) :: panel
+
+    ! compute the local coordinates for each panel
+    select case(panel)
+        case(1)
+            tanx = p(2)/p(1)
+            tany = p(3)/p(1)
+        case(2)
+            tanx = -p(1)/p(2)
+            tany =  p(3)/p(2)
+        case(3)
+            tanx =  p(2)/p(1)
+            tany = -p(3)/p(1)
+        case(4)
+            tanx = -p(1)/p(2)
+            tany = -p(3)/p(2)
+        case(5)
+            tanx =  p(2)/p(3)
+            tany = -p(1)/p(3)
+        case(6)
+            tanx = -p(2)/p(3)
+            tany = -p(1)/p(3)
+
+        case default
+            print*, 'error on inverse_equidistant_gnomonic_map: invalid panel, ', panel
+            stop
+        end select
+        x = datan(tanx)
+        y = datan(tany)
+    return
+end subroutine inverse_equiangular_gnomonic_map2
+
+
+
 subroutine get_cubedsphere_panel(p, panel, mesh)
 !---------------------------------------------------------------
 ! get_cubedsphere_panel

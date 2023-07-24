@@ -42,7 +42,11 @@ use allocation, only: &
 use diagnostics, only: &
   mass_computation, &
   adv_diagnostics
-  
+
+! duo grid interpolation
+use duogrid_interpolation, only: &
+    compute_lagrange_cs
+
 implicit none
 
 contains 
@@ -209,8 +213,16 @@ subroutine init_adv_vars(mesh)
     px%n = mesh%n
     py%n = mesh%n
 
+    ! Lagrange polynomial at centers
+    L_pc%degree =  advsimul%interp_degree
+    L_pc%order =  L_pc%degree+1
+    L_pc%pos = 1
+
     ! Allocate the variables
     call allocate_adv_vars(mesh)
+
+    ! Compute lagrange polynomials
+    call compute_lagrange_cs(L_pc, mesh)
 
     ! Time step over 2
     advsimul%dto2 = advsimul%dt*0.5_r8
@@ -218,6 +230,7 @@ subroutine init_adv_vars(mesh)
     ! Compute the initial conditions
     call compute_ic_adv(Q_exact, wind_pu, wind_pv, mesh, advsimul)
     Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
+
 
     ! Compute initial mass
     advsimul%mass0 = mass_computation(Q, mesh)

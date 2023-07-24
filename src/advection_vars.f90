@@ -11,10 +11,14 @@ use datastruct, only: &
   scalar_field, &
   vector_field, &
   ppm_parabola, &
+  lagrange_poly_cs, &
   simulation
 
 ! Advection class
-type(simulation):: advsimul
+type(simulation) :: advsimul
+
+! Lagrange polynomials at ghost cell centers
+type(lagrange_poly_cs) :: L_pc 
 
 ! Scalar fields
 type(scalar_field) :: Q      ! average values of the advected scalar field

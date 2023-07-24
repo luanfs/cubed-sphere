@@ -324,5 +324,31 @@ type ppm_parabola
     character(len=16) :: mt
 
 end type ppm_parabola
+
+!---------------------------------------------------------
+! Variable Lagrange polynomials at ghost cells on the
+! cubed-sphere
+!---------------------------------------------------------
+type lagrange_poly_cs
+    real (r8), allocatable  :: y_support(:)  ! Support points
+    real (r8), allocatable  :: f_support(:,:)  ! Value of the function at the support points
+    real (r8), allocatable  :: x_nodes(:,:) ! Nodes where we perform interpolation
+    real (r8), allocatable  :: y_nodes(:,:) ! Nodes where we perform interpolation
+    real (r8), allocatable  :: p_nodes(:,:,:) ! Lagrange polynomials at nodes
+    real (r8), allocatable  :: f_nodes(:,:,:) ! Support values used by node stenil
+
+    ! stencil
+    integer(i4), allocatable :: k0(:,:), kend(:,:)
+
+    ! degree
+    integer (i4) :: degree
+
+    ! order
+    integer (i4) :: order
+
+    ! position 1-center, 2-edges
+    integer (i4) :: pos
+
+end type lagrange_poly_cs
  
 end module datastruct

@@ -14,7 +14,9 @@ use constants, only: &
   r8, &
   nbfaces, &
   n_lat, n_lon, &
-  n0, nend
+  n0, nend, &
+  n0, nend, &
+  nghost
 
 !Data structures
 use datastruct, only: &
@@ -25,7 +27,8 @@ use datastruct, only: &
   scalar_field, &
   vector_field, &
   simulation, &
-  ppm_parabola
+  ppm_parabola, &
+  lagrange_poly_cs
 
 implicit none
 
@@ -417,6 +420,7 @@ subroutine vector_field_allocation(V, mesh, pos)
 end subroutine vector_field_allocation 
 
 
+
 subroutine ppm_parabola_allocation(p, mesh)
     !---------------------------------------------------
     !   PPM_PARABOLA_ALLOCATION
@@ -459,6 +463,53 @@ subroutine ppm_parabola_allocation(p, mesh)
 end subroutine ppm_parabola_allocation 
 
 
+
+subroutine lagrange_poly_allocation(L, mesh)
+    !---------------------------------------------------
+    !   LAGRANGE_POLY_ALLOCATION
+    !
+    ! This routines allocates the scalar field Q
+    ! at position 'pos', including ghost cells.
+    !
+    ! mesh must be already allocated.
+    !
+    ! Direction of the values relative to a mesh
+    !   1 - x direction
+    !   2 - y direction 
+    !
+    !--------------------------------------------------
+    type(cubedsphere), intent(in):: mesh
+    type(lagrange_poly_cs), intent(inout) :: L
+   
+    select case(L%pos)
+        case(1) ! centers
+            call r8_1darray_allocation(L%y_support, n0, nend)
+            call r8_2darray_allocation(L%f_support, n0, nend, 1, nghost)
+            call r8_2darray_allocation(L%x_nodes  , n0, nend, 1, nghost)
+            call r8_2darray_allocation(L%y_nodes  , n0, nend, 1, nghost)
+            call r8_3darray_allocation(L%p_nodes  , n0, nend, 1, nghost, 1, L%order)
+            call r8_3darray_allocation(L%f_nodes  , n0, nend, 1, nghost, 1, L%order)
+            call i4_2darray_allocation(L%k0       , n0, nend, 1, nghost)
+            call i4_2darray_allocation(L%kend     , n0, nend, 1, nghost)
+
+        case(2) ! edges
+            call r8_1darray_allocation(L%y_support, n0, nend+1)
+            call r8_2darray_allocation(L%f_support, n0, nend+1, 1, nghost)
+            call r8_2darray_allocation(L%x_nodes  , n0, nend+1, 1, nghost)
+            call r8_2darray_allocation(L%y_nodes  , n0, nend+1, 1, nghost)
+            call r8_3darray_allocation(L%p_nodes  , n0, nend+1, 1, nghost, 1, L%order)
+            call i4_2darray_allocation(L%k0       , n0, nend+1, 1, nghost)
+            call i4_2darray_allocation(L%kend     , n0, nend+1, 1, nghost)
+
+        case default
+            print*, 'ERROR on lagrange_poly_allocation: invalid position', L%pos
+            stop
+
+    end select
+
+    return
+end subroutine lagrange_poly_allocation 
+
 subroutine allocate_adv_vars(mesh)
     use advection_vars
     !---------------------------------------------------
@@ -480,14 +531,18 @@ subroutine allocate_adv_vars(mesh)
     call scalar_field_allocation(div_ugq_exact, mesh, 0)
     call scalar_field_allocation(div_ugq_error, mesh, 0)
 
-    !Operator splitting variables
+    ! Operator splitting variables
     call scalar_field_allocation(Qx, mesh, 0)
     call scalar_field_allocation(Qy, mesh, 0)
 
-    !PPM vars
+    ! PPM vars
     call ppm_parabola_allocation(px, mesh)
     call ppm_parabola_allocation(py, mesh)
 
+    ! Lagrange polynomial vars
+    call lagrange_poly_allocation(L_pc, mesh)
+    !---------------------------------------------------
 end subroutine
+
 end module allocation 
 
