@@ -73,6 +73,7 @@ subroutine adv_deallocation()
 
     deallocate(L_pc%y_support, L_pc%f_support, L_pc%x_nodes, L_pc%y_nodes)
     deallocate(L_pc%p_nodes, L_pc%f_nodes, L_pc%k0, L_pc%kend) 
+    deallocate(L_pc%halodata_east, L_pc%halodata_west, L_pc%halodata_north, L_pc%halodata_south) 
 
 
     deallocate(wind_pu%u%f)

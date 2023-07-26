@@ -336,6 +336,10 @@ type lagrange_poly_cs
     real (r8), allocatable  :: y_nodes(:,:) ! Nodes where we perform interpolation
     real (r8), allocatable  :: p_nodes(:,:,:) ! Lagrange polynomials at nodes
     real (r8), allocatable  :: f_nodes(:,:,:) ! Support values used by node stenil
+    real (r8), allocatable  :: halodata_east(:,:,:) ! var to store the needed halo data
+    real (r8), allocatable  :: halodata_west(:,:,:) ! var to store the needed halo data
+    real (r8), allocatable  :: halodata_north(:,:,:) ! var to store the needed halo data
+    real (r8), allocatable  :: halodata_south(:,:,:) ! var to store the needed halo data
 
     ! stencil
     integer(i4), allocatable :: k0(:,:), kend(:,:)
