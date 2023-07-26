@@ -205,19 +205,17 @@ subroutine dg_interp(Q, L)
     !--------------------------------------------------
     type(scalar_field), intent(inout) :: Q
     type(lagrange_poly_cs), intent(inout):: L
-    integer(i4) :: i, j, p, g, d, g2
+    integer(i4) :: i, j, p, g, d, g2, h
 
     ! Fill ghost cell centers
     call gethalodata(Q, L)
 
-    !print*,L%halodata_east(1, j0:jend, 1)
-    !stop
-    !read(*,*)
     do p = 1, nbfaces
         !--------------------------------------------------------------------------
         ! East panel interpolation
         do g = 1, nghost
-            do j = j0, jend
+            h = g-1
+            do j = j0-h, jend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
                 ! Does the interpolation
@@ -234,7 +232,8 @@ subroutine dg_interp(Q, L)
         ! Does the interpolation
         do g = 1, nghost
             g2 = nghost-g+1
-            do j = j0, jend
+            h = g2-1
+            do j = j0-h, jend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
                 Q%f(i0-g2,j,p) = 0._r8
@@ -248,7 +247,8 @@ subroutine dg_interp(Q, L)
         !--------------------------------------------------------------------------
         ! North panel interpolation
         do g = 1, nghost
-            do i = i0, iend
+            h = g-1
+            do i = i0-h, iend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
                 ! Does the interpolation
@@ -265,7 +265,8 @@ subroutine dg_interp(Q, L)
         ! Does the interpolation
         do g = 1, nghost
             g2 = nghost-g+1
-            do i = i0, iend
+            h = g2-1
+            do i = i0-h, iend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
                 Q%f(i,j0-g2,p) = 0._r8
@@ -325,7 +326,7 @@ subroutine compute_lagrange_cs(L, mesh)
                 L%kend(j,g) = L%kend(j,g) + n0
                 L%k0(j,g)   = L%k0(j,g) + n0
 
-                if (j>=j0 .and. j<=jend)then
+                if (j>n0 .and. j<nend)then
                     if(L%kend(j,g)>jend)then
                         L%kend(j,g) = jend
                         L%k0(j,g)   = L%kend(j,g) - L%order + 1 
@@ -334,17 +335,17 @@ subroutine compute_lagrange_cs(L, mesh)
                         L%kend(j,g) = L%k0(j,g) + L%order - 1 
                     end if
 
-                else if (j>=jend+1) then
-                    if (L%kend(j,g)>=nend+1)then
-                        L%kend(j,g) = nend
-                        L%k0(j,g)   = L%kend(j,g) - L%order + 1
+                !else if (j==nend) then
+                !    if (L%kend(j,g)>=nend+1)then
+                !        L%kend(j,g) = nend
+                !        L%k0(j,g)   = L%kend(j,g) - L%order + 1
+                !    end if
+                !else 
+                !    if (L%k0(j,g)==n0) then
+                !        L%k0(j,g)   = n0
+                !        L%kend(j,g) = L%k0(j,g) + L%order - 1
+                !    end if
                     end if
-                else !j<j0
-                    if (L%k0(j,g)<=n0) then
-                        L%k0(j,g)   = n0
-                        L%kend(j,g) = L%k0(j,g) + L%order - 1
-                    end if
-                end if
 
                 !print*, j+3, L%k0(j,g)+3, L%kend(j,g)+3
             end do

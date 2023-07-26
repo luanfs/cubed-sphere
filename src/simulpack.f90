@@ -21,7 +21,8 @@ use constants, only: &
     pi, deg2rad,&
     i0, iend, &
     j0, jend, &
-    n0, nend
+    n0, nend, &
+    nghost
 
 !Data structures
 use datastruct, only: &
@@ -136,7 +137,7 @@ subroutine interpolation_test(mesh)
     type(cubedsphere),intent(inout):: mesh
 
     ! aux integer
-    integer(i4) :: i, j, p
+    integer(i4) :: i, j, p, g, h
 
     !File name for output
     character (len=256):: filename
@@ -155,10 +156,26 @@ subroutine interpolation_test(mesh)
     call dg_interp(Q, L_pc)
 
     p=6
-    ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1:p)-Q%f(iend+1:,j0:jend,1:p)))
-    ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1:p)-Q%f(:i0-1,j0:jend,1:p)))
-    en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1:p)-Q%f(i0:iend,jend+1:,1:p)))
-    es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1:p)-Q%f(i0:iend,:j0-1,1:p)))
+    !ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1:p)-Q%f(iend+1:,j0:jend,1:p)))
+    !ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1:p)-Q%f(:i0-1,j0:jend,1:p)))
+    !en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1:p)-Q%f(i0:iend,jend+1:,1:p)))
+    !es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1:p)-Q%f(i0:iend,:j0-1,1:p)))
+    ee = 0._r8
+    ew = 0._r8
+    es = 0._r8
+    en = 0._r8
+    do p = 1, nbfaces
+        do g = 1, nghost
+            h = g-1
+            do j = j0-h, jend+h
+                ee = max(ee,abs(Q_exact%f(iend+g,j,p)-Q%f(iend+g,j,p)))
+                en = max(en,abs(Q_exact%f(j,jend+g,p)-Q%f(j,iend+g,p)))
+                ew = max(ew,abs(Q_exact%f(i0-g,j,p)-Q%f(i0-g,j,p)))
+                es = max(es,abs(Q_exact%f(j,i0-g,p)-Q%f(j,i0-g,p)))
+            end do
+        end do
+    end do
+ 
     print*,ee, ew, en, es
     stop
     ! Multiply Q by the metric tensor
