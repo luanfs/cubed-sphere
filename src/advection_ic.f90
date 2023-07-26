@@ -231,7 +231,6 @@ subroutine init_adv_vars(mesh)
     call compute_ic_adv(Q_exact, wind_pu, wind_pv, mesh, advsimul)
     Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
 
-
     ! Compute initial mass
     advsimul%mass0 = mass_computation(Q, mesh)
 
@@ -280,8 +279,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
     type(vector_field), intent(inout) :: V_pu, V_pv
 
     ! aux
-    integer(i4) :: nt
-    integer(i4) :: i, j, p, N
+    integer(i4) :: i, j, p
 
     !aux
     real(r8) :: lat, lon
@@ -291,9 +289,6 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
     real(r8) :: ull, vll, error1, error
     error = 0._r8
 
-    ! interior grid indexes
-    nt = mesh%ntotal
-    N = mesh%n
 
     ! Scalar field at pc
     do p = 1, nbfaces

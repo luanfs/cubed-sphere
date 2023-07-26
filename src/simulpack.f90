@@ -152,7 +152,7 @@ subroutine interpolation_test(mesh)
     !advsimul%name = "div_"//trim(advsimul%name)
 
     ! Duogrid nterpolation of the scalar field Q 
-    call dg_interp(Q, mesh, advsimul)
+    call dg_interp(Q, L_pc)
 
     p=6
     ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1:p)-Q%f(iend+1:,j0:jend,1:p)))

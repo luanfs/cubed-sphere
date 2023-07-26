@@ -39,18 +39,19 @@ implicit none
 
 contains 
 
-subroutine gethalodata(Q)
+subroutine gethalodata(Q, L)
     !---------------------------------------------------
     ! Fill the center ghost cell values of Q that are needed
     ! for duogrid interpolation
     !--------------------------------------------------
     type(scalar_field), intent(inout) :: Q
+    type(lagrange_poly_cs), intent(inout):: L
     integer(i4) :: p, east, north, south, west
 
 
     ! --------------------- Panel 1 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 1
     north = 5
@@ -59,23 +60,21 @@ subroutine gethalodata(Q)
     west  = 4
  
     ! Data of panel 1 from east
-    Q%f(iend+1:,j0:jend,p) = Q%f(i0:i0+nghost, j0:jend, east) ! Panel 2
+    L%halodata_east(1:nghost,j0:jend,p) = Q%f(i0:i0+nghost-1, j0:jend, east) ! Panel 2
 
     ! Data of panel 1 from  west
-    Q%f(:i0-1,j0:jend,p) = Q%f(iend-nghost:iend, j0:jend, west) ! Panel 4
+    L%halodata_west(1:nghost,j0:jend,p) = Q%f(iend-nghost+1:iend, j0:jend, west) ! Panel 4
 
     ! Data of panel 1 from north
-    Q%f(i0:iend,jend+1:,p) = Q%f(i0:iend, j0:j0+nghost, north) ! Panel 5
+    L%halodata_north(i0:iend,1:nghost,p) = Q%f(i0:iend, j0:j0+nghost-1, north) ! Panel 5
 
     ! Data of panel 1 from south
-    Q%f(i0:iend,:j0-1,p)  = Q%f(i0:iend, jend-nghost:jend, south) ! Panel 6
+    L%halodata_south(i0:iend,1:nghost,p) = Q%f(i0:iend, jend-nghost+1:jend, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
-
-
 
     ! --------------------- Panel 2 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 2
     north = 5
@@ -84,23 +83,23 @@ subroutine gethalodata(Q)
     west  = 1
 
     ! Data of panel 2 from east
-    Q%f(iend+1:,j0:jend,p) = Q%f(i0:i0+nghost, j0:jend, east) ! Panel 3
+    L%halodata_east(1:nghost,j0:jend,p) = Q%f(i0:i0+nghost-1, j0:jend, east) ! Panel 3
 
     ! Data of panel 2 from west
-    Q%f(:i0-1,j0:jend,p) = Q%f(iend-nghost:iend, j0:jend, west) ! Panel 1
+    L%halodata_west(1:nghost,j0:jend,p) = Q%f(iend-nghost+1:iend, j0:jend, west) ! Panel 1
 
     ! Data of panel 2 from north
-    Q%f(i0:iend,jend+1:,p) = transpose(Q%f(jend:jend-nghost:-1, i0:iend, north)) ! Panel 5
+    L%halodata_north(i0:iend,1:nghost,p) = transpose(Q%f(jend:jend-nghost+1:-1, i0:iend, north)) ! Panel 5
 
     ! Data of panel 2 from south
-    Q%f(i0:iend,:j0-1,p)  = transpose(Q%f(jend:jend-nghost:-1, iend:i0:-1,south)) ! Panel 6
+    L%halodata_south(i0:iend,1:nghost,p) = transpose(Q%f(jend-nghost+1:jend, iend:i0:-1,south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
 
     ! --------------------- Panel 3 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 3
     north = 5
@@ -109,23 +108,23 @@ subroutine gethalodata(Q)
     west  = 2
 
     ! Data of panel 3 from east
-    Q%f(iend+1:,j0:jend,p) = Q%f(i0:i0+nghost, j0:jend,east) ! Panel 4
+    L%halodata_east(1:nghost,j0:jend,p) = Q%f(i0:i0+nghost-1, j0:jend, east) ! Panel 4
 
     ! Data of panel 3 from west
-    Q%f(:i0-1,j0:jend,p) = Q%f(iend-nghost:iend, j0:jend, west) ! Panel 2
+    L%halodata_west(1:nghost,j0:jend,p) = Q%f(iend-nghost+1:iend, j0:jend, west) ! Panel 2
 
     ! Data of panel 3 from north
-    Q%f(i0:iend,jend+1:,p) = Q%f(iend:i0:-1, jend:jend-nghost:-1, north) ! Panel 5
+    L%halodata_north(i0:iend,1:nghost,p) = Q%f(iend:i0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
 
     ! Data of panel 3 from south
-    Q%f(i0:iend,:j0-1,p)  = Q%f(iend:i0:-1, j0+nghost:j0:-1, south) ! Panel 6
+    L%halodata_south(i0:iend,1:nghost,p) = Q%f(iend:i0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
 
     ! --------------------- Panel 4 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 4
     north = 5
@@ -134,23 +133,23 @@ subroutine gethalodata(Q)
     west  = 3
 
     ! Data of panel 4 from east
-    Q%f(iend+1:,j0:jend,p) = Q%f(i0:i0+nghost, j0:jend, east) ! Panel 1
+    L%halodata_east(1:nghost,j0:jend,p) = Q%f(i0:i0+nghost-1, j0:jend, east) ! Panel 1
 
     ! Data of panel 4 from west
-    Q%f(:i0-1,j0:jend,p) = Q%f(iend-nghost:iend, j0:jend, west) ! Panel 3
+    L%halodata_west(1:nghost,j0:jend,p) = Q%f(iend-nghost+1:iend, j0:jend, west) ! Panel 3
 
     ! Data of panel 4 from north
-    Q%f(i0:iend,jend+1:,p) = transpose(Q%f(i0:i0+nghost, jend:jend-nghost:-1, north)) ! Panel 5
+    L%halodata_north(i0:iend,1:nghost,p) = transpose(Q%f(i0:i0+nghost-1, jend:j0:-1, north)) ! Panel 5
 
     ! Data of panel 4 from south
-    Q%f(i0:iend,:j0-1,p)   = transpose(Q%f(i0+nghost:i0:-1, j0:jend, south)) ! Panel 6
+    L%halodata_south(i0:iend,1:nghost,p) = transpose(Q%f(i0+nghost-1:i0:-1, j0:jend, south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
 
     ! --------------------- Panel 5 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 5
     north = 3
@@ -159,21 +158,21 @@ subroutine gethalodata(Q)
     west  = 4
 
     ! Data of panel 5 from east
-    Q%f(iend+1:,j0:jend,p) = transpose(Q%f(i0:iend, jend:jend-nghost:-1, east)) ! Panel 2
+    L%halodata_east(1:nghost,j0:jend,p) = transpose(Q%f(i0:iend, jend:jend-nghost+1:-1, east)) ! Panel 2
 
     ! Data of panel 5 from west
-    Q%f(:i0-1,j0:jend,p) = transpose(Q%f(iend:i0:-1,jend-nghost:jend, west)) ! Panel 4
+    L%halodata_west(1:nghost,j0:jend,p) = transpose(Q%f(iend:i0:-1,jend-nghost+1:jend, west)) ! Panel 4
 
     ! Data of panel 5 from north
-    Q%f(i0:iend,jend+1:,p) = Q%f(iend:i0:-1, jend:jend-nghost:-1, north) ! Panel 3
+    L%halodata_north(i0:iend,1:nghost,p) = Q%f(iend:i0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
 
     ! Data of panel 5 from south
-    Q%f(i0:iend,:j0-1,p)   = Q%f(i0:iend, jend-nghost:jend, south) ! Panel 1
+    L%halodata_south(i0:iend,1:nghost,p) = Q%f(i0:iend, jend-nghost+1:jend, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
     ! --------------------- Panel 6 ----------------------------
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Q, i0, iend, j0, jend, nghost) &
+    !$OMP SHARED(Q, L, i0, iend, j0, jend, nghost) &
     !$OMP SHARED(north, south, east, west, p)
     p = 6
     north = 1
@@ -182,16 +181,16 @@ subroutine gethalodata(Q)
     west  = 4
 
     ! Data of panel 6 from east
-    Q%f(iend+1:,j0:jend,p) = transpose(Q%f(iend:i0:-1, j0:j0+nghost, east)) ! Panel 2
+    L%halodata_east(1:nghost,j0:jend,p) = transpose(Q%f(iend:i0:-1, j0:j0+nghost-1, east)) ! Panel 2
 
     ! Data of panel 6 from west
-    Q%f(:i0-1,j0:jend,p) = transpose(Q%f(i0:iend,j0+nghost:j0:-1, west)) ! Panel 4
+    L%halodata_west(1:nghost,j0:jend,p) = transpose(Q%f(i0:iend,j0+nghost-1:j0:-1, west)) ! Panel 4
 
     ! Data of panel 6 from north
-    Q%f(i0:iend,jend+1:,p) = Q%f(i0:iend, j0:j0+nghost, north) ! Panel 3
+    L%halodata_north(i0:iend,1:nghost,p) = Q%f(i0:iend, j0:j0+nghost-1, north) ! Panel 3
 
     ! Data of panel 6 from south
-    Q%f(i0:iend,:j0-1,p)   = Q%f(iend:i0:-1, j0+nghost:j0:-1, south) ! Panel 1
+    L%halodata_south(i0:iend,1:nghost,p) = Q%f(iend:i0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -199,17 +198,87 @@ end subroutine gethalodata
 
 
 
-subroutine dg_interp(Q, mesh, simul)
+subroutine dg_interp(Q, L)
     !---------------------------------------------------
     !   duogrid interpolation of scalar field Q
     ! (ghost cells are defined at cell centers)
     !--------------------------------------------------
-    type(cubedsphere), intent(in):: mesh
     type(scalar_field), intent(inout) :: Q
-    type(simulation), intent(in) :: simul
+    type(lagrange_poly_cs), intent(inout):: L
+    integer(i4) :: i, j, p, g, d, g2
 
     ! Fill ghost cell centers
-    call gethalodata(Q)
+    call gethalodata(Q, L)
+
+    !print*,L%halodata_east(1, j0:jend, 1)
+    !stop
+    !read(*,*)
+    do p = 1, nbfaces
+        !--------------------------------------------------------------------------
+        ! East panel interpolation
+        do g = 1, nghost
+            do j = j0, jend
+                ! Store in f the support points used in Lagrange interpolation
+                L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
+                ! Does the interpolation
+                Q%f(iend+g,j,p) = 0._r8
+                do d = 1, L%order
+                    Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                end do
+            end do
+        end do
+        !--------------------------------------------------------------------------
+
+        !--------------------------------------------------------------------------
+        ! West panel interpolation
+        ! Does the interpolation
+        do g = 1, nghost
+            g2 = nghost-g+1
+            do j = j0, jend
+                ! Store in f the support points used in Lagrange interpolation
+                L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
+                Q%f(i0-g2,j,p) = 0._r8
+                do d = 1, L%order
+                    Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                end do
+            end do
+        end do
+        !--------------------------------------------------------------------------
+
+        !--------------------------------------------------------------------------
+        ! North panel interpolation
+        do g = 1, nghost
+            do i = i0, iend
+                ! Store in f the support points used in Lagrange interpolation
+                L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
+                ! Does the interpolation
+                Q%f(i,jend+g,p) = 0._r8
+                do d = 1, L%order
+                    Q%f(i,jend+g,p) = Q%f(i,jend+g,p) + L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
+                end do
+            end do
+        end do
+        !--------------------------------------------------------------------------
+
+        !--------------------------------------------------------------------------
+        ! South panel interpolation
+        ! Does the interpolation
+        do g = 1, nghost
+            g2 = nghost-g+1
+            do i = i0, iend
+                ! Store in f the support points used in Lagrange interpolation
+                L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
+                Q%f(i,j0-g2,p) = 0._r8
+                do d = 1, L%order
+                    Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
+                end do
+            end do
+        end do
+ 
+        !--------------------------------------------------------------------------
+ 
+    end do
+    print*,'----------------------'
 end subroutine dg_interp
 
 
@@ -222,6 +291,7 @@ subroutine compute_lagrange_cs(L, mesh)
     type(cubedsphere), intent(inout):: mesh
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4) ::  j, p, g, d
+    real(r8):: k
 
     if(mesh%kind .ne. 'equiangular') then
         print*, 'ERROR in compute_lagrange_cs: invalid mesh kind, ', mesh%kind
@@ -231,7 +301,7 @@ subroutine compute_lagrange_cs(L, mesh)
     if(L%pos==1) then
         ! Compute the nodes
         ! Init local coordinates grid
-        L%y_support(n0) = -pio4 - mesh%halosize*mesh%dx*0.5
+        L%y_support(n0) = -pio4 - (mesh%halosize-0.5_r8)*mesh%dx
         do j = n0+1, nend
             L%y_support(j) = L%y_support(j-1) + mesh%dx
         end do
@@ -249,13 +319,15 @@ subroutine compute_lagrange_cs(L, mesh)
         ! Compute stencils
         do g = 1, nghost
             do j = n0, nend
-                L%kend(j,g) = (L%y_nodes(j,g) - L%y_support(n0))/mesh%dx
-                L%kend(j,g) = L%kend(j,g) + ceiling(L%order*0.5_r8)
-                L%k0(j,g)   = L%kend(j,g) - L%order + 1
+                k = (L%y_nodes(j,g) - L%y_support(n0))/mesh%dx
+                L%kend(j,g) = k + ceiling(L%order*0.5_r8)
+                L%k0(j,g)   = k + ceiling(L%order*0.5_r8) - L%order + 1
+                L%kend(j,g) = L%kend(j,g) + n0
+                L%k0(j,g)   = L%k0(j,g) + n0
 
                 if (j>=j0 .and. j<=jend)then
                     if(L%kend(j,g)>jend)then
-                        L%kend(j,g) = jend-1
+                        L%kend(j,g) = jend
                         L%k0(j,g)   = L%kend(j,g) - L%order + 1 
                     else if (L%k0(j,g)<j0)then
                         L%k0(j,g)   = j0
@@ -267,13 +339,14 @@ subroutine compute_lagrange_cs(L, mesh)
                         L%kend(j,g) = nend
                         L%k0(j,g)   = L%kend(j,g) - L%order + 1
                     end if
-                else !i<i0
-                    if (L%k0(j,g)<n0) then
+                else !j<j0
+                    if (L%k0(j,g)<=n0) then
                         L%k0(j,g)   = n0
                         L%kend(j,g) = L%k0(j,g) + L%order - 1
                     end if
                 end if
-                !print*,j, L%k0(j,g), L%kend(j,g), j0, jend
+
+                !print*, j+3, L%k0(j,g)+3, L%kend(j,g)+3
             end do
             !read(*,*)
         end do
@@ -287,6 +360,13 @@ subroutine compute_lagrange_cs(L, mesh)
             end do
         end do
 
+        do g = 1, nghost
+            do j = n0, nend
+            !    print*, L%f_nodes(j,g,:)
+            end do
+            !read(*,*)
+        end do
+
         ! Compute the Lagrange nodes at halo region
         do g = 1, nghost
             do j = n0, nend
@@ -298,10 +378,11 @@ subroutine compute_lagrange_cs(L, mesh)
 
         do g = 1, nghost
             do j = n0, nend
-                !print*, abs(sum(L%p_nodes(j,g,:))-1._r8)
+                !print*, L%p_nodes(j,g,:)
             end do
             !read(*,*)
         end do
+        !stop
     end if
 end subroutine compute_lagrange_cs
 
