@@ -136,14 +136,11 @@ subroutine interpolation_test(mesh)
     !--------------------------------------------------
     type(cubedsphere),intent(inout):: mesh
 
-    ! aux integer
-    integer(i4) :: i, j, p, g, h
-
     !File name for output
     character (len=256):: filename
 
     !Errors
-    real(r8) :: es, en, ew, ee
+    real(r8) :: error_q
 
     ! Get test parameter from par/interpolation.par
     call getinterp_parameters(advsimul)
@@ -155,57 +152,13 @@ subroutine interpolation_test(mesh)
     ! Duogrid nterpolation of the scalar field Q 
     call dg_interp(Q, L_pc)
 
-    p=6
-    !ee = maxval(abs(Q_exact%f(iend+1:,j0:jend,1:p)-Q%f(iend+1:,j0:jend,1:p)))
-    !ew = maxval(abs(Q_exact%f(:i0-1,j0:jend,1:p)-Q%f(:i0-1,j0:jend,1:p)))
-    !en = maxval(abs(Q_exact%f(i0:iend,jend+1:,1:p)-Q%f(i0:iend,jend+1:,1:p)))
-    !es = maxval(abs(Q_exact%f(i0:iend,:j0-1,1:p)-Q%f(i0:iend,:j0-1,1:p)))
-    ee = 0._r8
-    ew = 0._r8
-    es = 0._r8
-    en = 0._r8
-    do p = 1, nbfaces
-        do g = 1, nghost
-            h = g-1
-            do j = j0-h, jend+h
-                ee = max(ee,abs(Q_exact%f(iend+g,j,p)-Q%f(iend+g,j,p)))
-                en = max(en,abs(Q_exact%f(j,jend+g,p)-Q%f(j,iend+g,p)))
-                ew = max(ew,abs(Q_exact%f(i0-g,j,p)-Q%f(i0-g,j,p)))
-                es = max(es,abs(Q_exact%f(j,i0-g,p)-Q%f(j,i0-g,p)))
-            end do
-        end do
-    end do
- 
-    print*,ee, ew, en, es
-    stop
-    ! Multiply Q by the metric tensor
-    !Q%f = 1._r8
-
-    ! Compute the divergence obtained in one timestep
-    !call adv_timestep(mesh)
-
-    ! Exact divergence
-    !call compute_exact_div(div_ugq_exact, mesh, advsimul)
-
-    ! Compute the errors
-    !call compute_errors_field(div_ugq, div_ugq_exact, div_ugq_error, &
-    !  advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
-
-    ! Name scalar fields
-    !div_ugq_error%name = trim(advsimul%name)//"_error"
-    !div_ugq%name = trim(advsimul%name)
-
-    ! Plot scalar fields
-    !call plot_scalarfield(div_ugq, mesh)
-    !call plot_scalarfield(div_ugq_error, mesh)
-
-    ! Deallocate vars
-    !call adv_deallocation()
+    ! Compute the error
+    error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
     ! Print errors on screen
-    !print*
-    !print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
-
+    print*
+    print '(a22, 2e16.8)','(q, u) errors:', error_q, error_q
+    stop
     ! Write errors in a file
     !filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
     !call  write_final_errors(advsimul, mesh, filename) 
