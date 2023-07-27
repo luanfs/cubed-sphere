@@ -25,7 +25,8 @@ use constants, only: &
     i0, iend, &
     j0, jend, &
     n0, nend, &
-    nghost
+    nghost, &
+    hs
 
 !Data structures
 use datastruct, only: &
@@ -211,7 +212,7 @@ subroutine initghostcells(mesh)
 
     ! Halo size
     mesh%halosize = 4
- 
+    hs = mesh%halosize 
     ! Interior indexes
     mesh%i0   = 1
     mesh%iend = mesh%n

@@ -126,6 +126,7 @@ integer (i4) :: j0, jend
 ! Number of ghost cells in a direction
 integer(i4) :: nghost
 integer(i4) :: n0, nend
+integer(i4) :: hs
 
 !Lat/lon grid size (for ploting)
 integer (i4) :: n_lon = 1440
