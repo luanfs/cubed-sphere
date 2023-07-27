@@ -101,7 +101,21 @@ subroutine adv_deallocation()
     deallocate(wind_pv%vcontra_time_centered%f) 
     deallocate(wind_pv%ucovari%f)
     deallocate(wind_pv%vcovari%f)
- 
+
+    deallocate(wind_pc%u%f)
+    deallocate(wind_pc%v%f)
+    deallocate(wind_pc%ucontra%f)
+    deallocate(wind_pc%vcontra%f)
+    deallocate(wind_pc%ucontra_old%f)
+    deallocate(wind_pc%vcontra_old%f)
+    deallocate(wind_pc%ucontra_time_av%f)
+    deallocate(wind_pc%vcontra_time_av%f)
+    deallocate(wind_pc%ucontra_time_centered%f)
+    deallocate(wind_pc%vcontra_time_centered%f) 
+    deallocate(wind_pc%ucovari%f)
+    deallocate(wind_pc%vcovari%f)
+
+
 end subroutine adv_deallocation
 end module deallocation 
 

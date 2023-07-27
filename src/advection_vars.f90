@@ -25,7 +25,7 @@ type(scalar_field) :: Q      ! average values of the advected scalar field
 type(scalar_field) :: Q_exact ! exact solution
 
 ! Vector field
-type(vector_field) :: wind_pu, wind_pv
+type(vector_field) :: wind_pu, wind_pv, wind_pc
 
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu
