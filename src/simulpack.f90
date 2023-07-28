@@ -71,7 +71,7 @@ use diagnostics, only: &
 
 ! Duogrid interpolation
 use duogrid_interpolation, only: &
-    dg_interp
+    dg_interp, dg_vf_interp
 
 implicit none
 
@@ -140,7 +140,9 @@ subroutine interpolation_test(mesh)
     character (len=256):: filename
 
     !Errors
-    real(r8) :: error_q
+    real(r8) :: error_q, error_u, error_v
+    real(r8) :: ew_u, ee_u, en_u, es_u
+    real(r8) :: ew_v, ee_v, en_v, es_v
 
     ! Get test parameter from par/interpolation.par
     call getinterp_parameters(advsimul)
@@ -149,15 +151,22 @@ subroutine interpolation_test(mesh)
     call init_adv_vars(mesh)
     !advsimul%name = "div_"//trim(advsimul%name)
 
-    ! Duogrid nterpolation of the scalar field Q 
+    ! Duogrid interpolation of the scalar field Q 
     call dg_interp(Q, L_pc)
+
+    ! Duogrid interpolation of the vector field
+    call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
+    error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
+    error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+ 
+
     ! Print errors on screen
     print*
-    print '(a22, 2e16.8)','(q, u) errors:', error_q, error_q
+    print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_u, error_v
     stop
     ! Write errors in a file
     !filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
