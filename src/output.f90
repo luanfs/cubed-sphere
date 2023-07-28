@@ -428,7 +428,7 @@ subroutine plot_scalarfield(var, mesh)
     return
 end subroutine plot_scalarfield
 
-subroutine write_final_errors(advsimul, mesh, filename) 
+subroutine write_final_errors_adv(advsimul, mesh, filename) 
     !----------------------------------------------------------
     !  write the final errors of advection simulation in a file
     !----------------------------------------------------------
@@ -454,7 +454,30 @@ subroutine write_final_errors(advsimul, mesh, filename)
     write(iunit, *) advsimul%cfl
     write(iunit, *) advsimul%mass_variation
     close(iunit)
-end subroutine write_final_errors
+end subroutine write_final_errors_adv
+
+subroutine write_final_errors_interp(filename, error_q, error_u) 
+    !----------------------------------------------------------
+    !  write the final errors of advection simulation in a file
+    !----------------------------------------------------------
+    real(r8), intent(in) :: error_q, error_u
+
+    !File name for output
+    character (len=256), intent(inout) :: filename
+
+    !File units
+    integer (i4):: iunit
+    logical::  iopen
+
+    !File for errors
+    filename=trim(datadir)//trim(filename)//".txt"
+    call getunit(iunit)
+
+    open(iunit,file=filename, status='replace')
+    write(iunit, *) error_q
+    write(iunit, *) error_u
+    close(iunit)
+end subroutine write_final_errors_interp
 
 
 end module output

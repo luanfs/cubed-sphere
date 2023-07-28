@@ -264,7 +264,7 @@ type simulation
     integer(i4) :: vf
 
     ! Degree of interpolation at ghost cells
-    integer(i4) :: interp_degree
+    integer(i4) :: id
 
     ! Logical for exact solution
     logical :: exactsolution
@@ -274,6 +274,9 @@ type simulation
 
     ! Velocity field
     character(len=16) :: vf_name
+
+    ! Degree of interpolation at ghost cells
+    character(len=16) :: id_name
 
     ! One dimensional flux scheme
     character(len=16) :: recon1d

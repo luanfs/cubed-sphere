@@ -54,6 +54,10 @@ def main():
     vf = '1'
     replace_line(pardir+'advection.par', vf, 5)
 
+    # interpolation degree
+    interpd = '3'
+    replace_line(pardir+'advection.par', interpd, 19)
+
     # Get adv parameters
     ic, _, recon = get_adv_parameters()
 
@@ -119,7 +123,7 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf
+            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf+"_id"+interpd
 
             # File to be opened
             filename = datadir+div_name+"_"+grid_name+"_errors.txt"
