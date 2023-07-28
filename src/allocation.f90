@@ -314,6 +314,9 @@ subroutine meshallocation(mesh)
     call matrix_3darray_allocation(mesh%ll2contra_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
     call matrix_3darray_allocation(mesh%contra2ll_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
     call matrix_3darray_allocation(mesh%ll2contra_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%contra2ll_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%ll2contra_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+
 
     ! Latlon-grid allocation
     mesh%nlon = n_lon

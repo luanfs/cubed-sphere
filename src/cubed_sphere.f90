@@ -709,6 +709,42 @@ subroutine compute_ll2contra(mesh)
         end do
     end do
 
+    ! Compute at pc
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                ex = mesh%tgx_pc(i,j,p)%v
+                ey = mesh%tgy_pc(i,j,p)%v
+
+                lat = mesh%pc(i,j,p)%lat
+                lon = mesh%pc(i,j,p)%lon
+
+                call tangent_ll_lon(lon, elon)
+                call tangent_ll_lat(lon, lat, elat)
+
+                a11 = dot_product(ex, elon)
+                a12 = dot_product(ey, elon)
+                a21 = dot_product(ex, elat)
+                a22 = dot_product(ey, elat)
+                det = a11*a22 - a21*a12
+
+                ! Contra to latlon matrix
+                mesh%contra2ll_pc(i,j,p)%M(1,1) = a11
+                mesh%contra2ll_pc(i,j,p)%M(1,2) = a12
+                mesh%contra2ll_pc(i,j,p)%M(2,1) = a21
+                mesh%contra2ll_pc(i,j,p)%M(2,2) = a22
+
+                ! latlon to contra matrix
+                mesh%ll2contra_pc(i,j,p)%M(1,1) =  a22
+                mesh%ll2contra_pc(i,j,p)%M(1,2) = -a12
+                mesh%ll2contra_pc(i,j,p)%M(2,1) = -a21
+                mesh%ll2contra_pc(i,j,p)%M(2,2) =  a11
+                mesh%ll2contra_pc(i,j,p)%M(:,:) = mesh%ll2contra_pc(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+
+
 end subroutine compute_ll2contra
 
 

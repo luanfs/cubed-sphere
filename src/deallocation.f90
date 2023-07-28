@@ -30,8 +30,10 @@ subroutine meshdeallocation(mesh)
     deallocate(mesh%pv) ! Midpoints at v
     deallocate(mesh%ll2contra_pu) ! latlon 2 contravariant conversion at u
     deallocate(mesh%ll2contra_pv) ! latlon 2 contravariant conversion at v
+    deallocate(mesh%ll2contra_pc) ! latlon 2 contravariant conversion at c
     deallocate(mesh%contra2ll_pu) ! contravariant 2 latlon conversion at u
     deallocate(mesh%contra2ll_pv) ! contravariant 2 latlon conversion at v 
+    deallocate(mesh%contra2ll_pc) ! contravariant 2 latlon conversion at c
     deallocate(mesh%mt_pc)! Metric tensor at centers
     deallocate(mesh%mt_pu) ! Metric tensor at u
     deallocate(mesh%mt_pv) ! Metric tensor at v

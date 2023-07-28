@@ -102,11 +102,18 @@ type cubedsphere
     ! latlon to contravariant conversion at pv
     type(matrix), allocatable :: ll2contra_pv(:,:,:)
 
+    ! latlon to contravariant conversion at pc
+    type(matrix), allocatable :: ll2contra_pc(:,:,:)
+
     ! Contravariant to latlon conversion at pu
     type(matrix), allocatable :: contra2ll_pu(:,:,:)
 
     ! Contravariant to latlon conversion at pv
     type(matrix), allocatable :: contra2ll_pv(:,:,:)
+
+    ! Contravariant to latlon conversion at pc
+    type(matrix), allocatable :: contra2ll_pc(:,:,:)
+
 
     ! Metric tensor at pc
     real(r8), allocatable:: mt_pc(:,:,:)
