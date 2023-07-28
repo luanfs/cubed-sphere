@@ -18,7 +18,8 @@ use datastruct, only: &
   vector_field, &
   cubedsphere, &
   ppm_parabola, &
-  simulation
+  simulation, &
+  lagrange_poly_cs
 
 ! 1d fluxes 
 use ppm_flux, only: &
@@ -27,6 +28,10 @@ use ppm_flux, only: &
 
 ! Mass fixer
 use mass_fixer
+
+! Interpolation
+use duogrid_interpolation, only: &
+    dg_interp
 
 implicit none
 
@@ -180,7 +185,7 @@ end subroutine inner_g_operator
 
 
 subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, advsimul, mesh)
+                      px, py, Qx, Qy, advsimul, mesh, L_pc)
     !---------------------------------------------------
     !
     ! Computes the divergence of u*q using the
@@ -198,6 +203,10 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
     type(scalar_field), intent(inout) :: Qx ! variable to advect in x direction
     type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
+    type(lagrange_poly_cs), intent(inout) :: L_pc ! lagrange polynomial
+
+    ! Interpolate scalar field to ghost cells
+    call dg_interp(Q, L_pc)
 
     ! Dimension splitting operators
     call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)

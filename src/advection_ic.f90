@@ -214,7 +214,7 @@ subroutine init_adv_vars(mesh)
     py%n = mesh%n
 
     ! Lagrange polynomial at centers
-    L_pc%degree =  advsimul%interp_degree
+    L_pc%degree =  advsimul%id
     L_pc%order =  L_pc%degree+1
     L_pc%pos = 1
 
@@ -228,7 +228,7 @@ subroutine init_adv_vars(mesh)
     advsimul%dto2 = advsimul%dt*0.5_r8
 
     ! Compute the initial conditions
-    call compute_ic_adv(Q_exact, wind_pu, wind_pv, mesh, advsimul)
+    call compute_ic_adv(Q_exact, wind_pu, wind_pv, wind_pc, mesh, advsimul)
     Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
 
     ! Compute initial mass
@@ -253,13 +253,17 @@ subroutine init_adv_vars(mesh)
     write (advsimul%vf_name, *) advsimul%vf
     advsimul%vf_name = adjustl(advsimul%vf_name)
 
+    write (advsimul%id_name, *) advsimul%id
+    advsimul%id_name = adjustl(advsimul%id_name)
+
     advsimul%name = "ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%opsplit) &
     //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp) &
-    //"_mf"//trim(advsimul%mf)
+    //"_mf"//trim(advsimul%mf)//"_id"//trim(advsimul%id_name)
+
 
 end subroutine init_adv_vars
 
-subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
+subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
     !--------------------------------------------------
     ! Compute the initial conditions for the advection
     ! problem on the sphere
@@ -276,7 +280,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
     type(cubedsphere), intent(in) :: mesh
     type(simulation), intent(inout) :: advsimul
     type(scalar_field), intent(inout) :: Q
-    type(vector_field), intent(inout) :: V_pu, V_pv
+    type(vector_field), intent(inout) :: V_pu, V_pv, V_pc
 
     ! aux
     integer(i4) :: i, j, p
@@ -311,8 +315,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
                 call velocity_adv(ulon, vlat, lat, lon, 0._r8, advsimul%vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
 
-                V_pu%ucontra%f(i,j,p) = ucontra
-                V_pu%vcontra%f(i,j,p) = vcontra
+                V_pu%ucontra_old%f(i,j,p) = ucontra
+                V_pu%vcontra_old%f(i,j,p) = vcontra
 
                 ! debug 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pu(i,j,p)%M)
@@ -323,8 +327,10 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
         end do
     end do
 
-    V_pu%ucontra_old%f = V_pu%ucontra%f
-    V_pu%vcontra_old%f = V_pu%vcontra%f
+    V_pu%ucontra%f(i0:iend+1,j0:jend,:) = V_pu%ucontra_old%f(i0:iend+1,j0:jend,:)
+    V_pu%vcontra%f(i0:iend+1,j0:jend,:) = V_pu%vcontra_old%f(i0:iend+1,j0:jend,:)
+    V_pu%ucontra%f(:,:,:) = V_pu%ucontra_old%f(:,:,:)
+    V_pu%vcontra%f(:,:,:) = V_pu%vcontra_old%f(:,:,:)
  
     ! Vector field at pv
     do p = 1 , nbfaces
@@ -336,8 +342,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
                 call velocity_adv(ulon, vlat, lat, lon, 0._r8, advsimul%vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
 
-                V_pv%ucontra%f(i,j,p) = ucontra
-                V_pv%vcontra%f(i,j,p) = vcontra
+                V_pv%ucontra_old%f(i,j,p) = ucontra
+                V_pv%vcontra_old%f(i,j,p) = vcontra
 
                 ! debug 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)
@@ -348,9 +354,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, mesh, advsimul)
         end do
     end do
 
-    V_pv%ucontra_old%f = V_pv%ucontra%f
-    V_pv%vcontra_old%f = V_pv%vcontra%f
-
+    V_pv%ucontra%f(i0:iend,j0:jend+1,:) = V_pv%ucontra_old%f(i0:iend,j0:jend+1,:)
+    V_pv%vcontra%f(i0:iend,j0:jend+1,:) = V_pv%vcontra_old%f(i0:iend,j0:jend+1,:)
+    V_pv%ucontra%f(:,:,:) = V_pv%ucontra_old%f(:,:,:)
+    V_pv%vcontra%f(:,:,:) = V_pv%vcontra_old%f(:,:,:)
+ 
     ! CFL number
     advsimul%cfl = maxval(abs(V_pu%ucontra%f))
     advsimul%cfl = max(advsimul%cfl, maxval(abs(V_pv%vcontra%f)))

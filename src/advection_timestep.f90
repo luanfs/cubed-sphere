@@ -45,6 +45,10 @@ use advection_vars
 use departure_point, only: &
     adv_time_averaged_wind
 
+! Interpolation
+use duogrid_interpolation, only: &
+    dg_vf_interp
+
 implicit none
 
 contains 
@@ -56,7 +60,10 @@ subroutine adv_timestep(mesh)
     !
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
-        
+
+    ! Interpolation of the wind at ghost cells
+    !call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
     ! Compute time-averaged wind
     call adv_time_averaged_wind(wind_pu, wind_pv, advsimul%dp, advsimul%dto2, mesh%dx)
 
@@ -66,10 +73,11 @@ subroutine adv_timestep(mesh)
 
     ! Discrete divergence
     call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, advsimul, mesh)
+                      px, py, Qx, Qy, advsimul, mesh, L_pc)
 
     ! Update the solution
     Q%f = Q%f - advsimul%dt*div_ugq%f
+
 end subroutine adv_timestep
 
 
