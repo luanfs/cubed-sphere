@@ -308,6 +308,41 @@ subroutine meshstore(mesh, header)
     close(iunit)
 
     !---------------------------------------
+    !Write ll2contra at pc
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pc.dat"
+    open(iunit, file=filename, status='replace')
+    !Write coordinates
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                write(iunit,*) mesh%ll2contra_pc(i,j,p)%M(1,1), mesh%ll2contra_pc(i,j,p)%M(1,2), &
+                             mesh%ll2contra_pc(i,j,p)%M(2,1), mesh%ll2contra_pc(i,j,p)%M(2,2)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+    !---------------------------------------
+    !Write contra2ll at pc
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pc.dat"
+    open(iunit, file=filename, status='replace')
+    !Write coordinates
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                write(iunit,*) mesh%contra2ll_pc(i,j,p)%M(1,1), mesh%contra2ll_pc(i,j,p)%M(1,2), &
+                             mesh%contra2ll_pc(i,j,p)%M(2,1), mesh%contra2ll_pc(i,j,p)%M(2,2)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+
+    !---------------------------------------
     ! Write latlon grid indexes
     !---------------------------------------
     call getunit(iunit)

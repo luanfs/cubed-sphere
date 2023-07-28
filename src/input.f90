@@ -314,6 +314,41 @@ subroutine meshload(mesh, header)
     close(iunit)
 
     !---------------------------------------
+    ! Read ll2contra at pc
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pc.dat"
+    open(iunit, file=filename, status='old')
+    ! Read coordinates
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                read(iunit,*) mesh%ll2contra_pc(i,j,p)%M(1,1), mesh%ll2contra_pc(i,j,p)%M(1,2), &
+                             mesh%ll2contra_pc(i,j,p)%M(2,1), mesh%ll2contra_pc(i,j,p)%M(2,2)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+    !---------------------------------------
+    ! Read contra2ll at pu
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pc.dat"
+    open(iunit, file=filename, status='old')
+    ! Read coordinates
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                read(iunit,*) mesh%contra2ll_pc(i,j,p)%M(1,1), mesh%contra2ll_pc(i,j,p)%M(1,2), &
+                             mesh%contra2ll_pc(i,j,p)%M(2,1), mesh%contra2ll_pc(i,j,p)%M(2,2)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+
+    !---------------------------------------
     ! Read latlon grid indexes
     !---------------------------------------
     call getunit(iunit)
