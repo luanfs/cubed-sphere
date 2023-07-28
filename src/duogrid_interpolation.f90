@@ -21,7 +21,8 @@ use constants, only: &
     i0, iend, &
     j0, jend, &
     n0, nend, &
-    nghost
+    nghost, &
+    hs
 
 !Data structures
 use datastruct, only: &
@@ -33,7 +34,8 @@ use datastruct, only: &
 
 ! CS mapping
 use sphgeo, only: &
-    inverse_equiangular_gnomonic_map2
+    inverse_equiangular_gnomonic_map2, &
+    ll2contra, contra2ll
 
 implicit none
 
@@ -391,6 +393,180 @@ subroutine dg_interp(Q, L)
     end do
 
 end subroutine dg_interp
+
+subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
+    !---------------------------------------------------
+    !   duogrid interpolation of vector field 
+    ! (ghost cells are defined at cell centers)
+    !--------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
+    type(lagrange_poly_cs), intent(inout):: L
+    integer(i4):: i, j, p
+    real(r8) :: a1, a2
+
+    ! cubic interpolation coeffs
+    a1 =  9._r8/16._r8
+    a2 = -1._r8/16._r8
+
+    ! Let us populate the center values needed for the ghost cell interpolation
+    ! using a centered averaged (2nd order accurate)
+    U_pc%ucontra%f(i0:iend,j0:jend,:) = (U_pu%ucontra%f(i0:iend,j0:jend,:) + U_pu%ucontra%f(i0+1:iend+1,j0:jend,:))*0.5_r8
+    U_pc%vcontra%f(i0:iend,j0:jend,:) = (U_pv%vcontra%f(i0:iend,j0:jend,:) + U_pv%vcontra%f(i0:iend,j0+1:jend+1,:))*0.5_r8
+
+    ! Convert from contravariant to latlon
+    do i = i0, iend
+        do j = j0, jend
+            do p = 1, nbfaces
+                call contra2ll(U_pc%u%f(i,j,p), U_pc%v%f(i,j,p), &
+                U_pc%ucontra%f(i,j,p), U_pc%vcontra%f(i,j,p), mesh%contra2ll_pc(i,j,p)%M)
+            end do
+        end do
+    end do
+
+    ! Interpolate latlon to the ghost cell centers
+    call dg_interp(U_pc%u, L)
+    call dg_interp(U_pc%v, L)
+
+    ! Now, let us interpolate the ghost cell edges - cubic interpolation
+    ! Panel from south
+    U_pu%u%f(i0:iend+1,n0:j0-1,:) = &
+    a1*(U_pc%u%f(i0:iend+1  ,n0:j0-1,:) + U_pc%u%f(i0-1:iend  ,n0:j0-1,:)) + &
+    a2*(U_pc%u%f(i0+1:iend+2,n0:j0-1,:) + U_pc%u%f(i0-2:iend-1,n0:j0-1,:))
+
+    U_pu%v%f(i0:iend+1,n0:j0-1,:) = &
+    a1*(U_pc%v%f(i0:iend+1  ,n0:j0-1,:) + U_pc%v%f(i0-1:iend  ,n0:j0-1,:)) + &
+    a2*(U_pc%v%f(i0+1:iend+2,n0:j0-1,:) + U_pc%v%f(i0-2:iend-1,n0:j0-1,:))
+
+    ! Convert from latlon to contravariant
+    do i = i0, iend+1
+        do p = 1, nbfaces
+            do j = n0, j0-1
+                call ll2contra(U_pu%u%f(i,j,p), U_pu%v%f(i,j,p), &
+                U_pu%ucontra%f(i,j,p), U_pu%vcontra%f(i,j,p), mesh%ll2contra_pu(i,j,p)%M)
+            end do
+        end do
+    end do
+
+    ! Panel from north
+    U_pu%u%f(i0:iend+1, jend+1:nend,:) = &
+    a1*(U_pc%u%f(i0:iend+1  ,jend+1:nend,:) + U_pc%u%f(i0-1:iend  ,jend+1:nend,:)) + &
+    a2*(U_pc%u%f(i0+1:iend+2,jend+1:nend,:) + U_pc%u%f(i0-2:iend-1,jend+1:nend,:))
+
+    U_pu%v%f(i0:iend+1,jend+1:nend,:) = &
+    a1*(U_pc%v%f(i0:iend+1  ,jend+1:nend,:) + U_pc%v%f(i0-1:iend  ,jend+1:nend,:)) + &
+    a2*(U_pc%v%f(i0+1:iend+2,jend+1:nend,:) + U_pc%v%f(i0-2:iend-1,jend+1:nend,:))
+
+    ! Convert from latlon to contravariant
+    do i = i0, iend+1
+        do p = 1, nbfaces
+            do j = jend+1, nend
+                call ll2contra(U_pu%u%f(i,j,p), U_pu%v%f(i,j,p), &
+                U_pu%ucontra%f(i,j,p), U_pu%vcontra%f(i,j,p), mesh%ll2contra_pu(i,j,p)%M)
+            end do
+        end do
+    end do
+ 
+    ! Now, let us interpolate the ghost cell edges - cubic interpolation
+    ! Panel from south
+    U_pv%u%f(n0:i0-1,j0:jend+1,:) = &
+    a1*(U_pc%u%f(n0:i0-1,j0:jend+1,  :) + U_pc%u%f(n0:i0-1,j0-1:jend,  :)) + &
+    a2*(U_pc%u%f(n0:i0-1,j0+1:jend+2,:) + U_pc%u%f(n0:i0-1,j0-2:jend-1,:))
+
+    U_pv%v%f(n0:i0-1,j0:jend+1,:) = &
+    a1*(U_pc%v%f(n0:i0-1,j0:jend+1  ,:) + U_pc%v%f(n0:i0-1,j0-1:jend  ,:)) + &
+    a2*(U_pc%v%f(n0:i0-1,j0+1:jend+2,:) + U_pc%v%f(n0:i0-1,j0-2:jend-1,:))
+
+    ! Convert from latlon to contravariant
+    do j = j0, jend+1
+        do p = 1, nbfaces
+            do i = n0, i0-1
+                call ll2contra(U_pv%u%f(i,j,p), U_pv%v%f(i,j,p), &
+                U_pv%ucontra%f(i,j,p), U_pv%vcontra%f(i,j,p), mesh%ll2contra_pv(i,j,p)%M)
+            end do
+        end do
+    end do
+
+    ! Panel from north
+    U_pv%u%f(iend+1:nend, j0:jend+1, :) = &
+    a1*(U_pc%u%f(iend+1:nend,j0:jend+1  ,:) + U_pc%u%f(iend+1:nend,j0-1:jend  ,:)) + &
+    a2*(U_pc%u%f(iend+1:nend,j0+1:jend+2,:) + U_pc%u%f(iend+1:nend,j0-2:jend-1,:))
+
+    U_pv%v%f(iend+1:nend, j0:jend+1, :) = &
+    a1*(U_pc%v%f(iend+1:nend,j0:jend+1  ,:) + U_pc%v%f(iend+1:nend,j0-1:jend  ,:)) + &
+    a2*(U_pc%v%f(iend+1:nend,j0+1:jend+2,:) + U_pc%v%f(iend+1:nend,j0-2:jend-1,:))
+
+    ! Convert from latlon to contravariant
+    do j = j0, jend+1
+        do p = 1, nbfaces
+            do i = iend+1, nend
+                call ll2contra(U_pv%u%f(i,j,p), U_pv%v%f(i,j,p), &
+                U_pv%ucontra%f(i,j,p), U_pv%vcontra%f(i,j,p), mesh%ll2contra_pv(i,j,p)%M)
+            end do
+        end do
+    end do
+ 
+
+    !-----------------------------------------------------------------------------------
+    ! Interpolation needed for RK2 departure point scheme
+    ! Panel from west
+    U_pu%u%f(i0-1,n0:nend,:) = a1*(U_pc%u%f(i0-2,n0:nend,:) + U_pc%u%f(i0-1,n0:nend,:))&
+    + a2*(U_pc%u%f(i0,n0:nend,:) + U_pc%u%f(i0-3,n0:nend,:))
+    U_pu%v%f(i0-1,n0:nend,:) = a1*(U_pc%v%f(i0-2,n0:nend,:) + U_pc%v%f(i0-1,n0:nend,:))&
+    + a2*(U_pc%v%f(i0,n0:nend,:) + U_pc%v%f(i0-3,n0:nend,:))
+
+    ! Convert from latlon to contravariant
+    do j = n0, nend
+        do p = 1, nbfaces
+            call ll2contra(U_pu%u%f(i0-1,j,p), U_pu%v%f(i0-1,j,p), &
+        U_pu%ucontra%f(i0-1,j,p), U_pu%vcontra%f(i0-1,j,p), mesh%ll2contra_pu(i0-1,j,p)%M)
+        end do
+    end do
+
+    ! Panel from east
+    U_pu%u%f(iend+2,n0:nend,:) = a1*(U_pc%u%f(iend+1,:,:) + U_pc%u%f(iend+2,:,:))&
+    + a2*(U_pc%u%f(iend,:,:) + U_pc%u%f(iend+3,:,:))
+    U_pu%v%f(iend+2,:,:) = a1*(U_pc%v%f(iend+1,:,:) + U_pc%v%f(iend+2,:,:))&
+    + a2*(U_pc%v%f(iend,:,:) + U_pc%v%f(iend+3,:,:))
+
+    ! Convert from latlon to contravariant
+    do j = n0, nend
+        do p = 1, nbfaces
+            call ll2contra(U_pu%u%f(iend+2,j,p), U_pu%v%f(iend+2,j,p), &
+            U_pu%ucontra%f(iend+2,j,p), U_pu%vcontra%f(iend+2,j,p), mesh%ll2contra_pu(iend+2,j,p)%M)
+        end do
+    end do
+ 
+    !-----------------------------------------------------------------------------------
+    ! Panel from south
+    U_pv%u%f(n0:nend,j0-1,:) = a1*(U_pc%u%f(n0:nend,j0-2,:) + U_pc%u%f(n0:nend,j0-1,:))&
+    + a2*(U_pc%u%f(n0:nend,j0,:) + U_pc%u%f(n0:nend,j0-3,:))
+    U_pv%v%f(n0:nend,j0-1,:) = a1*(U_pc%v%f(n0:nend,j0-2,:) + U_pc%v%f(n0:nend,j0-1,:))&
+    + a2*(U_pc%v%f(n0:nend,j0,:) + U_pc%v%f(n0:nend,j0-3,:))
+
+    ! Convert from latlon to contravariant
+    do i = n0, nend
+        do p = 1, nbfaces
+            call ll2contra(U_pv%u%f(i,j0-1,p), U_pv%v%f(i,j0-1,p), &
+            U_pv%ucontra%f(i,j0-1,p), U_pv%vcontra%f(i,j0-1,p), mesh%ll2contra_pv(i,i0-1,p)%M)
+        end do
+    end do
+
+    ! Panel from east
+    U_pv%u%f(:,jend+2,:) = a1*(U_pc%u%f(:,jend+1,:) + U_pc%u%f(:,jend+2,:))&
+    + a2*(U_pc%u%f(:,jend,:) + U_pc%u%f(:,jend+3,:))
+    U_pv%v%f(:,jend+2,:) = a1*(U_pc%v%f(:,jend+1,:) + U_pc%v%f(:,jend+2,:))&
+    + a2*(U_pc%v%f(:,jend,:) + U_pc%v%f(:,jend+3,:))
+
+    ! Convert from latlon to contravariant
+    do i = n0, nend
+        do p = 1, nbfaces
+            call ll2contra(U_pv%u%f(i,jend+2,p), U_pv%v%f(i,jend+2,p), &
+            U_pv%ucontra%f(i,jend+2,p), U_pv%vcontra%f(i,jend+2,p), mesh%ll2contra_pv(i,jend+2,p)%M)
+        end do
+    end do
+ 
+end subroutine dg_vf_interp
 
 
 

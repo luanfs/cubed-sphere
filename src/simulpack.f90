@@ -42,7 +42,8 @@ use deallocation, only: &
 ! Output
 use output, only: &
     plot_scalarfield, &
-    write_final_errors
+    write_final_errors_adv, &
+    write_final_errors_interp
 
 ! Input
 use input, only: &
@@ -143,6 +144,7 @@ subroutine interpolation_test(mesh)
     real(r8) :: error_q, error_u, error_v
     real(r8) :: ew_u, ee_u, en_u, es_u
     real(r8) :: ew_v, ee_v, en_v, es_v
+    integer(i4) :: i,j,p,g,h
 
     ! Get test parameter from par/interpolation.par
     call getinterp_parameters(advsimul)
@@ -163,14 +165,15 @@ subroutine interpolation_test(mesh)
     error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
  
-
     ! Print errors on screen
     print*
     print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_u, error_v
-    stop
+    error_u = max(error_u, error_v)
+
     ! Write errors in a file
-    !filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
-    !call  write_final_errors(advsimul, mesh, filename) 
+    filename = "interp_ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)&
+    //"_id"//trim(advsimul%id_name)//"_"//trim(mesh%name)//"_errors"
+    call  write_final_errors_interp(filename, error_q, error_u)
 
 end subroutine interpolation_test
 
@@ -230,7 +233,7 @@ subroutine div_test(mesh)
     print '(a22, 1e16.8)','div mass:', advsimul%mass_variation
     ! Write errors in a file
     filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
-    call write_final_errors(advsimul, mesh, filename) 
+    call write_final_errors_adv(advsimul, mesh, filename) 
 
 end subroutine div_test
 
