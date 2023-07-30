@@ -16,20 +16,20 @@ module datastruct
 !=====================================================================
 
 !Use global constants and kinds
-use constants, only: i4, r8
+use constants, only: i4
 
 !-------------------------------------------------
 ! Simple 3d cartesian vector
 !------------------------------------------------
 type vector
-    real (r8), dimension(1:3) :: v
+    real (kind=8), dimension(1:3) :: v
 end type vector
 
 !-------------------------------------------------
 ! Simple 2x2 matrix
 !------------------------------------------------
 type matrix
-    real (r8), dimension(1:2,1:2) :: M
+    real (kind=8), dimension(1:2,1:2) :: M
 end type matrix
 
 !-------------------------------------------------
@@ -38,11 +38,11 @@ end type matrix
 !-------------------------------------------------
 type point_structure
     !Vector form of cartesian coordinates
-    real (r8), dimension(1:3) :: p
+    real (kind=8), dimension(1:3) :: p
 
     !Spherical/geographic coordinates of node in radians
     !  lat in [-pi/2, pi/2] , lon in [-pi, pi[   
-    real (r8) :: lat, lon
+    real (kind=8) :: lat, lon
 end type point_structure
 
 !---------------------------------
@@ -116,25 +116,25 @@ type cubedsphere
 
 
     ! Metric tensor at pc
-    real(r8), allocatable:: mt_pc(:,:,:)
+    real(kind=8), allocatable:: mt_pc(:,:,:)
 
     ! Metric tensor at pu
-    real(r8), allocatable:: mt_pu(:,:,:)
+    real(kind=8), allocatable:: mt_pu(:,:,:)
 
     ! Metric tensor at pu
-    real(r8), allocatable:: mt_pv(:,:,:)
+    real(kind=8), allocatable:: mt_pv(:,:,:)
 
     ! Minimum/Maximum geodesic distance between vertice points in radians
-    real(r8):: mindist, maxdist, meandist
+    real(kind=8):: mindist, maxdist, meandist
 
     ! Minimum/Maximum geodesic areas
-    real(r8):: minarea, maxarea, meanarea
+    real(kind=8):: minarea, maxarea, meanarea
 
     ! Local coordinates uniform grid size
-    real(r8):: dx, dy
+    real(kind=8):: dx, dy
 
     ! Latlon grid size (for plotting)
-    real(r8):: dlon, dlat
+    real(kind=8):: dlon, dlat
 
     ! Latlon grid points nearest neighbours indexes
     integer(i4), allocatable:: ix_ll(:,:), jy_ll(:,:), panels_ll(:,:)
@@ -182,7 +182,7 @@ end type cubedsphere
 type scalar_field
     ! Values array, ordered in the same sequence as the
     ! cubed sphere points
-    real (r8), allocatable  :: f(:,:,:)
+    real (kind=8), allocatable  :: f(:,:,:)
 
     ! Position of the values relative to a mesh
     !   0 - Centers (pc)
@@ -242,20 +242,20 @@ end type vector_field
 !---------------------------------------------------------
 type simulation
     ! variables for errors 
-    real(r8):: linf_error, l1_error, l2_error
+    real(kind=8):: linf_error, l1_error, l2_error
 
     ! variables for mass
-    real(r8):: mass, mass0, mass_variation
+    real(kind=8):: mass, mass0, mass_variation
 
     ! Time step
-    real(r8):: dt
-    real(r8):: dto2
+    real(kind=8):: dt
+    real(kind=8):: dto2
 
     ! CFL
-    real(r8):: cfl
+    real(kind=8):: cfl
 
     ! var used in mass fixer
-    real(r8):: a2
+    real(kind=8):: a2
 
     ! Initial condition
     integer(i4) :: ic
@@ -305,16 +305,16 @@ end type simulation
 type ppm_parabola
     ! parabola coefficients ! Notation from Colella and  Woodward 1984
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
-    real (r8), allocatable  :: q_L(:,:,:)
-    real (r8), allocatable  :: q_R(:,:,:)
-    real (r8), allocatable  :: dq(:,:,:)
-    real (r8), allocatable  :: q6(:,:,:)
+    real (kind=8), allocatable  :: q_L(:,:,:)
+    real (kind=8), allocatable  :: q_R(:,:,:)
+    real (kind=8), allocatable  :: dq(:,:,:)
+    real (kind=8), allocatable  :: q6(:,:,:)
 
     ! parabola fluxes
-    real (r8), allocatable  :: f_upw(:,:,:)  ! upwind flux
+    real (kind=8), allocatable  :: f_upw(:,:,:)  ! upwind flux
 
     ! Divergence of flux
-    real (r8), allocatable  :: df(:,:,:)  ! flux divergence
+    real (kind=8), allocatable  :: df(:,:,:)  ! flux divergence
 
     ! field to be reconstructed
     type(scalar_field) :: Q
@@ -340,16 +340,16 @@ end type ppm_parabola
 ! cubed-sphere
 !---------------------------------------------------------
 type lagrange_poly_cs
-    real (r8), allocatable  :: y_support(:)  ! Support points
-    real (r8), allocatable  :: f_support(:,:)  ! Value of the function at the support points
-    real (r8), allocatable  :: x_nodes(:,:) ! Nodes where we perform interpolation
-    real (r8), allocatable  :: y_nodes(:,:) ! Nodes where we perform interpolation
-    real (r8), allocatable  :: p_nodes(:,:,:) ! Lagrange polynomials at nodes
-    real (r8), allocatable  :: f_nodes(:,:,:) ! Support values used by node stenil
-    real (r8), allocatable  :: halodata_east(:,:,:) ! var to store the needed halo data
-    real (r8), allocatable  :: halodata_west(:,:,:) ! var to store the needed halo data
-    real (r8), allocatable  :: halodata_north(:,:,:) ! var to store the needed halo data
-    real (r8), allocatable  :: halodata_south(:,:,:) ! var to store the needed halo data
+    real (kind=8), allocatable  :: y_support(:)  ! Support points
+    real (kind=8), allocatable  :: f_support(:,:)  ! Value of the function at the support points
+    real (kind=8), allocatable  :: x_nodes(:,:) ! Nodes where we perform interpolation
+    real (kind=8), allocatable  :: y_nodes(:,:) ! Nodes where we perform interpolation
+    real (kind=8), allocatable  :: p_nodes(:,:,:) ! Lagrange polynomials at nodes
+    real (kind=8), allocatable  :: f_nodes(:,:,:) ! Support values used by node stenil
+    real (kind=8), allocatable  :: halodata_east(:,:,:) ! var to store the needed halo data
+    real (kind=8), allocatable  :: halodata_west(:,:,:) ! var to store the needed halo data
+    real (kind=8), allocatable  :: halodata_north(:,:,:) ! var to store the needed halo data
+    real (kind=8), allocatable  :: halodata_south(:,:,:) ! var to store the needed halo data
 
     ! stencil
     integer(i4), allocatable :: k0(:,:), kend(:,:)

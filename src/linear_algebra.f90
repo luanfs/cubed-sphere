@@ -8,8 +8,7 @@ use constants, only: &
    eps2, &
    i4, &
    r8, &
-   r4, &
-   r16
+   r4
 
 implicit none
 
@@ -56,40 +55,6 @@ function det(p1, p2, p3)
     return
 end function det
 
-function robdet(p1, p2, p3)
-    !-----------------------------------------------------------------------
-    !  ROBDET
-    !
-    !  Returns the robust determinant of the matrix made of the 3 points p1, p2, p3
-    !   as columns - The robust part is to ensure that the sign is correct if
-    !   it is near zero.
-    !-----------------------------------------------------------------------
-    real (r8), intent(in) :: p1(1:3)
-    real (r8), intent(in) :: p2(1:3)
-    real (r8), intent(in) :: p3(1:3)
-    real (r8):: robdet
-
-    real (r16):: a(1:6)
-    real (r16):: robdettmp
-    real(r16), dimension(1:3) :: q1
-    real(r16), dimension(1:3) :: q2
-    real(r16), dimension(1:3) :: q3
-
-    q1=p1
-    q2=p2
-    q3=p3
-    a(1)=q1(1)*q2(2)*q3(3)
-    a(2)=q2(1)*q3(2)*q1(3)
-    a(3)=q3(1)*q1(2)*q2(3)
-    a(4)=-q3(1)*q2(2)*q1(3)
-    a(5)=-q1(1)*q3(2)*q2(3)
-    a(6)=-q2(1)*q1(2)*q3(3)
-
-    robdettmp=a(1)+a(2)+a(3)+a(4)+a(5)+a(6)
-    robdet=real(robdettmp, r8)
-
-    return
-end function robdet
 
 function norm(p)
     !-----------------------------------------

@@ -20,76 +20,75 @@ integer, parameter :: i8  = selected_real_kind(14,40)
 
 integer, parameter :: r4  = selected_real_kind(6,37)  
 integer, parameter :: r8  = selected_real_kind(12,100)
-integer, parameter :: r16 = max(r8,selected_real_kind(27,2400))
 
 !---------------------------------------------------
 ! General Parameters
 !---------------------------------------------------
 
 !Pi 
-real(r8), parameter :: pi   = 4._r8* 0.78539816339744830961566 !datan (1._r8)
-real(r8), parameter :: pi2  = 2._r8*pi
-real(r8), parameter :: pio2 = pi/2._r8
-real(r8), parameter :: piby2 = pi*0.5_r8
-real(r8), parameter :: pio4 = pi/4._r8
+real(kind=8), parameter :: pi   = dacos(-1.d0)
+real(kind=8), parameter :: pi2  = 2.d0*pi
+real(kind=8), parameter :: pio2 = pi/2.d0
+real(kind=8), parameter :: piby2 = pi*0.5d0
+real(kind=8), parameter :: pio4 = pi*0.25d0
 
 ! Half length of cube edge
-real(r8), parameter :: acube = 1._r8/dsqrt(3._r8)
+real(kind=8), parameter :: acube = 1.d0/dsqrt(3.d0)
 
 !Degrees to radians coversion (multiply to obtain conversion)
-real(r8), parameter :: deg2rad = pi / 180._r8
+real(kind=8), parameter :: deg2rad = pi / 180.d0
 
 !Radians to Degrees coversion (multiply to obtain conversion)
-real(r8), parameter :: rad2deg = 1._r8/deg2rad
+real(kind=8), parameter :: rad2deg = 1.d0/deg2rad
 
 !Very small real number (aprox 1.10e-7)
-!real(r8), parameter :: eps = epsilon(1.)
-real(r8), parameter :: eps = epsilon(1.)
+!real(kind=8), parameter :: eps = epsilon(1.)
+real(kind=8), parameter :: eps = epsilon(1.)
 
 !Very very small real number (aprox 1.10e-16)
-real(r8), parameter :: eps2 = epsilon(pi)
+real(kind=8), parameter :: eps2 = epsilon(pi)
 
 !---------------------------------------------------
 ! Physical Parameters
 !---------------------------------------------------
 
 ! Earth mean radius (meters)
-real(r8), parameter :: erad     = 6.37122e6_r8
-real(r8), parameter :: rearth     = 6.37122e6_r8
-real(r8), parameter :: eradi    = 1._r8/6.37122e6_r8
-real(r8), parameter :: unitspharea    = 4._r8*pi
+real(kind=8), parameter :: erad     = 6.37122d0*10.d0**6
+real(kind=8), parameter :: rearth     = 6.37122d0*10.d0**6
+real(kind=8), parameter :: eradi    = 1.d0/erad
+real(kind=8), parameter :: unitspharea    = 4.d0*pi
 
 !Gravitational accerlaration of the Earth (m/s^2)
-real(r8), parameter  :: grav    = 9.80616_r8
-real(r8), parameter  :: gravity = 9.80616_r8
-real(r8), parameter  :: gravi   = 1._r8/9.80616_r8
-real(r8), parameter  :: gravo2   = grav*0.5_r8
+real(kind=8), parameter  :: grav    = 9.80616d0
+real(kind=8), parameter  :: gravity = 9.80616d0
+real(kind=8), parameter  :: gravi   = 1.d0/9.80616d0
+real(kind=8), parameter  :: gravo2   = grav*0.5d0
 
 ! Angular velocity of the Earth (rot/s)
-real (r8), parameter :: omega   = 7.292e-5_r8
-real (r8), parameter :: rotatn   = 7.292e-5_r8
+real (kind=8), parameter :: omega   = 7.292d0*10.d0**(-5)
+real (kind=8), parameter :: rotatn   = 7.292d0*10.d0**(-5)
 
 !Days to seconds
-real (r8), parameter :: day2sec = 86400_r8
-real (r8), parameter :: sec2day = 1._r8/86400_r8
+real (kind=8), parameter :: day2sec = 86400.d0
+real (kind=8), parameter :: sec2day = 1.d0/86400.d0
 
 ! Dry air gas constant [J/(kg K)]
-real(r8), parameter :: rdry     = 287.   
+real(kind=8), parameter :: rdry     = 287.   
 
 ! Dry air spec heat at const P [J/(kg K)]
-real(r8), parameter :: cp       = 1004.  
+real(kind=8), parameter :: cp       = 1004.  
 
 ! Dry air spec heat at const vol [J/(kg K)]
-real(r8), parameter :: cv       = 717.              
+real(kind=8), parameter :: cv       = 717.              
 
 ! Water vapor gas constant [J/(kg K)]
-real(r8), parameter :: rvap     = 461.               
+real(kind=8), parameter :: rvap     = 461.               
 
 ! Reference pressure [Pa]
-real(r8), parameter :: p00      = 1.e5            
+real(kind=8), parameter :: p00      = 1.e5            
 
 ! 0 Celsius temperature [K]
-real(r8), parameter :: t00      = 273.15         
+real(kind=8), parameter :: t00      = 273.15         
 
 !---------------------------------------------------
 ! Directories

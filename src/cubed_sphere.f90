@@ -20,7 +20,6 @@ use constants, only: &
     unitspharea, &
     acube, &
     rad2deg, &
-    r8, &
     showonscreen, &
     i0, iend, &
     j0, jend, &
@@ -257,10 +256,10 @@ subroutine equiangular_cubedsphere_generation(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
     ! Real aux vars
-    real(r8), allocatable :: x(:) ! Local coordinates (angular)
-    real(r8), allocatable :: y(:) ! Local coordinates (angular)
-    real(r8), allocatable :: tanx(:)
-    real(r8), allocatable :: tany(:)
+    real(kind=8), allocatable :: x(:) ! Local coordinates (angular)
+    real(kind=8), allocatable :: y(:) ! Local coordinates (angular)
+    real(kind=8), allocatable :: tanx(:)
+    real(kind=8), allocatable :: tany(:)
 
     ! Integer auxs
     integer(i4) :: i, j ! 2D grid counters
@@ -434,8 +433,8 @@ subroutine compute_tgvectors(mesh)
     integer(i4) :: panel    ! Panel counter
 
     ! Real aux vars
-    real(r8) :: v(1:3) ! vector point
-    real(r8), allocatable :: x(:), y(:)
+    real(kind=8) :: v(1:3) ! vector point
+    real(kind=8), allocatable :: x(:), y(:)
 
     ! Allocation
     call r8_1darray_allocation(x, n0, nend+1)
@@ -501,11 +500,11 @@ subroutine latlon_grid(mesh)
     type(cubedsphere), intent(inout) :: mesh
     integer(i4) :: i, j !counters
     integer(i4) :: ix, jy, panel !latlon point index on the cubed-sphere
-    real(r8) :: x, y
-    real(r8), allocatable :: xx(:), yy(:)
+    real(kind=8) :: x, y
+    real(kind=8), allocatable :: xx(:), yy(:)
 
     ! Latlon grid spacing
-    mesh%dlon = 2._r8*pi/mesh%nlon
+    mesh%dlon = 2d0*pi/mesh%nlon
     mesh%dlat = pi/mesh%nlat
 
     print*, 'Generating latlon grid...'
@@ -529,8 +528,8 @@ subroutine latlon_grid(mesh)
     do i = 0, mesh%nlon
         do j = 0, mesh%nlat
             call inverse_equiangular_gnomonic_map(x, y, panel, mesh%ll(i,j)%p, mesh)
-            !ix = floor((x+pio4-mesh%dx*0.5_r8)/mesh%dx)
-            !jy = floor((y+pio4-mesh%dx*0.5_r8)/mesh%dy)
+            !ix = floor((x+pio4-mesh%dx*0.d0)/mesh%dx)
+            !jy = floor((y+pio4-mesh%dx*0.d0)/mesh%dy)
             ix = minloc(abs(xx(:)-x),DIM=1)
             jy = minloc(abs(yy(:)-y),DIM=1)
             mesh%panels_ll(i,j) = panel
@@ -538,7 +537,7 @@ subroutine latlon_grid(mesh)
             mesh%jy_ll(i,j) = jy
 
             !print*,ix,jy,x*rad2deg,y*rad2deg,panel
-            !if(abs(x)*rad2deg>45._r8 .or. abs(y)*rad2deg>45._r8)then
+            !if(abs(x)*rad2deg>45d0 .or. abs(y)*rad2deg>45._kind=8)then
             !    print*, 'error1'
             !    stop
             !end if
@@ -575,7 +574,7 @@ subroutine compute_metric_tensor(mesh)
     integer(i4) :: p! Panel counter
 
     ! Real aux vars
-    real(r8) :: v1(1:3), v2(1:3) ! vectors
+    real(kind=8) :: v1(1:3), v2(1:3) ! vectors
 
     print*, 'Computing cubed-sphere metric tensor...'
 
@@ -633,9 +632,9 @@ subroutine compute_ll2contra(mesh)
     integer(i4) :: p ! Panel counter
 
     ! Real aux vars
-    real(r8) :: elon(1:3), elat(1:3), ex(1:3), ey(1:3) ! vectors
-    real(r8) :: lat, lon
-    real(r8) :: a11, a12, a21, a22, det
+    real(kind=8) :: elon(1:3), elat(1:3), ex(1:3), ey(1:3) ! vectors
+    real(kind=8) :: lat, lon
+    real(kind=8) :: a11, a12, a21, a22, det
 
     print*, 'Computing conversion matrices...'
 

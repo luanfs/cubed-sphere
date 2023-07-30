@@ -11,7 +11,6 @@ module advection_ic
 !Global constants
 use constants, only: &
     i4, &
-    r8, &
     pi, &
     nbfaces, &
     i0, iend, &
@@ -62,40 +61,40 @@ function q0_adv(lat, lon, ic)
     ! 3 - two gaussian hills
     !--------------------------------------------------
     integer(i4), intent(in) :: ic
-    real(r8), intent(in) :: lat, lon
-    real(r8) :: q0_adv
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8) :: q0_adv
 
     ! aux vars
-    real(r8) :: alpha ! rotation angle
-    real(r8) :: x, y, z ! r3 coordinates
-    real(r8) :: x0, y0, z0 ! r3 coordinates of center point
-    real(r8) :: x1, y1, z1 ! r3 coordinates of center point
-    real(r8) :: lat0, lon0 ! latlon coordinates of center point
-    real(r8) :: lat1, lon1 ! latlon coordinates of center point
-    real(r8) :: b0 ! Gaussian width
-    real(r8) :: u0, f
+    real(kind=8) :: alpha ! rotation angle
+    real(kind=8) :: x, y, z ! r3 coordinates
+    real(kind=8) :: x0, y0, z0 ! r3 coordinates of center point
+    real(kind=8) :: x1, y1, z1 ! r3 coordinates of center point
+    real(kind=8) :: lat0, lon0 ! latlon coordinates of center point
+    real(kind=8) :: lat1, lon1 ! latlon coordinates of center point
+    real(kind=8) :: b0 ! Gaussian width
+    real(kind=8) :: u0, f
     integer(i4):: m, n
 
     select case(ic)
         case(1) ! constant scalar field
-            q0_adv = 1._r8
+            q0_adv = 1.d0
 
         case(2) ! one Gaussian hill
             call sph2cart(lon, lat, x, y, z)
             ! Gaussian center
-            lon0 = 0._r8
-            lat0 = 0._r8
+            lon0 = 0.d0
+            lat0 = 0.d0
             call sph2cart(lon0, lat0, x0, y0, z0)
-            b0 = 5._r8
+            b0 = 5.d0
             q0_adv = dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
    
         case(3) ! two Gaussian hills
             call sph2cart(lon, lat, x, y, z)
             ! Gaussian hill centers
-            lon0 = -pi/6._r8
-            lat0 = 0._r8
-            lon1 = pi/6._r8
-            lat1 = 0._r8
+            lon0 = -pi/6.d0
+            lat0 = 0.d0
+            lon1 = pi/6.d0
+            lat1 = 0.d0
             call sph2cart(lon0, lat0, x0, y0, z0)
             call sph2cart(lon1, lat1, x1, y1, z1)
             b0 = 5.0
@@ -103,15 +102,15 @@ function q0_adv(lat, lon, ic)
                      dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
 
         case(4) ! steady state from will92
-            alpha = -45._r8*deg2rad ! Rotation angle
-            u0 = 2._r8*pi/5._r8     ! Wind speed
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0 = 2.d0*pi/5.d0     ! Wind speed
             f = (-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))
             q0_adv = 1.0 - f*f
 
         case(5) ! Trigonometric field
             m = 1
             n = 1
-            q0_adv = -(-dcos(lon) * dsin(m * lon) * m * dcos(n * lat) ** 4 / dcos(lat) - &
+            q0_adv = (-dcos(lon) * dsin(m * lon) * m * dcos(n * lat) ** 4 / dcos(lat) - &
             dsin(lon) * dcos(m * lon) * m ** 2 * dcos(n * lat) ** 4 / dcos(lat) + &
             12.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 2 * dsin(n *lat) ** 2 * n ** 2 * dcos(lat) - &
             4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 4 * n ** 2 * dcos(lat) + &
@@ -138,17 +137,17 @@ subroutine velocity_adv(ulon, vlat, lat, lon, time, vf)
     ! 6 - trinometric field
     !--------------------------------------------------
     integer(i4), intent(in) :: vf
-    real(r8), intent(in) :: lat, lon, time
-    real(r8), intent(inout) :: ulon, vlat
+    real(kind=8), intent(in) :: lat, lon, time
+    real(kind=8), intent(inout) :: ulon, vlat
 
     ! aux vars
-    real(r8) :: alpha ! rotation angle
-    real(r8) :: u0, T, k, lonp
+    real(kind=8) :: alpha ! rotation angle
+    real(kind=8) :: u0, T, k, lonp
     integer(i4) :: n, m
 
     select case(vf)
         case(1)! rotated zonal wind
-            alpha = -45._r8*deg2rad ! Rotation angle
+            alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  2.0*pi/5.0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
@@ -225,7 +224,7 @@ subroutine init_adv_vars(mesh)
     call compute_lagrange_cs(L_pc, mesh)
 
     ! Time step over 2
-    advsimul%dto2 = advsimul%dt*0.5_r8
+    advsimul%dto2 = advsimul%dt*0.5d0
 
     ! Compute the initial conditions
     call compute_ic_adv(Q_exact, wind_pu, wind_pv, wind_pc, mesh, advsimul)
@@ -286,12 +285,12 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
     integer(i4) :: i, j, p
 
     !aux
-    real(r8) :: lat, lon
-    real(r8) :: ulon, vlat, ucontra, vcontra
+    real(kind=8) :: lat, lon
+    real(kind=8) :: ulon, vlat, ucontra, vcontra
     
     !debug - check if wind conversion is correct
-    real(r8) :: ull, vll, error1, error
-    error = 0._r8
+    real(kind=8) :: ull, vll, error1, error
+    error = 0.d0
 
 
     ! Scalar field at pc
@@ -312,7 +311,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0._r8, advsimul%vf)
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
 
                 V_pu%ucontra_old%f(i,j,p) = ucontra
@@ -339,7 +338,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0._r8, advsimul%vf)
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
 
                 V_pv%ucontra_old%f(i,j,p) = ucontra
@@ -380,13 +379,13 @@ subroutine div_adv(div, lat, lon, vf)
     ! 6 - trigometric field
     !--------------------------------------------------
     integer(i4), intent(in) :: vf
-    real(r8), intent(in) :: lat, lon
-    real(r8), intent(out) :: div
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8), intent(out) :: div
     integer(i4) :: m, n
 
     select case(vf)
         case(1, 2)
-            div = 0._r8
+            div = 0.d0
         case(3)
             print*, 'error on div_adv: div is not implemented for this vector field: ', vf
             stop
@@ -419,7 +418,7 @@ subroutine compute_exact_div(div, mesh, advsimul)
     integer(i4) :: i, j, p
 
     !aux
-    real(r8) :: lat, lon
+    real(kind=8) :: lat, lon
 
     ! interior grid indexes
     i0 = mesh%i0

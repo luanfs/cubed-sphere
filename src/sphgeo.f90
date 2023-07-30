@@ -19,8 +19,6 @@ use constants, only: &
      pi2, &
      pio2, &
      r8, &
-     r4, &
-     r16, &
      rad2deg, &
      acube, &
      nbfaces
