@@ -206,7 +206,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(lagrange_poly_cs), intent(inout) :: L_pc ! lagrange polynomial
 
     ! Interpolate scalar field to ghost cells
-    call dg_interp(Q, L_pc)
+    !call dg_interp(Q, L_pc)
 
     ! Dimension splitting operators
     call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)

@@ -13,7 +13,6 @@ use constants, only: &
     griddir, &
     i4, &
     pardir, &
-    r8, &
     showonscreen, &
     simulcase, &
     nbfaces, &
@@ -90,14 +89,14 @@ subroutine grid_quality(mesh)
     type(scalar_field):: mt_pc
 
     ! aux vars
-    real(r8) :: erad_km, erad2_km ! Earth radius in km
+    real(kind=8) :: erad_km, erad2_km ! Earth radius in km
     integer(i4) :: p
     integer(i4) :: i   , j
     print*, 'Grid quality testing...'
     print*
 
     ! Earth radius in km
-    erad_km  = erad/1e3_r8
+    erad_km  = erad/1000.d0
     erad2_km = erad_km*erad_km
 
     ! Scalar fields allocation
@@ -141,9 +140,9 @@ subroutine interpolation_test(mesh)
     character (len=256):: filename
 
     !Errors
-    real(r8) :: error_q, error_u, error_v
-    real(r8) :: ew_u, ee_u, en_u, es_u
-    real(r8) :: ew_v, ee_v, en_v, es_v
+    real(kind=8) :: error_q, error_u, error_v
+    real(kind=8) :: ew_u, ee_u, en_u, es_u
+    real(kind=8) :: ew_v, ee_v, en_v, es_v
     integer(i4) :: i,j,p,g,h
 
     ! Get test parameter from par/interpolation.par
@@ -157,13 +156,30 @@ subroutine interpolation_test(mesh)
     call dg_interp(Q, L_pc)
 
     ! Duogrid interpolation of the vector field
-    call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    !call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
     error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+
+    error_q = 0.d0
+    do p = 1, nbfaces
+        do g = 1, nghost
+            !h = g-1
+            !do j = j0-h, jend+h
+            do j = j0, jend
+                error_q = max(error_q, maxval(abs(Q_exact%f(iend+g,j0:jend,p)-Q%f(iend+g,j0:jend,p))))
+                error_q = max(error_q, maxval(abs(Q_exact%f(i0-g,j0:jend,p)-Q%f(i0-g,j0:jend,p))))
+                error_q = max(error_q, maxval(abs(Q_exact%f(i0:iend,jend+g,p)-Q%f(i0:iend,jend+g,p))))
+                error_q = max(error_q, maxval(abs(Q_exact%f(i0:iend,j0-g,p)-Q%f(i0:iend,j0-g,p))))
+ 
+            end do
+        end do
+    end do
+    !print*, abs(Q_exact%f(iend+1,j0:jend,1)-Q%f(iend+1,j0:jend,1))
+    !stop
  
     ! Print errors on screen
     print*
@@ -203,7 +219,7 @@ subroutine div_test(mesh)
     advsimul%name = "div_"//trim(advsimul%name)
 
     ! Multiply Q by the metric tensor
-    Q%f = 1._r8
+    Q%f = 1.d0
 
     ! Compute the divergence obtained in one timestep
     call adv_timestep(mesh)
@@ -250,7 +266,7 @@ subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
     type(scalar_field), intent(inout) :: Q      ! numerical approximation
     type(scalar_field), intent(inout) :: Q_ref   ! reference solution
     type(scalar_field), intent(inout) :: Q_error ! error
-    real(r8), intent(out) :: linf, l1, l2
+    real(kind=8), intent(out) :: linf, l1, l2
     ! aux vars
     integer (i4) :: x0, xend
     integer (i4) :: y0, yend
