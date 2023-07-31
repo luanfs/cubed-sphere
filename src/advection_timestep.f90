@@ -9,7 +9,6 @@ module advection_timestep
 !Global constants
 use constants, only: &
     i4, &
-    r8, &
     pi, &
     nbfaces, &
     i0, iend, &
@@ -103,8 +102,8 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     integer(i4) :: i, j, p
 
     !aux
-    real(r8) :: lat, lon
-    real(r8) :: ulon, vlat, ucontra, vcontra
+    real(kind=8) :: lat, lon
+    real(kind=8) :: ulon, vlat, ucontra, vcontra
     
     !$OMP PARALLEL DO &
     !$OMP DEFAULT(NONE) & 
@@ -119,7 +118,7 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
                 V_pu%ucontra%f(i,j,p) = ucontra
                 V_pu%vcontra%f(i,j,p) = vcontra
@@ -141,7 +140,7 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0._r8, vf)
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
                 V_pv%ucontra%f(i,j,p) = ucontra
                 V_pv%vcontra%f(i,j,p) = vcontra

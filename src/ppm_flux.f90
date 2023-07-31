@@ -24,7 +24,6 @@ module ppm_flux
 ! Constants
 use constants, only: &
   i4, &
-  r8, &
   nbfaces, &
   i0, iend, &
   j0, jend, &
@@ -149,7 +148,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
-    px%q6(i0-1:iend+1,:,:) = 6._r8*px%Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
+    px%q6(i0-1:iend+1,:,:) = 6.d0*px%Q%f(i0-1:iend+1,:,:) - 3.d0*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
     !$OMP END PARALLEL WORKSHARE
 
     !$OMP PARALLEL DO &
@@ -163,17 +162,17 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
         do j = n0, nend
             do p = 1, nbfaces
                 ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
-                if(cx_pu%f(i,j,p) >= 0._r8)then
+                if(cx_pu%f(i,j,p) >= 0.d0)then
                     ! Flux at left edges
                     px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*(px%q_R(i-1,j,p) + &
-                    0.5_r8*cx_pu%f(i,j,p)*(px%q6(i-1,j,p) - px%dq(i-1,j,p)) - &
-                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3._r8)*px%q6(i-1,j,p))
+                    0.5d0*cx_pu%f(i,j,p)*(px%q6(i-1,j,p) - px%dq(i-1,j,p)) - &
+                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3.d0)*px%q6(i-1,j,p))
 
                 else
                     ! Flux at right edges
                     px%f_upw(i,j,p) = V_pu_av%f(i,j,p)*(px%q_L(i,j,p) - &
-                    0.5_r8*cx_pu%f(i,j,p)*(px%q6(i,j,p) + px%dq(i,j,p)) - &
-                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3._r8)*px%q6(i,j,p))
+                    0.5d0*cx_pu%f(i,j,p)*(px%q6(i,j,p) + px%dq(i,j,p)) - &
+                    (cx_pu%f(i,j,p)*cx_pu%f(i,j,p)/3.d0)*px%q6(i,j,p))
 
                 end if
             end do
@@ -231,7 +230,7 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     py%dq(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:) - py%q_L(:,j0-1:jend+1,:)
-    py%q6(:,j0-1:jend+1,:) = 6._r8*py%Q%f(:,j0-1:jend+1,:) - 3._r8*(py%q_R(:,j0-1:jend+1,:) + py%q_L(:,j0-1:jend+1,:))
+    py%q6(:,j0-1:jend+1,:) = 6.d0*py%Q%f(:,j0-1:jend+1,:) - 3.d0*(py%q_R(:,j0-1:jend+1,:) + py%q_L(:,j0-1:jend+1,:))
     !$OMP END PARALLEL WORKSHARE
 
     !$OMP PARALLEL DO &
@@ -244,17 +243,17 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
         do j = j0, jend+1
             do p = 1, nbfaces
                 ! Compute the fluxes (formula 1.12 from Collela and Woodward 1984)
-                if(cy_pv%f(i,j,p) >= 0._r8)then
+                if(cy_pv%f(i,j,p) >= 0.d0)then
                     ! Flux at left edges
                     py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*(py%q_R(i,j-1,p) + &
-                    0.5_r8*cy_pv%f(i,j,p)*(py%q6(i,j-1,p) - py%dq(i,j-1,p)) - &
-                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3._r8)*py%q6(i,j-1,p))
+                    0.5d0*cy_pv%f(i,j,p)*(py%q6(i,j-1,p) - py%dq(i,j-1,p)) - &
+                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3.d0)*py%q6(i,j-1,p))
 
                 else
                     ! Flux at right edges
                     py%f_upw(i,j,p) = V_pv_av%f(i,j,p)*(py%q_L(i,j,p) - &
-                    0.5_r8*cy_pv%f(i,j,p)*(py%q6(i,j,p) + py%dq(i,j,p)) - &
-                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3._r8)*py%q6(i,j,p))
+                    0.5d0*cy_pv%f(i,j,p)*(py%q6(i,j,p) + py%dq(i,j,p)) - &
+                    (cy_pv%f(i,j,p)*cy_pv%f(i,j,p)/3.d0)*py%q6(i,j,p))
 
                 end if
             end do
