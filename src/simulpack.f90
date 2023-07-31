@@ -156,13 +156,14 @@ subroutine interpolation_test(mesh)
     call dg_interp(Q, L_pc)
 
     ! Duogrid interpolation of the vector field
-    !call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
     error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+    !error_u = 0.d0
 
     ! Print errors on screen
     print*
