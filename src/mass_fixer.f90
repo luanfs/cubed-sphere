@@ -9,7 +9,6 @@ module mass_fixer
 ! Constants
 use constants, only: &
   i4, &
-  r8, &
   nbfaces, &
   i0, iend, &
   j0, jend, &
@@ -37,11 +36,11 @@ subroutine average_flux_at_cube_intefaces(px, py, dx, dy, dt)
     !--------------------------------------------------------------------------------
     type(ppm_parabola), intent(inout) :: px ! parabola
     type(ppm_parabola), intent(inout) :: py ! parabola
-    real(r8), intent(in) :: dx, dy, dt ! parabola
-    real(r8) :: a, b
+    real(kind=8), intent(in) :: dx, dy, dt ! parabola
+    real(kind=8) :: a, b
 
-    a = 0.5_r8
-    b = 0.5_r8
+    a = 0.5d0
+    b = 0.5d0
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(px, py, i0, iend, j0, jend, dx, dy, dt, a, b)
     ! Average panels 1-2,2-3,3-4,4-1

@@ -22,7 +22,6 @@ module ppm_reconstruction
 !Global constants
 use constants, only: &
     i4, &
-    r8, &
     i0, iend, &
     j0, jend
 
@@ -47,14 +46,14 @@ subroutine ppm_reconstruction_x(Q, px)
     type(ppm_parabola), intent(inout) :: px
 
     !aux
-    real(r8) :: a1, a2, a3, a4, a5
+    real(kind=8) :: a1, a2, a3, a4, a5
 
     select case(px%recon)
         case('ppm') ! PPM from CW84 paper
             ! Values of Q at right edges (q_(j+1/2)) - Formula 1.9 from Collela and Woodward 1984
-            a1 = 7._r8/12._r8
+            a1 = 7.d0/12.d0
             a2 = a1
-            a3 = -1._r8/12._r8
+            a3 = -1.d0/12.d0
             a4 = a3
 
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -68,11 +67,11 @@ subroutine ppm_reconstruction_x(Q, px)
 
         case('hyppm') !Hybrid PPM from PL07
             ! coeffs from equations 41 and 42 from Putman and Lin 2007
-            a1 =   2._r8/60._r8
-            a2 = -13._r8/60._r8
-            a3 =  47._r8/60._r8
-            a4 =  27._r8/60._r8
-            a5 =  -3._r8/60._r8
+            a1 =   2.d0/60.d0
+            a2 = -13.d0/60.d0
+            a3 =  47.d0/60.d0
+            a4 =  27.d0/60.d0
+            a5 =  -3.d0/60.d0
 
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(px, Q, a1, a2, a3, a4, a5, i0, iend)
@@ -91,7 +90,7 @@ subroutine ppm_reconstruction_x(Q, px)
         ! Compute the polynomial coefs
         ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
         !px%dq(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:) - px%q_L(i0-1:iend+1,:,:)
-        !px%q6(i0-1:iend+1,:,:) = 6._r8*Q%f(i0-1:iend+1,:,:) - 3._r8*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
+        !px%q6(i0-1:iend+1,:,:) = 6.d0*Q%f(i0-1:iend+1,:,:) - 3.d0*(px%q_R(i0-1:iend+1,:,:) + px%q_L(i0-1:iend+1,:,:))
 
        return 
 
@@ -109,14 +108,14 @@ subroutine ppm_reconstruction_y(Q, py)
     type(ppm_parabola), intent(inout) :: py
 
     !aux
-    real(r8) :: a1, a2, a3, a4, a5
+    real(kind=8) :: a1, a2, a3, a4, a5
 
     select case(py%recon)
         case('ppm') ! PPM from CW84 paper
             ! Values of Q at right edges (q_(j+1/2)) - Formula 1.9 from Collela and Woodward 1984
-            a1 = 7._r8/12._r8
+            a1 = 7.d0/12.d0
             a2 = a1
-            a3 = -1._r8/12._r8
+            a3 = -1.d0/12.d0
             a4 = a3
 
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -130,11 +129,11 @@ subroutine ppm_reconstruction_y(Q, py)
 
         case('hyppm') !Hybrid PPM from PL07
             ! coeffs from equations 41 and 42 from Putman and Lin 2007
-            a1 =   2._r8/60._r8
-            a2 = -13._r8/60._r8
-            a3 =  47._r8/60._r8
-            a4 =  27._r8/60._r8
-            a5 =  -3._r8/60._r8
+            a1 =   2.d0/60.d0
+            a2 = -13.d0/60.d0
+            a3 =  47.d0/60.d0
+            a4 =  27.d0/60.d0
+            a5 =  -3.d0/60.d0
 
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(py, Q, a1, a2, a3, a4, a5, j0, jend)
@@ -154,7 +153,7 @@ subroutine ppm_reconstruction_y(Q, py)
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     !py%dq(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:) - py%q_L(:,i0-1:iend+1,:)
-    !py%q6(:,i0-1:iend+1,:) = 6._r8*Q%f(:,i0-1:iend+1,:) - 3._r8*(py%q_R(:,i0-1:iend+1,:) + py%q_L(:,i0-1:iend+1,:))
+    !py%q6(:,i0-1:iend+1,:) = 6.d0*Q%f(:,i0-1:iend+1,:) - 3.d0*(py%q_R(:,i0-1:iend+1,:) + py%q_L(:,i0-1:iend+1,:))
     return 
 
 end subroutine ppm_reconstruction_y
