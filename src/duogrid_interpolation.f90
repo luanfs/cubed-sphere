@@ -397,11 +397,10 @@ subroutine dg_interp(Q, L)
 
 end subroutine dg_interp
 
-subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
+subroutine dg_vf_interp_Cgrid(U_pu, U_pv, U_pc, L, mesh)
     !---------------------------------------------------
-    !   duogrid interpolation of vector field 
-    ! (ghost cells are defined at cell centers)
-    !--------------------------------------------------
+    ! duogrid interpolation of vector field given at C grid
+    ! (ghost cells are defined at cell edges)
     type(cubedsphere), intent(inout) :: mesh
     type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
     type(lagrange_poly_cs), intent(inout):: L
@@ -425,11 +424,12 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     c1 =  9.d0/16.d0
     c2 = -1.d0/16.d0
 
-    ! Let us populate the center values needed for the ghost cell interpolation
-    ! using a cubic interpolation
-    U_pc%ucontra%f(i0:iend,j0:jend,:) = (U_pu%ucontra%f(i0:iend,j0:jend,:) + U_pu%ucontra%f(i0+1:iend+1,j0:jend,:))*0.5d0
-    U_pc%vcontra%f(i0:iend,j0:jend,:) = (U_pv%vcontra%f(i0:iend,j0:jend,:) + U_pv%vcontra%f(i0:iend,j0+1:jend+1,:))*0.5d0
-
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend) &
+    !$OMP SHARED(a1, a2, a3, a4) &
+    !$OMP SHARED(b1, b2, b3, b4) &
+    !$OMP SHARED(h, hs) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     ! west boundary
     U_pc%ucontra%f(i0,j0:jend,:) = &
       a1*U_pu%ucontra%f(i0,j0:jend,:) &
@@ -505,9 +505,15 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     + b2*U_pu%ucontra%f(i0+hs:iend-h    ,jend-hs:jend,:) &
     + b3*U_pu%ucontra%f(i0+hs+1:iend-h+1,jend-hs:jend,:) &
     + b4*U_pu%ucontra%f(i0+hs+2:iend-h+2,jend-hs:jend,:)
-
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from contravariant to latlon
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pc, mesh) & 
+    !$OMP SHARED(n0, nend, i0, iend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     do i = i0, iend
         do j = j0, jend
             do p = 1, nbfaces
@@ -516,6 +522,7 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! Interpolate latlon to the ghost cell centers
     call dg_interp(U_pc%u, L)
@@ -523,6 +530,10 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
 
     ! Now, let us interpolate the ghost cell edges - cubic interpolation
     ! Panel from south
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pu%u%f(i0:iend+1,n0:j0-1,:) = &
     c1*(U_pc%u%f(i0:iend+1  ,n0:j0-1,:) + U_pc%u%f(i0-1:iend  ,n0:j0-1,:)) + &
     c2*(U_pc%u%f(i0+1:iend+2,n0:j0-1,:) + U_pc%u%f(i0-2:iend-1,n0:j0-1,:))
@@ -530,18 +541,31 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     U_pu%v%f(i0:iend+1,n0:j0-1,:) = &
     c1*(U_pc%v%f(i0:iend+1  ,n0:j0-1,:) + U_pc%v%f(i0-1:iend  ,n0:j0-1,:)) + &
     c2*(U_pc%v%f(i0+1:iend+2,n0:j0-1,:) + U_pc%v%f(i0-2:iend-1,n0:j0-1,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pu, mesh) & 
+    !$OMP SHARED(n0, nend, i0, iend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     do i = i0, iend+1
-        do p = 1, nbfaces
-            do j = n0, j0-1
+        do j = n0, j0-1
+            do p = 1, nbfaces
                 call ll2contra(U_pu%u%f(i,j,p), U_pu%v%f(i,j,p), &
                 U_pu%ucontra%f(i,j,p), U_pu%vcontra%f(i,j,p), mesh%ll2contra_pu(i,j,p)%M)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
+
 
     ! Panel from north
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pu%u%f(i0:iend+1, jend+1:nend,:) = &
     c1*(U_pc%u%f(i0:iend+1  ,jend+1:nend,:) + U_pc%u%f(i0-1:iend  ,jend+1:nend,:)) + &
     c2*(U_pc%u%f(i0+1:iend+2,jend+1:nend,:) + U_pc%u%f(i0-2:iend-1,jend+1:nend,:))
@@ -549,19 +573,31 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     U_pu%v%f(i0:iend+1,jend+1:nend,:) = &
     c1*(U_pc%v%f(i0:iend+1  ,jend+1:nend,:) + U_pc%v%f(i0-1:iend  ,jend+1:nend,:)) + &
     c2*(U_pc%v%f(i0+1:iend+2,jend+1:nend,:) + U_pc%v%f(i0-2:iend-1,jend+1:nend,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pu, mesh) & 
+    !$OMP SHARED(n0, nend, i0, iend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     do i = i0, iend+1
-        do p = 1, nbfaces
-            do j = jend+1, nend
+        do j = jend+1, nend
+            do p = 1, nbfaces
                 call ll2contra(U_pu%u%f(i,j,p), U_pu%v%f(i,j,p), &
                 U_pu%ucontra%f(i,j,p), U_pu%vcontra%f(i,j,p), mesh%ll2contra_pu(i,j,p)%M)
             end do
         end do
     end do
- 
+    !$OMP END PARALLEL DO
+
     ! Now, let us interpolate the ghost cell edges - cubic interpolation
     ! Panel from south
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pv%u%f(n0:i0-1,j0:jend+1,:) = &
     c1*(U_pc%u%f(n0:i0-1,j0:jend+1,  :) + U_pc%u%f(n0:i0-1,j0-1:jend,  :)) + &
     c2*(U_pc%u%f(n0:i0-1,j0+1:jend+2,:) + U_pc%u%f(n0:i0-1,j0-2:jend-1,:))
@@ -569,18 +605,30 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     U_pv%v%f(n0:i0-1,j0:jend+1,:) = &
     c1*(U_pc%v%f(n0:i0-1,j0:jend+1  ,:) + U_pc%v%f(n0:i0-1,j0-1:jend  ,:)) + &
     c2*(U_pc%v%f(n0:i0-1,j0+1:jend+2,:) + U_pc%v%f(n0:i0-1,j0-2:jend-1,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pv, mesh) & 
+    !$OMP SHARED(n0, nend, i0, iend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     do j = j0, jend+1
-        do p = 1, nbfaces
-            do i = n0, i0-1
+        do i = n0, i0-1
+            do p = 1, nbfaces
                 call ll2contra(U_pv%u%f(i,j,p), U_pv%v%f(i,j,p), &
                 U_pv%ucontra%f(i,j,p), U_pv%vcontra%f(i,j,p), mesh%ll2contra_pv(i,j,p)%M)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! Panel from north
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pv%u%f(iend+1:nend, j0:jend+1, :) = &
     c1*(U_pc%u%f(iend+1:nend,j0:jend+1  ,:) + U_pc%u%f(iend+1:nend,j0-1:jend  ,:)) + &
     c2*(U_pc%u%f(iend+1:nend,j0+1:jend+2,:) + U_pc%u%f(iend+1:nend,j0-2:jend-1,:))
@@ -588,86 +636,146 @@ subroutine dg_vf_interp(U_pu, U_pv, U_pc, L, mesh)
     U_pv%v%f(iend+1:nend, j0:jend+1, :) = &
     c1*(U_pc%v%f(iend+1:nend,j0:jend+1  ,:) + U_pc%v%f(iend+1:nend,j0-1:jend  ,:)) + &
     c2*(U_pc%v%f(iend+1:nend,j0+1:jend+2,:) + U_pc%v%f(iend+1:nend,j0-2:jend-1,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pv, mesh) & 
+    !$OMP SHARED(n0, nend, i0, iend, j0, jend, nbfaces) &
+    !$OMP PRIVATE(i, j, p) &
+    !$OMP SCHEDULE(static)
     do j = j0, jend+1
-        do p = 1, nbfaces
-            do i = iend+1, nend
+        do i = iend+1, nend
+            do p = 1, nbfaces
                 call ll2contra(U_pv%u%f(i,j,p), U_pv%v%f(i,j,p), &
                 U_pv%ucontra%f(i,j,p), U_pv%vcontra%f(i,j,p), mesh%ll2contra_pv(i,j,p)%M)
             end do
         end do
     end do
+    !$OMP END PARALLEL DO
  
 
     !-----------------------------------------------------------------------------------
     ! Interpolation needed for RK2 departure point scheme
     ! Panel from west
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pu%u%f(i0-1,n0:nend,:) = &
     c1*(U_pc%u%f(i0-2,n0:nend,:) + U_pc%u%f(i0-1,n0:nend,:)) + &
     c2*(U_pc%u%f(i0,n0:nend,:) + U_pc%u%f(i0-3,n0:nend,:))
+
     U_pu%v%f(i0-1,n0:nend,:) = &
     c1*(U_pc%v%f(i0-2,n0:nend,:) + U_pc%v%f(i0-1,n0:nend,:)) + &
     c2*(U_pc%v%f(i0,n0:nend,:) + U_pc%v%f(i0-3,n0:nend,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pu, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend, nbfaces) &
+    !$OMP PRIVATE(j, p) &
+    !$OMP SCHEDULE(static)
     do j = n0, nend
         do p = 1, nbfaces
             call ll2contra(U_pu%u%f(i0-1,j,p), U_pu%v%f(i0-1,j,p), &
         U_pu%ucontra%f(i0-1,j,p), U_pu%vcontra%f(i0-1,j,p), mesh%ll2contra_pu(i0-1,j,p)%M)
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! Panel from east
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pu%u%f(iend+2,n0:nend,:) = &
     c1*(U_pc%u%f(iend+1,:,:) + U_pc%u%f(iend+2,:,:)) + &
     c2*(U_pc%u%f(iend,:,:) + U_pc%u%f(iend+3,:,:))
+
     U_pu%v%f(iend+2,:,:) = &
     c1*(U_pc%v%f(iend+1,:,:) + U_pc%v%f(iend+2,:,:)) + &
     c2*(U_pc%v%f(iend,:,:) + U_pc%v%f(iend+3,:,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pu, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend, nbfaces) &
+    !$OMP PRIVATE(j, p) &
+    !$OMP SCHEDULE(static)
     do j = n0, nend
         do p = 1, nbfaces
             call ll2contra(U_pu%u%f(iend+2,j,p), U_pu%v%f(iend+2,j,p), &
             U_pu%ucontra%f(iend+2,j,p), U_pu%vcontra%f(iend+2,j,p), mesh%ll2contra_pu(iend+2,j,p)%M)
         end do
     end do
+    !$OMP END PARALLEL DO
  
     !-----------------------------------------------------------------------------------
     ! Panel from south
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pv%u%f(n0:nend,j0-1,:) = &
     c1*(U_pc%u%f(n0:nend,j0-2,:) + U_pc%u%f(n0:nend,j0-1,:)) + &
     c2*(U_pc%u%f(n0:nend,j0,:) + U_pc%u%f(n0:nend,j0-3,:))
+
     U_pv%v%f(n0:nend,j0-1,:) = &
     c1*(U_pc%v%f(n0:nend,j0-2,:) + U_pc%v%f(n0:nend,j0-1,:)) + &
     c2*(U_pc%v%f(n0:nend,j0,:) + U_pc%v%f(n0:nend,j0-3,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pv, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend, nbfaces) &
+    !$OMP PRIVATE(i, p) &
+    !$OMP SCHEDULE(static)
     do i = n0, nend
         do p = 1, nbfaces
             call ll2contra(U_pv%u%f(i,j0-1,p), U_pv%v%f(i,j0-1,p), &
             U_pv%ucontra%f(i,j0-1,p), U_pv%vcontra%f(i,j0-1,p), mesh%ll2contra_pv(i,i0-1,p)%M)
         end do
     end do
+    !$OMP END PARALLEL DO
 
     ! Panel from east
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+    !$OMP SHARED(c1, c2) &
+    !$OMP SHARED(U_pc, U_pu, U_pv)
     U_pv%u%f(:,jend+2,:) = &
     c1*(U_pc%u%f(:,jend+1,:) + U_pc%u%f(:,jend+2,:)) + &
     c2*(U_pc%u%f(:,jend,:) + U_pc%u%f(:,jend+3,:))
+
     U_pv%v%f(:,jend+2,:) = &
     c1*(U_pc%v%f(:,jend+1,:) + U_pc%v%f(:,jend+2,:)) + &
     c2*(U_pc%v%f(:,jend,:) + U_pc%v%f(:,jend+3,:))
+    !$OMP END PARALLEL WORKSHARE
 
     ! Convert from latlon to contravariant
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(U_pv, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, n0, nend, nbfaces) &
+    !$OMP PRIVATE(i, p) &
+    !$OMP SCHEDULE(static)
     do i = n0, nend
         do p = 1, nbfaces
             call ll2contra(U_pv%u%f(i,jend+2,p), U_pv%v%f(i,jend+2,p), &
             U_pv%ucontra%f(i,jend+2,p), U_pv%vcontra%f(i,jend+2,p), mesh%ll2contra_pv(i,jend+2,p)%M)
         end do
     end do
- 
-end subroutine dg_vf_interp
+    !$OMP END PARALLEL DO
+
+end subroutine dg_vf_interp_Cgrid
 
 
 
