@@ -215,8 +215,8 @@ subroutine dg_interp(Q, L)
         !--------------------------------------------------------------------------
         ! East panel interpolation
         do g = 1, nghost
-            !h = g-1
-            do j = n0, nend
+            h = g-1
+            do j = j0-h, jend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
                 !print*, L%f_nodes(j,g,:)
@@ -297,9 +297,9 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
             ! Does the interpolation
-            !Q%f(iend+g,j,p) = 0.d0
+            Q%f(iend+g,j,p) = 0.d0
             do d = 1, L%order
-            !    Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
 
@@ -311,7 +311,7 @@ subroutine dg_interp(Q, L)
             L%f_nodes(j,g,:) = L%halodata_north(L%k0(j,g):L%kend(j,g), g, p)
             ! Does the interpolation
             do d = 1, L%order
-            !    Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -324,9 +324,9 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
             ! Does the interpolation
-            !Q%f(iend+g,j,p) =0.d0
+            Q%f(iend+g,j,p) = 0.d0
             do d = 1, L%order
-            !    Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
 
@@ -349,9 +349,9 @@ subroutine dg_interp(Q, L)
             j = jend+g2
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            !Q%f(i0-g2,j,p) = 0.d0
+            Q%f(i0-g2,j,p) = 0.d0
             do d = 1, L%order
-            !    Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
             end do
         end do
 
@@ -362,7 +362,7 @@ subroutine dg_interp(Q, L)
             L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
             ! Does the interpolation
             do d = 1, L%order
-            !    Q%f(i,jend+g,p) = Q%f(i,jend+g,p) + 0.5d0*L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
+                Q%f(i,jend+g,p) = Q%f(i,jend+g,p) + 0.5d0*L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -375,9 +375,9 @@ subroutine dg_interp(Q, L)
             j = i0-g2
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            !Q%f(i0-g2,j,p) = 0.d0
+            Q%f(i0-g2,j,p) = 0.d0
             do d = 1, L%order
-            !    Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
             end do
         end do
 
@@ -389,7 +389,7 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
             do d = 1, L%order
-            !   Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
+                Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -605,54 +605,53 @@ subroutine compute_lagrange_cs(L, mesh)
                 mesh%pc(iend+g,j,1)%p, mesh)
             end do
         end do
+
         L%k0(:,:) = 0
         L%kend(:,:) =0
-        print*
         do g = 1, nghost
             do j = n0, nend
             !    print*, L%y_nodes(j,g),  L%x_nodes(j,g), mesh%dx
             end do
             !read(*,*)
         end do
-        !stop
-        ! Compute stencils for all ghost cells expect at corners
-        print*, mesh%n
+
+        ! Compute stencils
         do g = 1, nghost
-            !h = g-1
-            do j = n0, nend
-                kk = ((L%y_nodes(j,g)-L%y_support(n0))/mesh%dx)
-                L%kend(j,g) = kk+ceiling(L%order*0.5d0)
-                L%k0(j,g) = L%kend(j,g) - L%order + 1
-                L%kend(j,g) = L%kend(j,g)+n0
-                L%k0(j,g)   = L%k0(j,g)+n0
- 
-                if (j>=j0 .and. j<=jend)then
-                    if(L%kend(j,g)>=jend+1)then
-                        L%kend(j,g) = jend
-                        L%k0(j,g) = L%kend(j,g) - L%order + 1
-                    else if(L%k0(j,g)<j0)then
-                        L%k0(j,g) = j0
-                        L%kend(j,g) = L%k0(j,g) + L%order - 1
+            do j = j0-g, jend+g
+                ! Point that are not at the corners
+                if (j>j0-g .and. j<jend+g)then
+                    jnearest =  minloc(abs(L%y_support(j0:jend)-L%y_nodes(j,g)),DIM=1)
+                    if(L%y_nodes(j,g) > L%y_support(jnearest))then
+                        L%kend(j,g) = jnearest  + ceiling(L%order*0.5d0)
+                        L%k0(j,g) = L%kend(j,g) - L%order + 1 
+                    else 
+                        L%k0(j,g) = jnearest - ceiling(L%order*0.5d0)
+                        L%kend(j,g) = L%k0(j,g) + L%order - 1 
                     end if
-                end if
+                
+                    if(L%k0(j,g)<j0)then
+                        L%k0(j,g) = j0
+                        L%kend(j,g) = L%k0(j,g) + L%order - 1 
+                    end if
 
-                if (j>jend .and. L%kend(j,g)>=nend+1)then
-                    L%kend(j,g) = nend
-                    L%k0(j,g) = L%kend(j,g) - L%order + 1
-                end if
+                    if(L%kend(j,g)>jend)then
+                        L%kend(j,g) = jend
+                        L%k0(j,g) = L%kend(j,g) - L%order + 1 
+                    end if
 
-                if (j<j0 .and. L%k0(j,g)<n0)then
-                    L%k0(j,g) = n0
+                ! Corner points
+                else if (j==jend+g) then
+                    L%kend(j,g) = min(nend, jend + ceiling(L%order*0.5d0))
+                    L%k0(j,g)   = L%kend(j,g) - L%order + 1
+                else 
+                    L%k0(j,g)   = max(n0, j0-ceiling(L%order*0.5d0))
                     L%kend(j,g) = L%k0(j,g) + L%order - 1
                 end if
-     
-                !print*,L%k0(j,g)+3,L%kend(j,g)+3
             end do
             !read(*,*)
+            !stop
         end do
 
-
-        !stop
         do g = 1, nghost
             do i = i0-g, iend+g
                 if(L%kend(i,g)-L%k0(i,g) .ne. L%degree)then
@@ -666,16 +665,16 @@ subroutine compute_lagrange_cs(L, mesh)
                 !end if
 
                 if(L%y_support(L%k0(i,g))>L%y_nodes(i,g))then
-                    print*, i,g, 'error3'
-                    print*, L%k0(i,g), L%kend(i,g)
-                    !read(*,*)
+                    print*, 'error3'
+                    print*, i,g,L%k0(i,g), L%kend(i,g)
+                    read(*,*)
                     stop
                 end if
 
                 if(L%y_support(L%kend(i,g))<L%y_nodes(i,g))then
-                    print*, i,g, 'error4'
-                    !print*, L%k0(i,g), L%kend(i,g)
-                    !read(*,*)
+                    print*, 'error4'
+                    print*, i,g,L%k0(i,g), L%kend(i,g)
+                    read(*,*)
                     stop
                 end if
  
@@ -687,35 +686,20 @@ subroutine compute_lagrange_cs(L, mesh)
 
         ! Store in f the nearest support points used in Lagrange interpolation
         do g = 1, nghost
-            do j = n0, nend
+            do j = j0-g, jend+g
                 L%f_nodes(j,g,:) = L%y_support(L%k0(j,g):L%kend(j,g))
             end do
         end do
-        print*
-        do g = 1, nghost
-            do j = n0, nend
-            !    print*, L%f_nodes(j,g,:)
-            end do
-            !read(*,*)
-        end do
 
-        !stop
         ! Compute the Lagrange nodes at halo region
         do g = 1, nghost
-            do j = n0, nend
+            do j = j0-g, jend+g
                 do d = 1, L%order
                     call lagrange_basis(L%y_nodes(j,g), L%f_nodes(j,g,:), L%degree, d, L%p_nodes(j,g,d))
                 end do
             end do
         end do
 
-        do g = 1, nghost
-            do j = n0, nend
-            !    print*, L%p_nodes(j,g,:)
-            end do
-            !read(*,*)
-        end do
-        !stop
     end if
 end subroutine compute_lagrange_cs
 

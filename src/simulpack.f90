@@ -164,23 +164,6 @@ subroutine interpolation_test(mesh)
     error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
 
-    error_q = 0.d0
-    do p = 1, nbfaces
-        do g = 1, nghost
-            !h = g-1
-            !do j = j0-h, jend+h
-            do j = j0, jend
-                error_q = max(error_q, maxval(abs(Q_exact%f(iend+g,j0:jend,p)-Q%f(iend+g,j0:jend,p))))
-                error_q = max(error_q, maxval(abs(Q_exact%f(i0-g,j0:jend,p)-Q%f(i0-g,j0:jend,p))))
-                error_q = max(error_q, maxval(abs(Q_exact%f(i0:iend,jend+g,p)-Q%f(i0:iend,jend+g,p))))
-                error_q = max(error_q, maxval(abs(Q_exact%f(i0:iend,j0-g,p)-Q%f(i0:iend,j0-g,p))))
- 
-            end do
-        end do
-    end do
-    !print*, abs(Q_exact%f(iend+1,j0:jend,1)-Q%f(iend+1,j0:jend,1))
-    !stop
- 
     ! Print errors on screen
     print*
     print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_u, error_v
