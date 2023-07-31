@@ -21,8 +21,8 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128, 256,) # Values of N
-degrees = (0, 1, 2, 3) # interpolation degrees
+N = (16, 32, 64, 128, 256, 512) # Values of N
+degrees = (1, 2, 3, 4,) # interpolation degrees
 
 # Program to be run
 program = "./main"
@@ -78,14 +78,15 @@ def main():
                 subprocess.run('cd .. ; ./main', shell=True)
 
             errors = np.loadtxt(filename)
-            error_u[k,i] = errors[0]
-            error_q[k,i] = errors[1]
+            error_q[k,i] = errors[0]
+            error_u[k,i] = errors[1]
 
             k = k + 1
 
     # plot errors for different all schemes in  different norms
-    error_list = [error_u, error_q]
-    name = ['vf'+str(vf), 'ic'+str(ic)]
+    error_list = [ error_q, error_u]
+    name = ['ic'+str(ic), 'vf'+str(vf)]
+    titles = ['Ghost cells of scalar field' , 'Ghost cells of vector field']
 
     e = 0
     for error in error_list:
@@ -100,16 +101,16 @@ def main():
 
         for k in range(0, len(degrees)):
             errors.append(error[:,k])
-            fname.append('Degree - '+str(k))
+            fname.append('Degree - '+str(degrees[k]))
 
-        title = 'Interpolation error'
+        title = 'Interpolation error - ' + titles[e]
         filename = graphdir+'interp_'+name[e]+'_parabola_errors.pdf'
         plot_errors_loglog(N, errors, fname, filename, title, emin, emax)
 
         # Plot the convergence rate
-        title = 'Convergence rate'
+        title = 'Convergence rate - ' + titles[e]
         filename = graphdir+'interp_'+name[e]+'_convergence_rate.pdf'
-        plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
+        plot_convergence_rate(N, errors, fname, filename, title, 0, 5)
         e = e+1
 
 if __name__ == '__main__':
