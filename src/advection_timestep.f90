@@ -46,7 +46,7 @@ use departure_point, only: &
 
 ! Interpolation
 use duogrid_interpolation, only: &
-    dg_vf_interp
+    dg_vf_interp_Cgrid
 
 implicit none
 
@@ -61,7 +61,7 @@ subroutine adv_timestep(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
     ! Interpolation of the wind at ghost cells
-    !call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! Compute time-averaged wind
     call adv_time_averaged_wind(wind_pu, wind_pv, advsimul%dp, advsimul%dto2, mesh%dx)
@@ -74,9 +74,11 @@ subroutine adv_timestep(mesh)
     call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
                       px, py, Qx, Qy, advsimul, mesh, L_pc)
 
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Q, advsimul, div_ugq)
     ! Update the solution
     Q%f = Q%f - advsimul%dt*div_ugq%f
-
+    !$OMP END PARALLEL WORKSHARE
 end subroutine adv_timestep
 
 
@@ -108,12 +110,12 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !$OMP PARALLEL DO &
     !$OMP DEFAULT(NONE) & 
     !$OMP SHARED(V_pu, mesh) & 
-    !$OMP SHARED(n0, nend, nbfaces, vf) &
+    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
     !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
     !$OMP SCHEDULE(static) 
     ! Vector field at pu
-    do i = n0, nend+1
-        do j = n0, nend
+    do i = i0, iend+1
+        do j = j0, jend
             do p = 1, nbfaces
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
@@ -131,11 +133,11 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !$OMP PARALLEL DO &
     !$OMP DEFAULT(NONE) & 
     !$OMP SHARED(V_pv, mesh) & 
-    !$OMP SHARED(n0, nend, nbfaces, vf) &
+    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
     !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
     !$OMP SCHEDULE(static) 
-    do i = n0, nend
-        do j = n0, nend+1
+    do i = i0, iend
+        do j = j0, jend+1
             do p = 1, nbfaces
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon

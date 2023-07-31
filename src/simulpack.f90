@@ -71,7 +71,7 @@ use diagnostics, only: &
 
 ! Duogrid interpolation
 use duogrid_interpolation, only: &
-    dg_interp, dg_vf_interp
+    dg_interp, dg_vf_interp_Cgrid
 
 implicit none
 
@@ -140,10 +140,9 @@ subroutine interpolation_test(mesh)
     character (len=256):: filename
 
     !Errors
-    real(kind=8) :: error_q, error_u, error_v
-    real(kind=8) :: ew_u, ee_u, en_u, es_u
-    real(kind=8) :: ew_v, ee_v, en_v, es_v
-    integer(i4) :: i,j,p,g,h
+    real(kind=8) :: error_q
+    real(kind=8) :: error_ucontra, error_vcontra
+    real(kind=8) :: error_ucovari, error_vcovari
 
     ! Get test parameter from par/interpolation.par
     call getinterp_parameters(advsimul)
@@ -155,25 +154,25 @@ subroutine interpolation_test(mesh)
     ! Duogrid interpolation of the scalar field Q 
     call dg_interp(Q, L_pc)
 
-    ! Duogrid interpolation of the vector field
-    call dg_vf_interp(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    ! Duogrid interpolation of the vector field on a C grid
+    call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
-    error_u = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
-    error_v = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+    error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
+    error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
     !error_u = 0.d0
 
+    error_ucontra = max(error_ucontra, error_vcontra)
     ! Print errors on screen
     print*
-    print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_u, error_v
-    error_u = max(error_u, error_v)
+    print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_ucontra, error_ucovari
 
     ! Write errors in a file
     filename = "interp_ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)&
     //"_id"//trim(advsimul%id_name)//"_"//trim(mesh%name)//"_errors"
-    call  write_final_errors_interp(filename, error_q, error_u)
+    call  write_final_errors_interp(filename, error_q, error_ucontra)
 
 end subroutine interpolation_test
 
