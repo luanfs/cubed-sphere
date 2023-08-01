@@ -82,10 +82,10 @@ function q0_adv(lat, lon, ic)
         case(2) ! one Gaussian hill
             call sph2cart(lon, lat, x, y, z)
             ! Gaussian center
-            lon0 = 0.d0
-            lat0 = 0.d0
+            lon0 = pi*0.25d0
+            lat0 = pi/6.d0
             call sph2cart(lon0, lat0, x0, y0, z0)
-            b0 = 5.d0
+            b0 = 10.d0
             q0_adv = dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
    
         case(3) ! two Gaussian hills
@@ -123,6 +123,8 @@ function q0_adv(lat, lon, ic)
     return
 end function q0_adv
 
+
+
 subroutine velocity_adv(ulon, vlat, lat, lon, time, vf)
     !--------------------------------------------------
     ! Compute the velocity field of the advection
@@ -148,22 +150,22 @@ subroutine velocity_adv(ulon, vlat, lat, lon, time, vf)
     select case(vf)
         case(1)! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
-            u0    =  2.0*pi/5.0 ! Wind speed
+            u0    =  2.d0*pi/5.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
 
         case(2) ! Non divergent field 4 from Nair and Lauritzen 2010
-            T = 5.0 ! Period
-            k = 2.0
-            lonp = lon-2*pi*time/T
+            T = 5.d0 ! Period
+            k = 2.d0
+            lonp = lon-2.d0*pi*time/T
             ulon = k*(dsin((lonp+pi))**2)*(dsin(2.*lat))*(dcos(pi*time/T))+2.*pi*dcos(lat)/T
             vlat = k*(dsin(2*(lonp+pi)))*(dcos(lat))*(dcos(pi*time/T))
 
         case(3)! Divergent field 3 from Nair and Lauritzen 2010
-            T = 5.0 ! Period
-            k = 1.0
-            ulon = -k*(dsin((lon+pi)/2.0)**2)*(dsin(2.0*lat))*(dcos(lat)**2)*(dcos(pi*time/T))
-            vlat = (k/2.0)*(dsin((lon+pi)))*(dcos(lat)**3)*(dcos(pi*time/T))
+            T = 5.d0 ! Period
+            k = 1.d0
+            ulon = -k*(dsin((lon+pi)/2.d0)**2)*(dsin(2.d0*lat))*(dcos(lat)**2)*(dcos(pi*time/T))
+            vlat = (k/2.d0)*(dsin((lon+pi)))*(dcos(lat)**3)*(dcos(pi*time/T))
 
         case(4) ! trigonometric field
             m = 1
@@ -226,6 +228,14 @@ subroutine init_adv_vars(mesh)
     ! Time step over 2
     advsimul%dto2 = advsimul%dt*0.5d0
 
+    ! Final time step - we adopt 5 units for all simulations
+    advsimul%tf = 5.d0
+
+    ! Number of time steps
+    advsimul%nsteps = int(advsimul%tf/advsimul%dt)
+    advsimul%nplot = advsimul%nsteps/(advsimul%nplot-1)
+    advsimul%plotcounter = 0
+
     ! Compute the initial conditions
     call compute_ic_adv(Q_exact, wind_pu, wind_pv, wind_pc, mesh, advsimul)
     Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
@@ -236,12 +246,12 @@ subroutine init_adv_vars(mesh)
     ! var used in pr mass fixer
     advsimul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
 
-    ! Define wheter exact solution is available or not
-    if(advsimul%vf == 1)then
+    ! Define wheter exact solution at all time steps is available or not
+    if(advsimul%ic == 1 .and. advsimul%vf <= 2)then
         advsimul%exactsolution = .true.
-    else if(advsimul%ic == 1 .and. advsimul%vf <= 2)then
+    else if(advsimul%ic .ne. 3 .and. advsimul%vf == 1)then
         advsimul%exactsolution = .true.
-    else
+     else
         advsimul%exactsolution = .false.
     end if
 
@@ -259,6 +269,14 @@ subroutine init_adv_vars(mesh)
     //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp) &
     //"_mf"//trim(advsimul%mf)//"_id"//trim(advsimul%id_name)
 
+    ! basename
+    !advsimul%name = trim(advsimul%name)
+
+    ! Name scalar fields
+    div_ugq_error%name = "div_"//trim(advsimul%name)//"_div_error"
+    div_ugq%name = "div_"//trim(advsimul%name)//"_div"
+    Q%name = "adv_"//trim(advsimul%name)//"_Q"
+    Q_error%name = "adv_"//trim(advsimul%name)//"_Q_error"
 
 end subroutine init_adv_vars
 
@@ -328,8 +346,6 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
     V_pu%ucontra%f(i0:iend+1,j0:jend,:) = V_pu%ucontra_old%f(i0:iend+1,j0:jend,:)
     V_pu%vcontra%f(i0:iend+1,j0:jend,:) = V_pu%vcontra_old%f(i0:iend+1,j0:jend,:)
-    V_pu%ucontra%f(:,:,:) = V_pu%ucontra_old%f(:,:,:)
-    V_pu%vcontra%f(:,:,:) = V_pu%vcontra_old%f(:,:,:)
  
     ! Vector field at pv
     do p = 1 , nbfaces
@@ -355,8 +371,6 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
     V_pv%ucontra%f(i0:iend,j0:jend+1,:) = V_pv%ucontra_old%f(i0:iend,j0:jend+1,:)
     V_pv%vcontra%f(i0:iend,j0:jend+1,:) = V_pv%vcontra_old%f(i0:iend,j0:jend+1,:)
-    V_pv%ucontra%f(:,:,:) = V_pv%ucontra_old%f(:,:,:)
-    V_pv%vcontra%f(:,:,:) = V_pv%vcontra_old%f(:,:,:)
  
     ! CFL number
     advsimul%cfl = maxval(abs(V_pu%ucontra%f))

@@ -26,7 +26,8 @@ use sphgeo, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field
+  vector_field, &
+  simulation
 
 ! Discrete operators 
 use discrete_operators, only: &
@@ -44,10 +45,6 @@ use advection_vars
 use departure_point, only: &
     adv_time_averaged_wind
 
-! Interpolation
-use duogrid_interpolation, only: &
-    dg_vf_interp_Cgrid
-
 implicit none
 
 contains 
@@ -60,15 +57,16 @@ subroutine adv_timestep(mesh)
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
 
-    ! Interpolation of the wind at ghost cells
-    call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    ! Time averaged wind - when vf==1, we only need to compute for n=1
+    if(advsimul%vf>=2 .or. advsimul%n==1)then
+        ! Compute time-averaged wind
+        call adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, advsimul%dp, &
+        advsimul%dto2, mesh%dx, mesh, L_pc)
 
-    ! Compute time-averaged wind
-    call adv_time_averaged_wind(wind_pu, wind_pv, advsimul%dp, advsimul%dto2, mesh%dx)
-
-    ! CFL number
-    call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
-    call cfl_y(mesh, wind_pv, cy_pv, advsimul%dt)
+        ! CFL number
+        call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
+        call cfl_y(mesh, wind_pv, cy_pv, advsimul%dt)
+    end if
 
     ! Discrete divergence
     call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
@@ -82,13 +80,11 @@ subroutine adv_timestep(mesh)
 end subroutine adv_timestep
 
 
-subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
+subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     !--------------------------------------------------
     ! Compute the velocity update needed in a timestep 
     ! for the advection problem on the sphere
     !
-    ! ic - initial conditions
-    ! vf - velocity field
     !
     ! Q - scalar field average values on cells
     ! V_pu - velocity at pu
@@ -96,9 +92,9 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !
     !--------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(scalar_field), intent(out) :: Q
-    type(vector_field), intent(out) :: V_pu, V_pv
-    integer(i4), intent(in) :: ic, vf
+    type(vector_field), intent(inout) :: V_pu, V_pv
+    integer(i4), intent(in) :: vf
+    real(kind=8), intent(in) :: t
 
     ! aux
     integer(i4) :: i, j, p
@@ -106,13 +102,19 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
     !aux
     real(kind=8) :: lat, lon
     real(kind=8) :: ulon, vlat, ucontra, vcontra
-    
-    !$OMP PARALLEL DO &
-    !$OMP DEFAULT(NONE) & 
-    !$OMP SHARED(V_pu, mesh) & 
-    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
-    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
-    !$OMP SCHEDULE(static) 
+
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(V_pu, V_pv)
+    V_pu%ucontra%f(:,:,:) = V_pu%ucontra_old%f(:,:,:)
+    V_pv%vcontra%f(:,:,:) = V_pv%vcontra_old%f(:,:,:)
+
+    !!$OMP END PARALLEL WORKSHARE
+    !!$OMP PARALLEL DO &
+    !!$OMP DEFAULT(NONE) & 
+    !!$OMP SHARED(V_pu, mesh) & 
+    !!$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
+    !!$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !!$OMP SCHEDULE(static) 
     ! Vector field at pu
     do i = i0, iend+1
         do j = j0, jend
@@ -120,36 +122,36 @@ subroutine adv_update(Q, V_pu, V_pv, mesh, ic, vf)
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0.d0, vf)
+                call velocity_adv(ulon, vlat, lat, lon, t, vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
                 V_pu%ucontra%f(i,j,p) = ucontra
                 V_pu%vcontra%f(i,j,p) = vcontra
             end do
         end do
     end do    
-    !$OMP END PARALLEL DO
+    !!$OMP END PARALLEL DO
 
     ! Vector field at pv
-    !$OMP PARALLEL DO &
-    !$OMP DEFAULT(NONE) & 
-    !$OMP SHARED(V_pv, mesh) & 
-    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
-    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
-    !$OMP SCHEDULE(static) 
+    !!$OMP PARALLEL DO &
+    !!$OMP DEFAULT(NONE) & 
+    !!$OMP SHARED(V_pv, mesh) & 
+    !!$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
+    !!$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !!$OMP SCHEDULE(static) 
     do i = i0, iend
         do j = j0, jend+1
             do p = 1, nbfaces
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
-                call velocity_adv(ulon, vlat, lat, lon, 0.d0, vf)
+                call velocity_adv(ulon, vlat, lat, lon, t, vf)
                 call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
                 V_pv%ucontra%f(i,j,p) = ucontra
                 V_pv%vcontra%f(i,j,p) = vcontra
             end do
         end do
     end do
-    !$OMP END PARALLEL DO
+    !!$OMP END PARALLEL DO
 end subroutine adv_update
 
 end module advection_timestep

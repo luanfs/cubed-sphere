@@ -92,11 +92,6 @@ bin/deallocation.obj: src/deallocation.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv deallocation.mod bin/.
 
-#Output
-bin/output.obj: src/output.f90
-	$(F90) $(FFLAG) $(NFFLAG) -c  $^ -o $@ $(IMOD)
-	mv output.mod bin/.
-
 #Input
 bin/input.obj: src/input.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
@@ -146,6 +141,11 @@ bin/advection_vars.obj: src/advection_vars.f90
 bin/advection_ic.obj: src/advection_ic.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv advection_ic.mod bin/.
+
+#Output
+bin/output.obj: src/output.f90
+	$(F90) $(FFLAG) $(NFFLAG) -c  $^ -o $@ $(IMOD)
+	mv output.mod bin/.
 
 #Advection timestep
 bin/advection_timestep.obj: src/advection_timestep.f90

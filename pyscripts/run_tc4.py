@@ -22,12 +22,12 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128, 256, ) # Values of N
-reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
-splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
-mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
-dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
-mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
+N = (16, 32, 64, 128,) # Values of N
+reconmethods = ('hyppm', 'hyppm', 'hyppm') # reconstruction methods
+splitmethods = ('pl07' , 'avlt' , 'avlt' ) # splitting
+mtmethods    = ('pl07' , 'mt0'  , 'mt0') # metric tensor formulation
+dpmethods    = ('rk1'  , 'rk2'  , 'rk2') # departure point formulation
+mfixers      = ('pr'   , 'af'   , 'pr') # mass fixers 
 
 #reconmethods = ('hyppm',) # reconstruction methods
 #splitmethods = ('avlt',) # splitting
@@ -40,15 +40,21 @@ program = "./main"
 run = True # Run the simulation?
 
 # Plotting parameters
-colormap = 'seismic'
-map_projection = 'mercator'
+map_projection = 'sphere'
 
 def main():
     # Get the parameters
     _, kind  = get_parameters()
 
-    # Define divergence test in mesh.par'
-    replace_line(pardir+'mesh.par', '3', 11)
+    # Define advection test in mesh.par'
+    replace_line(pardir+'mesh.par', '4', 11)
+
+    # remove output on screen
+    replace_line(pardir+'mesh.par', '0', 9)
+
+    # Define velocity
+    ic = '4'
+    replace_line(pardir+'advection.par', ic, 3)
 
     # Define velocity
     vf = '1'
@@ -56,13 +62,16 @@ def main():
 
     # interpolation degree
     interpd = '3'
-    replace_line(pardir+'advection.par', interpd, 19)
-
-    # Get adv parameters
-    ic, _, recon = get_adv_parameters()
+    replace_line(pardir+'advection.par', interpd, 21)
 
     # time steps
     dt = np.zeros(len(N))
+
+    # number of plots
+    Nplots = 2
+    replace_line(pardir+'advection.par', str(Nplots), 9)
+    tplots = np.linspace(0, Nplots-1, Nplots, dtype=np.uint8)
+    timeplots = np.linspace(0.0, 5.0, Nplots)
 
     # Initial time step
     if vf=='1':
@@ -74,6 +83,14 @@ def main():
     else:
         print('Error - invalid vf')
         exit()
+
+    # min/max in plot
+    if ic=='1' or ic=='2' or ic=='3' or ic=='4':
+       qmin, qmax = -0.2, 1.2
+    else:
+        print('Error - invalid ic')
+        exit()
+
 
     for k in range(1, len(N)):
         dt[k] = 0.5*dt[k-1]
@@ -100,19 +117,19 @@ def main():
         mf = mfixers[i]
 
         # Update reconstruction method in advection.par
-        replace_line(pardir+'advection.par', recon, 9)
+        replace_line(pardir+'advection.par', recon, 11)
 
         # Update splitting method in advection.par
-        replace_line(pardir+'advection.par', opsplit, 11)
+        replace_line(pardir+'advection.par', opsplit, 13)
 
         # Update metric tensor method in advection.par
-        replace_line(pardir+'advection.par', mt, 13)
+        replace_line(pardir+'advection.par', mt, 15)
 
         # Update departure point method in advection.par
-        replace_line(pardir+'advection.par', dp, 15)
+        replace_line(pardir+'advection.par', dp, 17)
 
         # Update mass fixer in advection.par
-        replace_line(pardir+'advection.par', mf, 17)
+        replace_line(pardir+'advection.par', mf, 19)
 
         k = 0
         for n in N:
@@ -122,11 +139,11 @@ def main():
             # Grid name
             grid_name = gridname(n, kind)
 
-            # Div error name
-            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf+"_id"+interpd
+            # Advection error name
+            adv_name = "adv_ic"+ic+"_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf+"_id"+interpd
 
             # File to be opened
-            filename = datadir+div_name+"_"+grid_name+"_errors.txt"
+            filename = datadir+adv_name+"_"+grid_name+"_errors.txt"
             print(filename)
 
             # Update N in mesh.par
@@ -141,35 +158,53 @@ def main():
             error_l1[k,i] = errors[1]
             error_l2[k,i] = errors[2]
             cfl = errors[3]
+            massvar = errors[4]
             cfl = str("{:.2e}".format(cfl))
+            massvar = str("{:.2e}".format(massvar))
             k = k+1
 
             #--------------------------------------------------------
-            # Plot error
+            # Plot
             # Open the file and reshape
-            fname = div_name+'_div_error_'+grid_name
-            f = open(datadir+fname+'.dat', 'rb')
-            data = np.fromfile(f, dtype=np.float64)
-            data = np.reshape(data, (Nlat+1, Nlon+1))
-            data = np.transpose(data)
-            qabs_max = np.amax(abs(data))
-            qmin, qmax = -qabs_max, qabs_max
-            title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+', sp = '\
-            +str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
-            +str(mt)+', mf = '+str(mf) +'\n \n'
-
-            plot_scalar_field(data, lats, lons, \
-                             colormap, map_projection, fname, title, qmin, qmax)
-            if vf == '4':
-                # Plot divergence
-                # Open the file and reshape
-                fname = div_name+'_div_'+grid_name
+            for t in tplots:
+                # scalar field
+                colormap = 'jet'
+                fname = adv_name+'_Q_t'+str(t)+'_'+grid_name
                 f = open(datadir+fname+'.dat', 'rb')
                 data = np.fromfile(f, dtype=np.float64)
                 data = np.reshape(data, (Nlat+1, Nlon+1))
                 data = np.transpose(data)
+                dmin, dmax = np.amin(data), np.amax(data)
+                dmin = str("{:.2e}".format(dmin))
+                dmax = str("{:.2e}".format(dmax))
+                time = str("{:.2e}".format(timeplots[t]))
+                title = 'N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+\
+                '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
+                +str(mt)+', mf = '+str(mf) +\
+                '\n min = '+dmin+', max = '+dmax+', mass variation = '+massvar+'\n \n'
+
                 plot_scalar_field(data, lats, lons, \
-                                 colormap, map_projection, fname)
+                             colormap, map_projection, fname, title, qmin, qmax)
+
+                # plot the error
+                colormap = 'seismic'
+                fname = adv_name+'_Q_error_t'+str(t)+'_'+grid_name
+                if os.path.exists(datadir+fname+'.dat'): # The file exists
+                    f = open(datadir+fname+'.dat', 'rb')
+                    data = np.fromfile(f, dtype=np.float64)
+                    data = np.reshape(data, (Nlat+1, Nlon+1))
+                    data = np.transpose(data)
+                    dabs_max = np.amax(abs(data))
+                    dmin, dmax = -dabs_max, dabs_max
+ 
+                    time = str("{:.2e}".format(timeplots[t]))
+                    title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+\
+                    '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
+                    ', mt = '+str(mt)+', mf = '+str(mf) +'\n \n'
+                    plot_scalar_field(data, lats, lons, \
+                                 colormap, map_projection, fname, title, dmin, dmax)
+
+     
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
@@ -196,14 +231,14 @@ def main():
             mf = mfixers[k]
             fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf)
 
-        title = 'Divergence error, vf='+ str(vf)+', norm='+norm_title[e]
-        filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
+        title = 'Advection error, ic = '+str(ic)+', vf = '+ str(vf)+', norm='+norm_title[e]
+        filename = graphdir+'cs_adv_ic'+str(ic)+'_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
 
         plot_errors_loglog(N, errors, fname, filename, title, emin, emax)
 
         # Plot the convergence rate
-        title = 'Convergence rate, vf=' + str(vf)+', norm='+norm_title[e]
-        filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
+        title = 'Convergence rate, ic = '+str(ic)+', vf=' + str(vf)+', norm='+norm_title[e]
+        filename = graphdir+'cs_adv_ic'+str(ic)+'_vf'+str(vf)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
         plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
         e = e+1
 

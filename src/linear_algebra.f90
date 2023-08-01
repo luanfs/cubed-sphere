@@ -140,4 +140,38 @@ function error_norm_1_rel(f, g)
     return
 end function error_norm_1_rel
 
+function norm_max(f)
+    !-------------------------------------------
+    ! max norm
+    !-------------------------------------------
+    real (r8),  intent(in) :: f(:,:,:)
+    real (r8):: norm_max
+
+    norm_max = maxval(abs(f))
+    return
+end function norm_max
+
+function norm_2(f)
+    !-------------------------------------------
+    ! L2 norm
+    !-------------------------------------------
+    real (r8),  intent(in) :: f(:,:,:)
+    real (r8):: norm_2
+
+    norm_2 = dsqrt(sum((f)**2))
+    return
+end function norm_2
+
+function norm_1(f)
+    !-------------------------------------------
+    ! L1 norm
+    !-------------------------------------------
+    real (r8), intent(in) :: f(:,:,:)
+    real (r8):: norm_1
+
+    norm_1 = sum(abs(f))
+    return
+end function norm_1
+
+
 end module linear_algebra 

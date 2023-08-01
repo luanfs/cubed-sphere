@@ -106,7 +106,8 @@ def plot_scalar_field(data, lat, lon, \
         plateCr = ccrs.PlateCarree()
         plt.figure(figsize=(1832/dpi, 977/dpi), dpi=dpi)
     elif map_projection == "sphere":
-        plateCr = ccrs.Orthographic(central_longitude=-60.0, central_latitude=0.0)
+        #plateCr = ccrs.Orthographic(central_longitude=0.0, central_latitude=0.0)
+        plateCr = ccrs.Orthographic(central_longitude=0.25*pi*rad2deg, central_latitude=pi*rad2deg/6.0)
         plt.figure(figsize=(800/dpi, 800/dpi), dpi=dpi)
     elif map_projection == "north_pole":
         #plateCr = ccrs.Orthographic(central_longitude=-60.0, central_latitude=0.0)

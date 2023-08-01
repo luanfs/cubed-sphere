@@ -21,8 +21,9 @@ type(simulation) :: advsimul
 type(lagrange_poly_cs) :: L_pc 
 
 ! Scalar fields
-type(scalar_field) :: Q      ! average values of the advected scalar field
+type(scalar_field) :: Q       ! average values of the advected scalar field
 type(scalar_field) :: Q_exact ! exact solution
+type(scalar_field) :: Q_error ! error
 
 ! Vector field
 type(vector_field) :: wind_pu, wind_pv, wind_pc

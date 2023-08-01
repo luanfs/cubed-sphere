@@ -1,20 +1,22 @@
 #Advection test case parameters 
 #Initial condition field 
-1
+4
 #Vector field
 1
 #Time step
-0.0015625
+0.003125
+#Number of plots
+2
 #1D reconstruction (ppm or hyppm)
 hyppm
 #2D operator splitting (avlt or pl07)
-pl07
+avlt
 #Metric tensor treatment (pl07 or mt0)
-pl07
+mt0
 #Departure point scheme (rk1 or rk2)
-rk1
+rk2
 #Mass fixer (none, af, pr)
-none
+pr
 #Ghost cells interpolation degree
 3
 #-----------Description of parameters -------------------------------------
@@ -22,6 +24,7 @@ none
 #  case(1) - constant flow
 #  case(2) - gaussian hill
 #  case(3) - two gaussian hills
+#  case(4) - steady state
 #Possible vector fields
 #  case(1) - rotated zonal wind (divergence free)
 #  case(2) - Non divergent field 4 from Nair and Lauritzen 2010

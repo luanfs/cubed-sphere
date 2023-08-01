@@ -130,8 +130,8 @@ subroutine meshload(mesh, header)
         mesh%dx = pio2/mesh%n
         mesh%dy = pio2/mesh%n
     else
-        mesh%dx = 2._r8/mesh%n
-        mesh%dy = 2._r8/mesh%n
+        mesh%dx = 2.d0/mesh%n
+        mesh%dy = 2.d0/mesh%n
     end if
 
     !---------------------------------------
@@ -361,6 +361,10 @@ subroutine meshload(mesh, header)
     end do
     close(iunit)
 
+    print*
+    print*, "Converting latlon to xyz..."
+    print*
+
 
     !---------------------------------------
     ! Convert po to xyz
@@ -436,8 +440,8 @@ subroutine meshread(mesh)
     integer (i4):: n
     integer (i4):: m
     integer (i4):: ios
-    real (r8):: lon
-    real (r8):: lat
+    real (kind=8):: lon
+    real (kind=8):: lat
     logical:: ifile
     integer (i4), dimension(1:6):: nbtmp, nbtmp2
 
@@ -477,6 +481,8 @@ subroutine getadvparameters(advsimul)
     read(fileunit,*)  advsimul%vf
     read(fileunit,*)  buffer
     read(fileunit,*)  advsimul%dt
+    read(fileunit,*)  buffer
+    read(fileunit,*)  advsimul%nplot
     read(fileunit,*)  buffer
     read(fileunit,*)  advsimul%recon1d
     read(fileunit,*)  buffer

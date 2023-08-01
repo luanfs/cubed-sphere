@@ -42,7 +42,9 @@ use deallocation, only: &
 use output, only: &
     plot_scalarfield, &
     write_final_errors_adv, &
-    write_final_errors_interp
+    write_final_errors_interp, &
+    output_adv, &
+    compute_errors_field
 
 ! Input
 use input, only: &
@@ -57,13 +59,8 @@ use advection_ic, only: &
 
 ! Advection timestep
 use advection_timestep, only: &
-    adv_timestep
-
-! Linear algebra
-use linear_algebra, only: &
-    error_norm_max_rel, &
-    error_norm_1_rel, &
-    error_norm_2_rel
+    adv_timestep, &
+    adv_update
 
 ! Diagnostics 
 use diagnostics, only: &
@@ -162,7 +159,6 @@ subroutine interpolation_test(mesh)
 
     error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
-    !error_u = 0.d0
 
     error_ucontra = max(error_ucontra, error_vcontra)
     ! Print errors on screen
@@ -193,16 +189,10 @@ subroutine div_test(mesh)
     ! Get test parameter from par/advection.par
     call getadvparameters(advsimul)
 
-    ! For divergence testing, we make Q = 1
-    advsimul%ic = 1
-
     ! Initialize the variables (allocation, initial condition,...)
+    advsimul%ic = 1
+    advsimul%n = 1
     call init_adv_vars(mesh)
-
-    advsimul%name = "div_"//trim(advsimul%name)
-
-    ! Multiply Q by the metric tensor
-    Q%f = 1.d0
 
     ! Compute the divergence obtained in one timestep
     call adv_timestep(mesh)
@@ -214,83 +204,76 @@ subroutine div_test(mesh)
     call compute_errors_field(div_ugq, div_ugq_exact, div_ugq_error, &
       advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
 
-    ! Name scalar fields
-    div_ugq_error%name = trim(advsimul%name)//"_error"
-    div_ugq%name = trim(advsimul%name)
-
     ! Plot scalar fields
     call plot_scalarfield(div_ugq, mesh)
     call plot_scalarfield(div_ugq_error, mesh)
-    advsimul%mass_variation = mass_computation(div_ugq, mesh)
 
-    ! Deallocate vars
-    call adv_deallocation()
+    advsimul%mass_variation = mass_computation(div_ugq, mesh)
 
     ! Print errors on screen
     print*
     print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
     print '(a22, 1e16.8)','div mass:', advsimul%mass_variation
+
     ! Write errors in a file
-    filename = trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
+    filename = "div_"//trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
     call write_final_errors_adv(advsimul, mesh, filename) 
+
+    ! Deallocate vars
+    call adv_deallocation()
 
 end subroutine div_test
 
 
-subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
+subroutine adv_test(mesh)
+    use advection_vars
     !---------------------------------------------------
-    ! COMPUTE_ERRORS_FIELD
-    !
-    ! Given the scalar field reference field Q_ref,
-    ! this routine compute the l1, l2, linf errors
-    ! of Q
+    ! ADV_TEST
     !--------------------------------------------------
-    type(cubedsphere),intent(in) :: mesh
-    type(scalar_field), intent(inout) :: Q      ! numerical approximation
-    type(scalar_field), intent(inout) :: Q_ref   ! reference solution
-    type(scalar_field), intent(inout) :: Q_error ! error
-    real(kind=8), intent(out) :: linf, l1, l2
-    ! aux vars
-    integer (i4) :: x0, xend
-    integer (i4) :: y0, yend
+    type(cubedsphere),intent(inout):: mesh
 
-    select case(Q%pos)
-        case(0) ! pc
-            x0 = i0
-            y0 = j0
-            xend = iend
-            yend = jend
+    ! aux integer
+    integer(i4) :: n
 
-        case(1) ! po
-            x0 = i0+1
-            y0 = j0+1
-            xend = iend+1
-            yend = jend+1
+    !File name for output
+    character (len=256):: filename
 
-        case(2) ! pu
-            x0 = i0+1
-            y0 = j0
-            xend = iend+1
-            yend = jend
+    ! Get test parameter from par/advection.par
+    call getadvparameters(advsimul)
 
-        case(3) ! pv
-            x0 = i0
-            y0 = j0+1
-            xend = iend
-            yend = jend+1
+    ! Initialize the variables (allocation, initial condition,...)
+    call init_adv_vars(mesh)
 
-        case default
-            print*, 'ERROR on compute_errors_field: invalid position', Q%pos
+    ! Initial output
+    call output_adv(mesh)
 
-    end select
+    ! Temporal loop
+    advsimul%t = 0.d0
+    do n = 1, advsimul%nsteps
+        ! Update time
+        advsimul%t = advsimul%t + advsimul%dt
+        advsimul%n = n
 
-    ! Compute the errors
-    Q_error%f = Q_ref%f - Q%f
-    linf = error_norm_max_rel(Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
-    l1   = error_norm_1_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
-    l2   = error_norm_2_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
+        ! Update the solution
+        call adv_timestep(mesh)
 
+        ! Output
+        call output_adv(mesh)
 
-end subroutine compute_errors_field
+        ! Update the velocity field for the next time step - only for variable velocity
+        if(advsimul%vf>=2)then
+            call adv_update(wind_pu, wind_pv, mesh, advsimul%vf, advsimul%t)
+        end if
+    end do
+
+    ! Write errors in a file
+    filename = "adv_"//trim(advsimul%name)//"_"//trim(mesh%name)//"_errors"
+    call write_final_errors_adv(advsimul, mesh, filename) 
+
+    ! Deallocate vars
+    call adv_deallocation()
+
+end subroutine adv_test
+
 
 end module simulpack 
