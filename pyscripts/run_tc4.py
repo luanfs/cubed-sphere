@@ -41,6 +41,7 @@ run = True # Run the simulation?
 
 # Plotting parameters
 map_projection = 'sphere'
+map_projection = 'mercator'
 
 def main():
     # Get the parameters
@@ -52,7 +53,7 @@ def main():
     # remove output on screen
     replace_line(pardir+'mesh.par', '0', 9)
 
-    # Define velocity
+    # Define ic
     ic = '4'
     replace_line(pardir+'advection.par', ic, 3)
 

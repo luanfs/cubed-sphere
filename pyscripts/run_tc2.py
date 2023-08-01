@@ -33,7 +33,7 @@ def main():
     # Get the parameters
     _, kind  = get_parameters()
 
-    # Define divergence test in mesh.par'
+    # Define interpolation test in mesh.par'
     replace_line(pardir+'mesh.par', '2', 11)
 
     # Define velocity and scalar field

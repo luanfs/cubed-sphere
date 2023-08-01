@@ -54,6 +54,13 @@ def main():
     vf = '1'
     replace_line(pardir+'advection.par', vf, 5)
 
+    # remove output on screen
+    replace_line(pardir+'mesh.par', '0', 9)
+
+    # number of plots
+    Nplots = 2
+    replace_line(pardir+'advection.par', str(Nplots), 9)
+ 
     # interpolation degree
     interpd = '3'
     replace_line(pardir+'advection.par', interpd, 19)
@@ -100,19 +107,19 @@ def main():
         mf = mfixers[i]
 
         # Update reconstruction method in advection.par
-        replace_line(pardir+'advection.par', recon, 9)
+        replace_line(pardir+'advection.par', recon, 11)
 
         # Update splitting method in advection.par
-        replace_line(pardir+'advection.par', opsplit, 11)
+        replace_line(pardir+'advection.par', opsplit, 13)
 
         # Update metric tensor method in advection.par
-        replace_line(pardir+'advection.par', mt, 13)
+        replace_line(pardir+'advection.par', mt, 15)
 
         # Update departure point method in advection.par
-        replace_line(pardir+'advection.par', dp, 15)
+        replace_line(pardir+'advection.par', dp, 17)
 
         # Update mass fixer in advection.par
-        replace_line(pardir+'advection.par', mf, 17)
+        replace_line(pardir+'advection.par', mf, 19)
 
         k = 0
         for n in N:

@@ -142,10 +142,12 @@ subroutine interpolation_test(mesh)
     real(kind=8) :: error_ucovari, error_vcovari
 
     ! Get test parameter from par/interpolation.par
+    call getadvparameters(advsimul)
     call getinterp_parameters(advsimul)
 
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
+
     !advsimul%name = "div_"//trim(advsimul%name)
 
     ! Duogrid interpolation of the scalar field Q 
@@ -153,7 +155,6 @@ subroutine interpolation_test(mesh)
 
     ! Duogrid interpolation of the vector field on a C grid
     call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
-
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 
