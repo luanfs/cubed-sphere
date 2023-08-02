@@ -145,11 +145,11 @@ subroutine ppm_reconstruction_y(Q, py)
 
             !$OMP END PARALLEL WORKSHARE
 
-        case default
+         case default
             print*, 'ERROR on ppm_reconstruction_y: invalid 1D reconstruction method: ', py%recon
             stop
     end select
- 
+
     ! Compute the polynomial coefs
     ! q(x) = q_L + z*(dq + q6*(1-z)) z in [0,1]
     !py%dq(:,i0-1:iend+1,:) = py%q_R(:,i0-1:iend+1,:) - py%q_L(:,i0-1:iend+1,:)
@@ -157,6 +157,85 @@ subroutine ppm_reconstruction_y(Q, py)
     return 
 
 end subroutine ppm_reconstruction_y
+
+subroutine average_parabolas_at_cube_intefaces(px, py)
+    !---------------------------------------------------------------------------------
+    ! AVERAGE_PARABOLAS_AT_CUBE_INTERFACES
+    !
+    ! Given the PPM parabolas px and py, this routine
+    ! average the values of the edge reconstruction at the
+    ! cube edge points
+    !--------------------------------------------------------------------------------
+    type(ppm_parabola), intent(inout) :: px, py
+    real(kind=8) :: a, b
+
+    a = 0.5d0
+    b = 1.d0 - a
+
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(px, py, i0, iend, j0, jend, a, b)
+    ! Average panels 1-2,2-3,3-4,4-1
+    px%q_R(iend+1,j0:jend,1:3) = a*px%q_R(iend+1,j0:jend,1:3) + b*px%q_L(i0,j0:jend,2:4)
+    px%q_L(i0,j0:jend,2:4)     = px%q_R(iend+1,j0:jend,1:3)
+
+    px%q_R(iend+1,j0:jend,4) = a*px%q_R(iend+1,j0:jend,4) + b*px%q_L(i0,j0:jend,1)
+    px%q_L(i0,j0:jend,1)  = px%q_R(iend+1,j0:jend,4)
+
+    ! Average panels 1-5
+    py%q_L(i0:iend,j0,5)   = a*py%q_L(i0:iend,j0,5) + b*py%q_R(i0:iend,jend+1,1)
+    py%q_R(i0:iend,jend+1,1) = py%q_L(i0:iend,j0,5)
+
+    ! Average panels 2-5
+    px%q_R(iend+1,j0:jend,5) = a*px%q_R(iend+1,j0:jend,5) + b*py%q_R(i0:iend,jend+1,2)
+    py%q_R(i0:iend,jend+1,2) = px%q_R(iend+1,j0:jend,5)
+
+    ! Average panels 3-5
+    py%q_R(i0:iend,jend+1,5) = a*py%q_R(i0:iend,jend+1,5) + b*py%q_R(iend:i0:-1,jend+1,3)
+    py%q_R(i0:iend,jend+1,3) = py%q_R(iend:i0:-1,jend+1,5)
+
+    ! Average panels 4-5
+    px%q_L(i0,j0:jend,5)    = a*px%q_L(i0,j0:jend,5) + b*(py%q_R(iend:i0:-1,jend+1,4))
+    py%q_R(i0:iend,jend+1,4) = (px%q_L(i0,jend:j0:-1,5))
+
+    ! Average panels 1-6
+    py%q_R(i0:iend,jend+1,6) = a*py%q_R(i0:iend,jend+1,6) + b*py%q_L(i0:iend,j0,1)
+    py%q_L(i0:iend,j0,1)   = py%q_R(i0:iend,jend+1,6)
+
+    ! Average panels 2-6
+    py%q_L(i0:iend,j0,2)     = a*py%q_L(i0:iend,j0,2) + b*px%q_R(iend+1,jend:j0:-1,6)
+    px%q_R(iend+1,j0:jend,6) = py%q_L(iend:i0:-1,j0,2)
+
+    ! Average panels 3-6
+    py%q_L(i0:iend,j0,3) = a*py%q_L(i0:iend,j0,3) + b*py%q_L(iend:i0:-1,j0,6)
+    py%q_L(i0:iend,j0,6) = py%q_L(iend:i0:-1,j0,3)
+
+    ! Average panels 4-6
+    py%q_L(i0:iend,j0,4) = a*px%q_L(i0,j0:jend,6) + b*py%q_L(i0:iend,j0,4)
+    px%q_L(i0,j0:jend,6) = py%q_L(i0:iend,j0,4)
+
+    !$OMP END PARALLEL WORKSHARE
+
+end subroutine average_parabolas_at_cube_intefaces
+
+subroutine edges_extrapolation(Qx, Qy, px, py)
+    !---------------------------------------------------------------------------------
+    ! AVERAGE_PARABOLAS_AT_CUBE_INTERFACES
+    !
+    ! Given the PPM parabolas px and py, this routine
+    ! average the values of the edge reconstruction at the
+    ! cube edge points
+    !--------------------------------------------------------------------------------
+    type(ppm_parabola), intent(inout) :: px, py
+    type(scalar_field), intent(inout) :: Qx, Qy
+
+    call average_parabolas_at_cube_intefaces(px, py)
+
+
+end subroutine edges_extrapolation
+
+
+
+
 
 
 end module ppm_reconstruction 

@@ -82,6 +82,7 @@ subroutine average_flux_at_cube_intefaces(px, py, dx, dy, dt)
     py%f_upw(i0:iend,j0,4) = -a*px%f_upw(i0,j0:jend,6) + b*py%f_upw(i0:iend,j0,4)
     px%f_upw(i0,j0:jend,6) = -py%f_upw(i0:iend,j0,4)
 
+    ! Update divergence
     px%df(i0,:,:)   = -(dt/dx)*(px%f_upw(i0+1,:,:)   - px%f_upw(i0,:,:))
     px%df(iend,:,:) = -(dt/dx)*(px%f_upw(iend+1,:,:) - px%f_upw(iend,:,:))
     py%df(:,j0,:)   = -(dt/dy)*(py%f_upw(:,j0+1,:)   - py%f_upw(:,j0,:))
@@ -99,12 +100,21 @@ subroutine divergence_projection(div_ugq,  advsimul, mesh)
     type(cubedsphere), intent(inout) :: mesh
     type(simulation), intent(inout) :: advsimul
     type(scalar_field), intent(inout) :: div_ugq
+    real(kind=8) :: l
 
     advsimul%mass = mass_computation(div_ugq, mesh)
+
+    ! sum of metric tensor^2 of cells at boundary
+    l = advsimul%mass/advsimul%a2
+
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(div_ugq, i0, iend, j0, jend, advsimul, mesh)
+    !$OMP SHARED(div_ugq, l, i0, iend, j0, jend, advsimul, mesh)
+    !div_ugq%f(i0  ,j0:jend,:) = div_ugq%f(i0  ,j0:jend,:) - l*mesh%mt_pc(i0  ,j0:jend,:)
+    !div_ugq%f(iend,j0:jend,:) = div_ugq%f(iend,j0:jend,:) - l*mesh%mt_pc(iend,j0:jend,:)
+    !div_ugq%f(i0+1:iend-1,j0  ,:) = div_ugq%f(i0+1:iend-1,j0  ,:) - l*mesh%mt_pc(i0+1:iend-1,j0  ,:)
+    !div_ugq%f(i0+1:iend-1,jend,:) = div_ugq%f(i0+1:iend-1,jend,:) - l*mesh%mt_pc(i0+1:iend-1,jend,:)
     div_ugq%f(i0:iend,j0:jend,:) = div_ugq%f(i0:iend,j0:jend,:) - &
-    mesh%mt_pc(i0:iend,j0:jend,:)*advsimul%mass/advsimul%a2
+    mesh%mt_pc(i0:iend,j0:jend,:)*l
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine divergence_projection

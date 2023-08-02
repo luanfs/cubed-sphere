@@ -23,11 +23,12 @@ import subprocess
 # Parameters
 #N = (16, )
 N = (16, 32, 64, 128,) # Values of N
-reconmethods = ('hyppm', 'hyppm', 'hyppm') # reconstruction methods
-splitmethods = ('pl07' , 'avlt' , 'avlt' ) # splitting
-mtmethods    = ('pl07' , 'mt0'  , 'mt0') # metric tensor formulation
-dpmethods    = ('rk1'  , 'rk2'  , 'rk2') # departure point formulation
-mfixers      = ('pr'   , 'af'   , 'pr') # mass fixers 
+reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
+splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
+mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
+dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
+mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
+edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
 
 #reconmethods = ('hyppm',) # reconstruction methods
 #splitmethods = ('avlt',) # splitting
@@ -40,7 +41,7 @@ program = "./main"
 run = True # Run the simulation?
 
 # Plotting parameters
-map_projection = 'sphere'
+#map_projection = 'sphere'
 map_projection = 'mercator'
 
 def main():
@@ -63,7 +64,7 @@ def main():
 
     # interpolation degree
     interpd = '3'
-    replace_line(pardir+'advection.par', interpd, 21)
+    replace_line(pardir+'advection.par', interpd, 23)
 
     # time steps
     dt = np.zeros(len(N))
@@ -116,6 +117,7 @@ def main():
         mt = mtmethods[i]
         dp = dpmethods[i]
         mf = mfixers[i]
+        et = edgetreat[i]
 
         # Update reconstruction method in advection.par
         replace_line(pardir+'advection.par', recon, 11)
@@ -132,6 +134,9 @@ def main():
         # Update mass fixer in advection.par
         replace_line(pardir+'advection.par', mf, 19)
 
+        # Update edge treatment advection.par
+        replace_line(pardir+'advection.par', et, 21)
+
         k = 0
         for n in N:
             # Update time step
@@ -141,7 +146,8 @@ def main():
             grid_name = gridname(n, kind)
 
             # Advection error name
-            adv_name = "adv_ic"+ic+"_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf+"_id"+interpd
+            adv_name = "adv_ic"+ic+"_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp\
+            +"_mf"+mf+"_et"+et+"_id"+interpd
 
             # File to be opened
             filename = datadir+adv_name+"_"+grid_name+"_errors.txt"
@@ -181,7 +187,7 @@ def main():
                 time = str("{:.2e}".format(timeplots[t]))
                 title = 'N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+\
                 '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
-                +str(mt)+', mf = '+str(mf) +\
+                +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
                 '\n min = '+dmin+', max = '+dmax+', mass variation = '+massvar+'\n \n'
 
                 plot_scalar_field(data, lats, lons, \
@@ -201,7 +207,7 @@ def main():
                     time = str("{:.2e}".format(timeplots[t]))
                     title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+\
                     '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
-                    ', mt = '+str(mt)+', mf = '+str(mf) +'\n \n'
+                    ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
                     plot_scalar_field(data, lats, lons, \
                                  colormap, map_projection, fname, title, dmin, dmax)
 
@@ -230,7 +236,8 @@ def main():
             mt = mtmethods[k]
             dp = dpmethods[k]
             mf = mfixers[k]
-            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf)
+            et = edgetreat[k]
+            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
 
         title = 'Advection error, ic = '+str(ic)+', vf = '+ str(vf)+', norm='+norm_title[e]
         filename = graphdir+'cs_adv_ic'+str(ic)+'_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'

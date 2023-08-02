@@ -6,7 +6,7 @@ equiangular
 !Loadable grid? 0-No; 1-Yes
 1
 !Show ongoing process details on screen? 0-No; 1-Yes
-1
+0
 !Test case to be done
 4
 !If mesh read from file give filename (Extensions: .xyz)
@@ -20,4 +20,4 @@ file.xyz
 !  case(1) ! Grid generation, storage and quality (see plotgrid.py and plot_tc1.py for outputs)
 !  case(2) ! Interpolation at ghost cell errors (see interpolation.par and run_tc2.py)
 !  case(3) ! Divergence error testing (see advection.par and run_tc3.py)
-9
+!  case(4) ! Advection on the sphere (see advection.par and run_tc4.py)

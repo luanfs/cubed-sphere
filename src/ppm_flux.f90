@@ -38,7 +38,12 @@ use datastruct, only: &
 !PPM reconstruction
 use ppm_reconstruction, only: &
     ppm_reconstruction_x, &
-    ppm_reconstruction_y
+    ppm_reconstruction_y, &
+    edges_extrapolation
+
+!edge treatment for pl07
+use duogrid_interpolation, only: &
+    gethalodata_PL07
 
 implicit none
 
@@ -58,7 +63,6 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
     type(ppm_parabola), intent(inout) :: px      ! parabola
     type(scalar_field), intent(inout) :: V_pu_av ! time averaged wind at pu points 
     type(scalar_field), intent(inout) :: cx_pu   ! CFL number of V_pu_av
-    character(len=16) :: mt ! metric tensor formulation
 
     select case(px%recon)
         case('ppm', 'hyppm')
@@ -69,7 +73,7 @@ subroutine ppm_flux_pu(Q, px, V_pu_av, cx_pu, mesh)
             call numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
 
         case default
-            print*, 'ERROR on ppm_flux_pu: invalid 1D flux method: ', px%recon 
+            print*, 'ERROR on ppm_flux_pu: invalid 1D reconstruction method: ', px%recon 
             stop
     end select
     return 
@@ -91,7 +95,6 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
     type(ppm_parabola), intent(inout) :: py      ! parabola
     type(scalar_field), intent(inout) :: V_pv_av ! time averaged wind at pv points 
     type(scalar_field), intent(inout) :: cy_pv   ! CFL number of V_pv_av
-    character(len=16) :: mt ! metric tensor formulation
 
     select case(py%recon)
         case('ppm', 'hyppm')
@@ -102,12 +105,53 @@ subroutine ppm_flux_pv(Q, py, V_pv_av, cy_pv, mesh)
             call numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
 
         case default
-            print*, 'ERROR on ppm_flux_pv: invalid 1D flux method: ', py%recon
+            print*, 'ERROR on ppm_flux_pv: invalid 1D reconstruction method: ', py%recon
             stop
     end select
     return 
 
 end subroutine ppm_flux_pv
+
+
+subroutine ppm_fluxes_PL07(Qx, Qy, px, py, V_pu_av, V_pv_av, cx_pu, cy_pv, mesh)
+    !---------------------------------------------------------------------------------
+    ! PPM_FLUX_PL07
+    !
+    ! Given the average values of  scalar field Qx and Qy, this routine reconstructs
+    ! the PPM aproximation of Qx and Qy using the reconstruction routine
+    ! from module ppm_reconstruction and evaluates the flux
+    ! at pu and pv points
+    ! Uses the formalation from PL07
+    !
+    !--------------------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    type(scalar_field), intent(inout) :: Qx, Qy
+    type(ppm_parabola), intent(inout) :: px, py  ! parabola
+    type(scalar_field), intent(inout) :: V_pu_av, V_pv_av !time averaged wind at pu points 
+    type(scalar_field), intent(inout) :: cx_pu, cy_pv   ! CFL number
+
+    if(px%et=='pl07') then
+        select case(px%recon)
+            case('ppm', 'hyppm')
+                ! Reconstructs the values of Qx and Qy using a piecewise parabolic polynomial
+                call gethalodata_PL07(Qx, Qy)
+                call ppm_reconstruction_x(Qx, px)
+                call ppm_reconstruction_y(Qy, py)
+                !call edges_extrapolation(Qx, Qy, px, py)
+
+                ! Compute the fluxes
+                call numerical_flux_ppm_pu(Qx, px, V_pu_av, cx_pu, mesh)
+                call numerical_flux_ppm_pv(Qy, py, V_pv_av, cy_pv, mesh)
+
+            case default
+                print*, 'ERROR on ppm_fluxes_pl07: invalid 1D reconstruction method: ', px%recon 
+                stop
+        end select
+    end if
+    return 
+
+end subroutine ppm_fluxes_PL07
+
 
 subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
     !---------------------------------------------------------------------------------

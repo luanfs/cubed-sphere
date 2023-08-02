@@ -295,6 +295,9 @@ type simulation
     ! Departure point scheme
     character(len=16) :: dp
 
+    ! Edge treatment
+    character(len=16) :: et
+
     !Variable name - long name - detailed name
     ! This is used to for filenames of this variable
     character (len=256) :: name
@@ -334,6 +337,10 @@ type ppm_parabola
 
     ! Metric tensor scheme
     character(len=16) :: mt
+
+    ! Edge treatment
+    character(len=16) :: et
+
 
 end type ppm_parabola
 

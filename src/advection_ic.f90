@@ -209,6 +209,8 @@ subroutine init_adv_vars(mesh)
     ! Metric tensor formulation
     px%mt = advsimul%mt
     py%mt = advsimul%mt
+    px%et = advsimul%et
+    py%et = advsimul%et
 
     ! N
     px%n = mesh%n
@@ -245,7 +247,11 @@ subroutine init_adv_vars(mesh)
 
     ! var used in pr mass fixer
     advsimul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
-
+    !advsimul%a2 = sum(mesh%mt_pc(i0  ,j0:jend,:)**2) + &
+    !              sum(mesh%mt_pc(iend,j0:jend,:)**2) + !&
+    !              sum(mesh%mt_pc(i0+1:iend-1,j0  ,:)**2)+&
+    !              sum(mesh%mt_pc(i0+1:iend-1,jend,:)**2)*mesh%dx*mesh%dy
+ 
     ! Define wheter exact solution at all time steps is available or not
     if(advsimul%ic == 1 .and. advsimul%vf <= 2)then
         advsimul%exactsolution = .true.
@@ -267,7 +273,7 @@ subroutine init_adv_vars(mesh)
 
     advsimul%name = "ic"//trim(advsimul%ic_name)//"_vf"//trim(advsimul%vf_name)//"_"//trim(advsimul%opsplit) &
     //"_"//trim(advsimul%recon1d)//"_mt"//trim(advsimul%mt)//"_"//trim(advsimul%dp) &
-    //"_mf"//trim(advsimul%mf)//"_id"//trim(advsimul%id_name)
+    //"_mf"//trim(advsimul%mf)//"_et"//trim(advsimul%et)//"_id"//trim(advsimul%id_name)
 
     ! basename
     !advsimul%name = trim(advsimul%name)

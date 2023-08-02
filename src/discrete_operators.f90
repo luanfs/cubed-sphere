@@ -23,7 +23,8 @@ use datastruct, only: &
 ! 1d fluxes 
 use ppm_flux, only: &
   ppm_flux_pu, &
-  ppm_flux_pv
+  ppm_flux_pv, &
+  ppm_fluxes_PL07
 
 ! Mass fixer
 use mass_fixer
@@ -57,7 +58,9 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt)
     real(kind=8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
+    if(px%et=='duogrid') then
+        call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
+    end if
 
     ! F operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -88,7 +91,9 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt)
     real(kind=8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
+    if(py%et=='duogrid') then
+        call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
+    end if
 
     ! G operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -111,7 +116,9 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, sp)
     real(kind=8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
+    if(px%et=='duogrid') then
+        call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
+    end if
 
     ! F operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -153,7 +160,9 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, sp)
     real(kind=8), intent(in) :: dt
 
     ! Compute fluxes
-    call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
+    if(py%et=='duogrid') then
+        call ppm_flux_pv(Q, py, wind_pv%vcontra_time_av, cy_pv, mesh)
+    end if
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(py, mesh, j0, jend, dt)
@@ -204,58 +213,114 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
     type(lagrange_poly_cs), intent(inout) :: L_pc ! lagrange polynomial
 
-    ! Interpolate scalar field to ghost cells
-    call dg_interp(Q, L_pc)
 
-    ! Dimension splitting operators
-    call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
-    call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
+    if(advsimul%et=='duogrid') then
+        ! Interpolate scalar field to ghost cells
+        call dg_interp(Q, L_pc)
 
-    ! Compute next splitting input
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(Qx, Qy, px, py)
-    Qx%f = px%Q%f+0.5d0*px%df
-    Qy%f = py%Q%f+0.5d0*py%df
-    !$OMP END PARALLEL WORKSHARE
+        ! Dimension splitting operators
+        call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
+        call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
 
-    ! Metric tensor scheme
-    select case (advsimul%mt)
-    case ('mt0')
+        ! Compute next splitting input
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(Qx, Qy, mesh)
-        Qx%f = Qx%f/mesh%mt_pc
-        Qy%f = Qy%f/mesh%mt_pc
+        !$OMP SHARED(Qx, Qy, px, py)
+        Qx%f = px%Q%f+0.5d0*px%df
+        Qy%f = py%Q%f+0.5d0*py%df
         !$OMP END PARALLEL WORKSHARE
-    case ('pl07')
-        ! Nothing to do here
-        !Qx%f = Qx%f
-        !Qy%f = Qy%f
 
-    case default
-        print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
+        ! Metric tensor scheme
+        select case (advsimul%mt)
+        case ('mt0')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(Qx, Qy, mesh)
+            Qx%f = Qx%f/mesh%mt_pc
+            Qy%f = Qy%f/mesh%mt_pc
+            !$OMP END PARALLEL WORKSHARE
+        case ('pl07')
+            ! Nothing to do here
+            !Qx%f = Qx%f
+            !Qy%f = Qy%f
+
+        case default
+            print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
+            stop
+        end select
+
+        ! Compute fluxes
+        call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
+        call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
+
+        ! Applies mass fixer (average at cube interfaces)
+        if (advsimul%mf=='af') then
+            call average_flux_at_cube_intefaces(px, py, mesh%dx, mesh%dy, advsimul%dt)
+        end if
+     
+        ! Compute the divergence
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
+        div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
+        !$OMP END PARALLEL WORKSHARE
+
+        ! Applies mass fixer (project divergence in nullspace)
+        if (advsimul%mf=='pr') then
+            call divergence_projection(div_ugq, advsimul, mesh)
+        end if
+
+    else if(advsimul%et == 'pl07')then
+        ! Compute fluxes
+        call ppm_fluxes_PL07(Q, Q, px, py, wind_pu%ucontra_time_av, &
+        wind_pv%vcontra_time_av, cx_pu, cy_pv, mesh)
+
+        ! Dimension splitting operators
+        call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
+        call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
+
+        ! Compute next splitting input
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(Qx, Qy, px, py)
+        Qx%f = px%Q%f+0.5d0*px%df
+        Qy%f = py%Q%f+0.5d0*py%df
+        !$OMP END PARALLEL WORKSHARE
+
+        ! Metric tensor scheme
+        select case (advsimul%mt)
+        case ('mt0')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(Qx, Qy, mesh)
+            Qx%f = Qx%f/mesh%mt_pc
+            Qy%f = Qy%f/mesh%mt_pc
+            !$OMP END PARALLEL WORKSHARE
+        case ('pl07')
+            ! Nothing to do here
+            !Qx%f = Qx%f
+            !Qy%f = Qy%f
+
+        case default
+            print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
+            stop
+        end select
+
+
+        !print*,maxval(abs(Q%f(iend+1:iend+4,j0:jend,1:3)-Q%f(i0:i0+3,j0:jend,2:4)))
+
+        ! Compute fluxes
+        call ppm_fluxes_PL07(Qy, Qx, px, py, wind_pu%ucontra_time_av, &
+        wind_pv%vcontra_time_av, cx_pu, cy_pv, mesh)
+
+        !print*,maxval(abs(Qy%f(iend+1:iend+4,j0:jend,1:3)-Qy%f(i0:i0+3,j0:jend,2:4)))
+        call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
+        call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
+
+        ! Compute the divergence
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
+        div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
+        !$OMP END PARALLEL WORKSHARE
+    else
+        print*, 'ERROR in divergence: invalid edge treatment ', advsimul%et
         stop
-    end select
-
-    ! Compute fluxes
-    call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
-    call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
-
-    ! Applies mass fixer (average at cube interfaces)
-    if (advsimul%mf=='af') then
-        call average_flux_at_cube_intefaces(px, py, mesh%dx, mesh%dy, advsimul%dt)
     end if
- 
-    ! Compute the divergence
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(div_ugq, px, py, advsimul, mesh)
-    div_ugq%f = -(px%df + py%df)/advsimul%dt/mesh%mt_pc
-    !$OMP END PARALLEL WORKSHARE
-
-    ! Applies mass fixer (project divergence in nullspace)
-    if (advsimul%mf=='pr') then
-        call divergence_projection(div_ugq, advsimul, mesh)
-    end if
-
 end subroutine divergence
 
 

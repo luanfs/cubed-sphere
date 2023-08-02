@@ -49,23 +49,24 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
     ! Interpolation of the wind at ghost cells
     call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
-    ! time extrapolation to obtaind the wind centered at time
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(wind_pu, wind_pv)
-    wind_pu%ucontra_time_centered%f = 1.5d0*wind_pu%ucontra%f-0.5d0*wind_pu%ucontra_old%f
-    wind_pv%vcontra_time_centered%f = 1.5d0*wind_pv%vcontra%f-0.5d0*wind_pv%vcontra_old%f
-    !$OMP END PARALLEL WORKSHARE
-
     select case (dp)
         case ('rk1')
             ! RK1
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(wind_pu, wind_pv)
-            wind_pu%ucontra_time_av%f = wind_pu%ucontra_time_centered%f
-            wind_pv%vcontra_time_av%f = wind_pv%vcontra_time_centered%f
+            wind_pu%ucontra_time_av%f = wind_pu%ucontra_old%f
+            wind_pv%vcontra_time_av%f = wind_pv%vcontra_old%f
             !$OMP END PARALLEL WORKSHARE
         case ('rk2')
             ! RK2
+
+            ! time extrapolation to obtaind the wind centered at time
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(wind_pu, wind_pv)
+            wind_pu%ucontra_time_centered%f = 1.5d0*wind_pu%ucontra%f-0.5d0*wind_pu%ucontra_old%f
+            wind_pv%vcontra_time_centered%f = 1.5d0*wind_pv%vcontra%f-0.5d0*wind_pv%vcontra_old%f
+            !$OMP END PARALLEL WORKSHARE
+
             ! wind for dp in x direction
             !$OMP PARALLEL DO &
             !$OMP DEFAULT(NONE) & 

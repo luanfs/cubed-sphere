@@ -15,8 +15,10 @@ avlt
 mt0
 #Departure point scheme (rk1 or rk2)
 rk2
-#Mass fixer (none, af, pr)
+#Mass fixer (none, af, pr) - only for duogrid
 pr
+#Edge treatment (pl07 or duogrid)
+duogrid
 #Ghost cells interpolation degree
 3
 #-----------Description of parameters -------------------------------------
@@ -43,6 +45,9 @@ pr
 #  case(af) - average flux at cube edges
 #  case(pr) - divergence projection
 #Possible departure point computation
-#  case(1) - Euler
-#  case(2) - Second-order Runge Kutta
-#
+#  case(rk1) - Euler
+#  case(rk2) - Second-order Runge Kutta
+#Possible cube edges treatment (used in reconstruction)
+#  case(duogrid) - extends the gridlines to adjacent panels
+#  case(pl07)    - uses the extrapolation from Putman and Lin 2007
+

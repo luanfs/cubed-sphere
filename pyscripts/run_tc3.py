@@ -28,12 +28,7 @@ splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
 dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
 mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
-
-#reconmethods = ('hyppm',) # reconstruction methods
-#splitmethods = ('avlt',) # splitting
-#mtmethods = ('mt0',) # metric tensor formulation
-#dpmethods = ('rk2',) # departure point formulation
-#mfixers = ('af',) # mass fixers 
+edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
 
 # Program to be run
 program = "./main"
@@ -63,7 +58,7 @@ def main():
  
     # interpolation degree
     interpd = '3'
-    replace_line(pardir+'advection.par', interpd, 19)
+    replace_line(pardir+'advection.par', interpd, 23)
 
     # Get adv parameters
     ic, _, recon = get_adv_parameters()
@@ -105,6 +100,7 @@ def main():
         mt = mtmethods[i]
         dp = dpmethods[i]
         mf = mfixers[i]
+        et = edgetreat[i]
 
         # Update reconstruction method in advection.par
         replace_line(pardir+'advection.par', recon, 11)
@@ -121,6 +117,9 @@ def main():
         # Update mass fixer in advection.par
         replace_line(pardir+'advection.par', mf, 19)
 
+        # Update edge treatment advection.par
+        replace_line(pardir+'advection.par', et, 21)
+
         k = 0
         for n in N:
             # Update time step
@@ -130,7 +129,8 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+"_mf"+mf+"_id"+interpd
+            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+\
+            "_mf"+mf+"_et"+et+"_id"+interpd
 
             # File to be opened
             filename = datadir+div_name+"_"+grid_name+"_errors.txt"
@@ -148,7 +148,9 @@ def main():
             error_l1[k,i] = errors[1]
             error_l2[k,i] = errors[2]
             cfl = errors[3]
+            massvar = errors[4]
             cfl = str("{:.2e}".format(cfl))
+            massvar = str("{:.2e}".format(massvar))
             k = k+1
 
             #--------------------------------------------------------
@@ -161,9 +163,10 @@ def main():
             data = np.transpose(data)
             qabs_max = np.amax(abs(data))
             qmin, qmax = -qabs_max, qabs_max
-            title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)+', sp = '\
-            +str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
-            +str(mt)+', mf = '+str(mf) +'\n \n'
+            title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)\
+            +'\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
+            +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
+            ', mass variation = '+massvar+'\n \n'
 
             plot_scalar_field(data, lats, lons, \
                              colormap, map_projection, fname, title, qmin, qmax)
@@ -201,7 +204,8 @@ def main():
             mt = mtmethods[k]
             dp = dpmethods[k]
             mf = mfixers[k]
-            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf)
+            et = edgetreat[k]
+            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
 
         title = 'Divergence error, vf='+ str(vf)+', norm='+norm_title[e]
         filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'

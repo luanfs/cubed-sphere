@@ -922,4 +922,162 @@ subroutine lagrange_basis(x, x_support, N, j, Lj)
     end do
 end subroutine lagrange_basis
 
+subroutine gethalodata_PL07(Qx, Qy)
+    !---------------------------------------------------
+    ! Fill the center ghost cell values of Qx and Qy that are needed
+    ! for reconstruction using the PL07 approach
+    !--------------------------------------------------
+    type(scalar_field), intent(inout) :: Qx, Qy
+    integer(i4) :: p, east, north, south, west
+
+
+    ! --------------------- Panel 1 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 1
+    north = 5
+    south = 6
+    east  = 2
+    west  = 4
+ 
+    ! Data of panel 1 from east
+    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 2
+
+    ! Data of panel 1 from  west
+    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 4
+
+    ! Data of panel 1 from north
+    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(n0:nend, j0:j0+nghost-1, north) ! Panel 5
+
+    ! Data of panel 1 from south
+    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(n0:nend, jend-nghost+1:jend, south) ! Panel 6
+    !$OMP END PARALLEL WORKSHARE
+
+    ! --------------------- Panel 2 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 2
+    north = 5
+    south = 6
+    east  = 3
+    west  = 1
+
+    ! Data of panel 2 from east
+    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 3
+
+    ! Data of panel 2 from west
+    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 1
+
+    ! Data of panel 2 from north
+    Qy%f(n0:nend,jend+1:nend,p) = transpose(Qx%f(jend:jend-nghost+1:-1, n0:nend, north)) ! Panel 5
+
+    ! Data of panel 2 from south
+    Qy%f(n0:nend,n0:j0-1,p) = transpose(Qx%f(jend-nghost+1:jend, nend:n0:-1,south)) ! Panel 6
+    !$OMP END PARALLEL WORKSHARE
+
+
+
+    ! --------------------- Panel 3 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 3
+    north = 5
+    south = 6
+    east  = 4
+    west  = 2
+
+    ! Data of panel 3 from east
+    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 4
+
+    ! Data of panel 3 from west
+    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 2
+
+    ! Data of panel 3 from north
+    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
+
+    ! Data of panel 3 from south
+    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
+    !$OMP END PARALLEL WORKSHARE
+
+
+
+    ! --------------------- Panel 4 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 4
+    north = 5
+    south = 6
+    east  = 1
+    west  = 3
+
+    ! Data of panel 4 from east
+    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 1
+
+    ! Data of panel 4 from west
+    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 3
+
+    ! Data of panel 4 from north
+    Qy%f(n0:nend,jend+1:nend,p) = transpose(Qx%f(i0:i0+nghost-1, nend:n0:-1, north)) ! Panel 5
+
+    ! Data of panel 4 from south
+    Qy%f(n0:nend,n0:j0-1,p) = transpose(Qx%f(i0+nghost-1:i0:-1, n0:nend, south)) ! Panel 6
+    !$OMP END PARALLEL WORKSHARE
+
+
+
+    ! --------------------- Panel 5 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 5
+    north = 3
+    south = 1
+    east  = 2
+    west  = 4
+
+    ! Data of panel 5 from east
+    Qx%f(iend+1:nend,n0:nend,p) = transpose(Qy%f(n0:nend, jend:jend-nghost+1:-1, east)) ! Panel 2
+
+    ! Data of panel 5 from west
+    Qx%f(n0:i0-1,n0:nend,p) = transpose(Qy%f(nend:n0:-1,jend-nghost+1:jend, west)) ! Panel 4
+
+    ! Data of panel 5 from north
+    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
+
+    ! Data of panel 5 from south
+    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(n0:nend, jend-nghost+1:jend, south) ! Panel 1
+    !$OMP END PARALLEL WORKSHARE
+
+    ! --------------------- Panel 6 ----------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(Qx, Qy, i0, iend, j0, jend, n0, nend, nghost) &
+    !$OMP SHARED(north, south, east, west, p)
+    p = 6
+    north = 1
+    south = 3
+    east  = 2
+    west  = 4
+
+    ! Data of panel 6 from east
+    Qx%f(iend+1:nend,n0:nend,p) = transpose(Qy%f(nend:n0:-1, j0:j0+nghost-1, east)) ! Panel 2
+
+    ! Data of panel 6 from west
+    Qx%f(n0:i0-1,n0:nend,p) = transpose(Qy%f(n0:nend,j0+nghost-1:j0:-1, west)) ! Panel 4
+
+    ! Data of panel 6 from north
+    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(n0:nend, j0:j0+nghost-1, north) ! Panel 3
+
+    ! Data of panel 6 from south
+    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
+    !$OMP END PARALLEL WORKSHARE
+
+
+end subroutine gethalodata_PL07
+
+
+
 end module duogrid_interpolation
