@@ -155,6 +155,7 @@ subroutine interpolation_test(mesh)
 
     ! Duogrid interpolation of the vector field on a C grid
     call dg_vf_interp_Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
     ! Compute the error
     error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
 

@@ -22,7 +22,9 @@ use sphgeo, only: &
   sph2cart, &
   deg2rad, &
   ll2contra, &
-  contra2ll
+  contra2ll, &
+  covari2contra, &
+  contra2covari
 
 ! Data structures
 use datastruct, only: &
@@ -319,7 +321,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
     !aux
     real(kind=8) :: lat, lon
-    real(kind=8) :: ulon, vlat, ucontra, vcontra
+    real(kind=8) :: ulon, vlat, ucontra, vcontra, ucovari, vcovari
     
     !debug - check if wind conversion is correct
     real(kind=8) :: ull, vll, error1, error
@@ -350,6 +352,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 V_pu%ucontra_old%f(i,j,p) = ucontra
                 V_pu%vcontra_old%f(i,j,p) = vcontra
 
+                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pu(i,j,p)%M)
+                V_pu%ucovari%f(i,j,p) = ucovari
+                V_pu%vcovari%f(i,j,p) = vcovari
+
+
                 ! debug 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pu(i,j,p)%M)
                 !error1 =  abs(ulon-ull)
@@ -374,6 +381,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
                 V_pv%ucontra_old%f(i,j,p) = ucontra
                 V_pv%vcontra_old%f(i,j,p) = vcontra
+
+                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pv(i,j,p)%M)
+                V_pv%ucovari%f(i,j,p) = ucovari
+                V_pv%vcovari%f(i,j,p) = vcovari
+
 
                 ! debug 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)

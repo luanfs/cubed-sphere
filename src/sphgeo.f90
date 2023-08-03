@@ -485,7 +485,7 @@ subroutine ll2contra(u, v, ucontra, vcontra, M)
     vcontra = M(2,1)*u + M(2,2)*v
 
     return
-end subroutine
+end subroutine ll2contra
 
 subroutine contra2ll(u, v, ucontra, vcontra, M)
 !---------------------------------------------------------------
@@ -505,8 +505,37 @@ subroutine contra2ll(u, v, ucontra, vcontra, M)
     v = M(2,1)*ucontra + M(2,2)*vcontra
 
     return
+end subroutine contra2ll
 
-end subroutine
+
+subroutine covari2contra(ucontra, vcontra, ucovari, vcovari, M)
+!---------------------------------------------------------------
+! COVARI2CONTRA
+!---------------------------------------------------------------
+    real(r8), intent(in):: M(1:2,1:2)
+    real(r8), intent(in):: ucovari, vcovari
+    real(r8), intent(out):: ucontra, vcontra
+
+    ucontra = M(1,1)*ucovari + M(1,2)*vcovari
+    vcontra = M(2,1)*ucovari + M(2,2)*vcovari
+
+    return
+end subroutine covari2contra
+
+subroutine contra2covari(ucovari, vcovari, ucontra, vcontra, M)
+!---------------------------------------------------------------
+! CONTRA2COVARI 
+!---------------------------------------------------------------
+    real(r8), intent(in):: M(1:2,1:2)
+    real(r8), intent(in):: ucontra, vcontra
+    real(r8), intent(out):: ucovari, vcovari
+
+    ucovari = M(1,1)*ucontra + M(1,2)*vcontra
+    vcovari = M(2,1)*ucontra + M(2,2)*vcontra
+
+    return
+end subroutine contra2covari
+
 
 subroutine tangent_ll_lon (lon, e_lon)
     !------------------------------------------------------------------------------------

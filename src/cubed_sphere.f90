@@ -414,6 +414,10 @@ subroutine cubedsphere_properties(mesh)
     ! Compute conversions between contravariant and latlon representation of vectors
     call compute_ll2contra(mesh)
 
+    ! Compute conversions between contravariant and covariant representation of vectors
+    call compute_covari2contra(mesh)
+
+
 end subroutine cubedsphere_properties
 
 
@@ -616,6 +620,118 @@ subroutine compute_metric_tensor(mesh)
 
 end subroutine compute_metric_tensor
 
+subroutine compute_covari2contra(mesh)
+    !---------------------------------------------------------------------
+    !
+    ! COMPUTE_covari2contra
+    !
+    ! This routine computes the matrices that performs
+    ! the conversions between contravariant and covariant representation
+    ! of tangent vectors on the sphere
+    !---------------------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+
+    ! Integer auxs
+    integer(i4) :: i, j ! 2D grid counters
+    integer(i4) :: p ! Panel counter
+
+    ! Real aux vars
+    real(kind=8) :: ex(1:3), ey(1:3) ! vectors
+    real(kind=8) :: lat, lon
+    real(kind=8) :: a11, a12, a21, a22, det
+
+    print*, 'Computing contravariant/covariant conversion matrices...'
+
+    ! Compute at pu
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend
+                ex = mesh%tgx_pu(i,j,p)%v
+                ey = mesh%tgy_pu(i,j,p)%v
+
+                a11 = dot_product(ex, ex)
+                a12 = dot_product(ey, ex)
+                a21 = dot_product(ex, ey)
+                a22 = dot_product(ey, ey)
+                det = a11*a22 - a21*a12
+
+                ! Contra to covari matrix
+                mesh%contra2covari_pu(i,j,p)%M(1,1) = a11
+                mesh%contra2covari_pu(i,j,p)%M(1,2) = a12
+                mesh%contra2covari_pu(i,j,p)%M(2,1) = a21
+                mesh%contra2covari_pu(i,j,p)%M(2,2) = a22
+
+                ! Covari to contra matrix
+                mesh%covari2contra_pu(i,j,p)%M(1,1) =  a22
+                mesh%covari2contra_pu(i,j,p)%M(1,2) = -a12
+                mesh%covari2contra_pu(i,j,p)%M(2,1) = -a21
+                mesh%covari2contra_pu(i,j,p)%M(2,2) =  a11
+                mesh%covari2contra_pu(i,j,p)%M(:,:) = mesh%covari2contra_pu(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+
+    ! Compute at pv
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend+1
+                ex = mesh%tgx_pv(i,j,p)%v
+                ey = mesh%tgy_pv(i,j,p)%v
+
+                a11 = dot_product(ex, ex)
+                a12 = dot_product(ey, ex)
+                a21 = dot_product(ex, ey)
+                a22 = dot_product(ey, ey)
+                det = a11*a22 - a21*a12
+
+                ! Contra to covari matrix
+                mesh%contra2covari_pv(i,j,p)%M(1,1) = a11
+                mesh%contra2covari_pv(i,j,p)%M(1,2) = a12
+                mesh%contra2covari_pv(i,j,p)%M(2,1) = a21
+                mesh%contra2covari_pv(i,j,p)%M(2,2) = a22
+
+                ! Covari to contra matrix
+                mesh%covari2contra_pv(i,j,p)%M(1,1) =  a22
+                mesh%covari2contra_pv(i,j,p)%M(1,2) = -a12
+                mesh%covari2contra_pv(i,j,p)%M(2,1) = -a21
+                mesh%covari2contra_pv(i,j,p)%M(2,2) =  a11
+                mesh%covari2contra_pv(i,j,p)%M(:,:) = mesh%covari2contra_pv(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+
+    ! Compute at pc
+    do p = 1, nbfaces
+        do i = n0, nend
+            do j = n0, nend
+                ex = mesh%tgx_pc(i,j,p)%v
+                ey = mesh%tgy_pc(i,j,p)%v
+
+                a11 = dot_product(ex, ex)
+                a12 = dot_product(ey, ex)
+                a21 = dot_product(ex, ey)
+                a22 = dot_product(ey, ey)
+                det = a11*a22 - a21*a12
+
+                ! Contra to covari matrix
+                mesh%contra2covari_pc(i,j,p)%M(1,1) = a11
+                mesh%contra2covari_pc(i,j,p)%M(1,2) = a12
+                mesh%contra2covari_pc(i,j,p)%M(2,1) = a21
+                mesh%contra2covari_pc(i,j,p)%M(2,2) = a22
+
+                ! Covari to contra matrix
+                mesh%covari2contra_pc(i,j,p)%M(1,1) =  a22
+                mesh%covari2contra_pc(i,j,p)%M(1,2) = -a12
+                mesh%covari2contra_pc(i,j,p)%M(2,1) = -a21
+                mesh%covari2contra_pc(i,j,p)%M(2,2) =  a11
+                mesh%covari2contra_pc(i,j,p)%M(:,:) = mesh%covari2contra_pc(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+
+
+end subroutine compute_covari2contra
+
 subroutine compute_ll2contra(mesh)
     !---------------------------------------------------------------------
     !
@@ -742,9 +858,6 @@ subroutine compute_ll2contra(mesh)
             end do
         end do
     end do
-
-
 end subroutine compute_ll2contra
-
 
 end module cubed_sphere 
