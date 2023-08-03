@@ -580,11 +580,11 @@ subroutine write_final_errors_adv(advsimul, mesh, filename)
     close(iunit)
 end subroutine write_final_errors_adv
 
-subroutine write_final_errors_interp(filename, error_q, error_u) 
+subroutine write_final_errors_interp(filename, error_q, error_u, error_v)
     !----------------------------------------------------------
     !  write the final errors of advection simulation in a file
     !----------------------------------------------------------
-    real(kind=8), intent(in) :: error_q, error_u
+    real(kind=8), intent(in) :: error_q, error_u, error_v
 
     !File name for output
     character (len=256), intent(inout) :: filename
@@ -600,6 +600,7 @@ subroutine write_final_errors_interp(filename, error_q, error_u)
     open(iunit,file=filename, status='replace')
     write(iunit, *) error_q
     write(iunit, *) error_u
+    write(iunit, *) error_v
     close(iunit)
 end subroutine write_final_errors_interp
 

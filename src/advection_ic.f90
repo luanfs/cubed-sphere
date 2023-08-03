@@ -335,10 +335,16 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lat  = mesh%pc(i,j,p)%lat
                 lon  = mesh%pc(i,j,p)%lon
                 Q%f(i,j,p) = q0_adv(lat, lon, advsimul%ic)
+
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
+                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pc(i,j,p)%M)
+                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pc(i,j,p)%M)
+                V_pc%ucontra_old%f(i,j,p) = ucovari
+                V_pc%vcontra_old%f(i,j,p) = vcovari
+
             end do
         end do
     end do
-
     ! Vector field at pu
     do p = 1 , nbfaces
         do i = n0, nend+1
@@ -355,9 +361,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pu(i,j,p)%M)
                 V_pu%ucovari%f(i,j,p) = ucovari
                 V_pu%vcovari%f(i,j,p) = vcovari
-
-
                 ! debug 
+                !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pu(i,j,p)%M)
                 !error1 =  abs(ulon-ull)
                 !error1 = max(error1, abs(vll-vlat))
@@ -388,6 +393,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
 
                 ! debug 
+                !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)
                 !error1 =  abs(ulon-ull)
                 !error1 = max(error1, abs(vll-vlat))

@@ -46,7 +46,8 @@ def main():
 
     # Error arrays
     error_q = np.zeros((len(N),len(degrees)))
-    error_u = np.zeros((len(N),len(degrees)))
+    error_ucontra = np.zeros((len(N),len(degrees)))
+    error_ucovari = np.zeros((len(N),len(degrees)))
 
     # compile the code
     subprocess.run('cd .. ; make', shell=True)
@@ -79,15 +80,16 @@ def main():
 
             errors = np.loadtxt(filename)
             error_q[k,i] = errors[0]
-            error_u[k,i] = errors[1]
+            error_ucontra[k,i] = errors[1]
+            error_ucovari[k,i] = errors[2]
 
             k = k + 1
 
     # plot errors for different all schemes in  different norms
-    error_list = [ error_q, error_u]
-    name = ['ic'+str(ic), 'vf'+str(vf)]
-    titles = ['Ghost cells of scalar field' , 'Ghost cells of vector field']
-
+    error_list = [ error_q, error_ucontra, error_ucovari]
+    name = ['ic'+str(ic), 'ucontra_vf'+str(vf), 'ucovari_vf'+str(vf)]
+    titles = ['Ghost cells of scalar field' , 'Ghost cells of vector field', \
+              'Ghost cells of vector field']
     e = 0
     for error in error_list:
         emin, emax = np.amin(error[:]), np.amax(error[:])
