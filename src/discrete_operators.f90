@@ -263,7 +263,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         !$OMP END PARALLEL WORKSHARE
 
         ! Applies mass fixer (project divergence in nullspace)
-        if (advsimul%mf=='pr') then
+        if (advsimul%mf=='lpr' .or. advsimul%mf=='gpr') then
             call divergence_projection(div_ugq, advsimul, mesh)
         end if
 

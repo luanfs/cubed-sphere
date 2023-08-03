@@ -27,14 +27,8 @@ reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
 dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
-mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
+mfixers      = ('none' ,  'gpr'  , 'af'  , 'gpr') # mass fixers 
 edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
-
-#reconmethods = ('hyppm',) # reconstruction methods
-#splitmethods = ('avlt',) # splitting
-#mtmethods = ('mt0',) # metric tensor formulation
-#dpmethods = ('rk2',) # departure point formulation
-#mfixers = ('af',) # mass fixers 
 
 # Program to be run
 program = "./main"
@@ -55,7 +49,7 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '4'
+    ic = '2'
     replace_line(pardir+'advection.par', ic, 3)
 
     # Define velocity

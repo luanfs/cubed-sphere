@@ -1,10 +1,10 @@
 #Advection test case parameters 
 #Initial condition field 
-4
+2
 #Vector field
 1
 #Time step
-0.003125
+0.0015625
 #Number of plots
 2
 #1D reconstruction (ppm or hyppm)
@@ -15,8 +15,8 @@ avlt
 mt0
 #Departure point scheme (rk1 or rk2)
 rk2
-#Mass fixer (none, af, pr) - only for duogrid
-pr
+#Mass fixer (none, af, gpr, lpr) - only for duogrid
+gpr
 #Edge treatment (pl07 or duogrid)
 duogrid
 #Ghost cells interpolation degree
@@ -43,7 +43,8 @@ duogrid
 #Possible mass fixers
 #  case(none) - none
 #  case(af) - average flux at cube edges
-#  case(pr) - divergence projection
+#  case(gpr) - global divergence projection
+#  case(lpr) - local divergence projection
 #Possible departure point computation
 #  case(rk1) - Euler
 #  case(rk2) - Second-order Runge Kutta

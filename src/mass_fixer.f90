@@ -107,16 +107,26 @@ subroutine divergence_projection(div_ugq,  advsimul, mesh)
     ! sum of metric tensor^2 of cells at boundary
     l = advsimul%mass/advsimul%a2
 
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(div_ugq, l, i0, iend, j0, jend, advsimul, mesh)
-    !div_ugq%f(i0  ,j0:jend,:) = div_ugq%f(i0  ,j0:jend,:) - l*mesh%mt_pc(i0  ,j0:jend,:)
-    !div_ugq%f(iend,j0:jend,:) = div_ugq%f(iend,j0:jend,:) - l*mesh%mt_pc(iend,j0:jend,:)
-    !div_ugq%f(i0+1:iend-1,j0  ,:) = div_ugq%f(i0+1:iend-1,j0  ,:) - l*mesh%mt_pc(i0+1:iend-1,j0  ,:)
-    !div_ugq%f(i0+1:iend-1,jend,:) = div_ugq%f(i0+1:iend-1,jend,:) - l*mesh%mt_pc(i0+1:iend-1,jend,:)
-    div_ugq%f(i0:iend,j0:jend,:) = div_ugq%f(i0:iend,j0:jend,:) - &
-    mesh%mt_pc(i0:iend,j0:jend,:)*l
-    !$OMP END PARALLEL WORKSHARE
+    if (advsimul%mf=='gpr') then
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_ugq, l, i0, iend, j0, jend, advsimul, mesh)
+        div_ugq%f(i0:iend,j0:jend,:) = div_ugq%f(i0:iend,j0:jend,:) - &
+        mesh%mt_pc(i0:iend,j0:jend,:)*l
+        !$OMP END PARALLEL WORKSHARE
 
+    else if (advsimul%mf=='lpr') then
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_ugq, l, i0, iend, j0, jend, advsimul, mesh)
+        div_ugq%f(i0  ,j0:jend,:) = div_ugq%f(i0  ,j0:jend,:) - l*mesh%mt_pc(i0  ,j0:jend,:)
+        div_ugq%f(iend,j0:jend,:) = div_ugq%f(iend,j0:jend,:) - l*mesh%mt_pc(iend,j0:jend,:)
+        div_ugq%f(i0+1:iend-1,j0  ,:) = div_ugq%f(i0+1:iend-1,j0  ,:) - l*mesh%mt_pc(i0+1:iend-1,j0  ,:)
+        div_ugq%f(i0+1:iend-1,jend,:) = div_ugq%f(i0+1:iend-1,jend,:) - l*mesh%mt_pc(i0+1:iend-1,jend,:)
+        !$OMP END PARALLEL WORKSHARE
+
+    else
+        print*, 'ERROR in divergence_projection: invalid mass fixer: ', advsimul%mf
+        stop
+    end if
 end subroutine divergence_projection
 
 

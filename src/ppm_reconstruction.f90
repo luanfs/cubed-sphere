@@ -175,35 +175,35 @@ subroutine average_parabolas_at_cube_intefaces(px, py)
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(px, py, i0, iend, j0, jend, a, b)
     ! Average panels 1-2,2-3,3-4,4-1
-    px%q_R(iend+1,j0:jend,1:3) = a*px%q_R(iend+1,j0:jend,1:3) + b*px%q_L(i0,j0:jend,2:4)
-    px%q_L(i0,j0:jend,2:4)     = px%q_R(iend+1,j0:jend,1:3)
+    px%q_R(iend,j0:jend,1:3) = a*px%q_R(iend,j0:jend,1:3) + b*px%q_L(i0,j0:jend,2:4)
+    px%q_L(i0,j0:jend,2:4)     = px%q_R(iend,j0:jend,1:3)
 
-    px%q_R(iend+1,j0:jend,4) = a*px%q_R(iend+1,j0:jend,4) + b*px%q_L(i0,j0:jend,1)
-    px%q_L(i0,j0:jend,1)  = px%q_R(iend+1,j0:jend,4)
+    px%q_R(iend,j0:jend,4) = a*px%q_R(iend,j0:jend,4) + b*px%q_L(i0,j0:jend,1)
+    px%q_L(i0,j0:jend,1)  = px%q_R(iend,j0:jend,4)
 
     ! Average panels 1-5
-    py%q_L(i0:iend,j0,5)   = a*py%q_L(i0:iend,j0,5) + b*py%q_R(i0:iend,jend+1,1)
-    py%q_R(i0:iend,jend+1,1) = py%q_L(i0:iend,j0,5)
+    py%q_L(i0:iend,j0,5)   = a*py%q_L(i0:iend,j0,5) + b*py%q_R(i0:iend,jend,1)
+    py%q_R(i0:iend,jend,1) = py%q_L(i0:iend,j0,5)
 
     ! Average panels 2-5
-    px%q_R(iend+1,j0:jend,5) = a*px%q_R(iend+1,j0:jend,5) + b*py%q_R(i0:iend,jend+1,2)
-    py%q_R(i0:iend,jend+1,2) = px%q_R(iend+1,j0:jend,5)
+    px%q_R(iend,j0:jend,5) = a*px%q_R(iend,j0:jend,5) + b*py%q_R(i0:iend,jend,2)
+    py%q_R(i0:iend,jend,2) = px%q_R(iend,j0:jend,5)
 
     ! Average panels 3-5
-    py%q_R(i0:iend,jend+1,5) = a*py%q_R(i0:iend,jend+1,5) + b*py%q_R(iend:i0:-1,jend+1,3)
-    py%q_R(i0:iend,jend+1,3) = py%q_R(iend:i0:-1,jend+1,5)
+    py%q_R(i0:iend,jend,5) = a*py%q_R(i0:iend,jend,5) + b*py%q_R(iend:i0:-1,jend,3)
+    py%q_R(i0:iend,jend,3) = py%q_R(iend:i0:-1,jend,5)
 
     ! Average panels 4-5
-    px%q_L(i0,j0:jend,5)    = a*px%q_L(i0,j0:jend,5) + b*(py%q_R(iend:i0:-1,jend+1,4))
-    py%q_R(i0:iend,jend+1,4) = (px%q_L(i0,jend:j0:-1,5))
+    px%q_L(i0,j0:jend,5)    = a*px%q_L(i0,j0:jend,5) + b*(py%q_R(iend:i0:-1,jend,4))
+    py%q_R(i0:iend,jend,4) = (px%q_L(i0,jend:j0:-1,5))
 
     ! Average panels 1-6
-    py%q_R(i0:iend,jend+1,6) = a*py%q_R(i0:iend,jend+1,6) + b*py%q_L(i0:iend,j0,1)
-    py%q_L(i0:iend,j0,1)   = py%q_R(i0:iend,jend+1,6)
+    py%q_R(i0:iend,jend,6) = a*py%q_R(i0:iend,jend,6) + b*py%q_L(i0:iend,j0,1)
+    py%q_L(i0:iend,j0,1)   = py%q_R(i0:iend,jend,6)
 
     ! Average panels 2-6
-    py%q_L(i0:iend,j0,2)     = a*py%q_L(i0:iend,j0,2) + b*px%q_R(iend+1,jend:j0:-1,6)
-    px%q_R(iend+1,j0:jend,6) = py%q_L(iend:i0:-1,j0,2)
+    py%q_L(i0:iend,j0,2)     = a*py%q_L(i0:iend,j0,2) + b*px%q_R(iend,jend:j0:-1,6)
+    px%q_R(iend,j0:jend,6) = py%q_L(iend:i0:-1,j0,2)
 
     ! Average panels 3-6
     py%q_L(i0:iend,j0,3) = a*py%q_L(i0:iend,j0,3) + b*py%q_L(iend:i0:-1,j0,6)
@@ -214,7 +214,6 @@ subroutine average_parabolas_at_cube_intefaces(px, py)
     px%q_L(i0,j0:jend,6) = py%q_L(i0:iend,j0,4)
 
     !$OMP END PARALLEL WORKSHARE
-
 end subroutine average_parabolas_at_cube_intefaces
 
 subroutine edges_extrapolation(Qx, Qy, px, py)
@@ -228,13 +227,100 @@ subroutine edges_extrapolation(Qx, Qy, px, py)
     type(ppm_parabola), intent(inout) :: px, py
     type(scalar_field), intent(inout) :: Qx, Qy
 
+    ! Formula 47 from PL07
+    ! x direction
+    px%q_L(i0,j0:jend,:) = 1.5d0*Qx%f(i0,j0:jend,:) - 0.5d0*Qx%f(i0+1,j0:jend,:)
+    px%q_R(iend,j0:jend,:) = 1.5d0*Qx%f(iend,j0:jend,:) - 0.5d0*Qx%f(iend-1,j0:jend,:)
+    ! y direction
+    py%q_L(i0:iend,j0,:) = 1.5d0*Qy%f(i0:iend,j0,:) - 0.5d0*Qy%f(i0:iend,j0+1,:)
+    py%q_R(i0:iend,jend,:) = 1.5d0*Qy%f(i0:iend,jend,:) - 0.5d0*Qy%f(i0:iend,jend-1,:)
+
+    ! Formula 49 from PL07
+    ! x direction
+    px%q_R(i0,j0:jend,:) = (3.d0*Qx%f(i0,j0:jend,:) + 11.d0*Qx%f(i0+1,j0:jend,:) - &
+                            2.d0*(Qx%f(i0+2,j0:jend,:) - Qx%f(i0,j0:jend,:)))/14.d0
+    px%q_L(i0+1,j0:jend,:) = px%q_R(i0,j0:jend,:)
+    px%q_L(iend,j0:jend,:) = (3.d0*Qx%f(iend,j0:jend,:)+11.d0*Qx%f(iend-1,j0:jend,:)-&
+                              2.d0*(Qx%f(iend-2,j0:jend,:)-Qx%f(iend,j0:jend,:)))/14.d0
+    px%q_R(iend-1,j0:jend,:) = px%q_L(iend,j0:jend,:)
+
+    ! y direction
+    py%q_R(i0:iend,j0,:) = (3.d0*Qy%f(i0:iend,j0,:) + 11.d0*Qy%f(i0:iend,j0+1,:) - &
+                            2.d0*(Qy%f(i0:iend,j0+2,:) - Qy%f(i0:iend,j0,:)))/14.d0
+    py%q_L(i0:iend,j0+1,:) = py%q_R(i0:iend,j0,:)
+    py%q_L(i0:iend,jend,:) = (3.d0*Qy%f(i0:iend,jend,:)+11.d0*Qy%f(i0:iend,jend-1,:) -&
+                              2.d0*(Qy%f(i0:iend,jend-2,:)-Qy%f(i0:iend,jend,:)))/14.d0
+    py%q_R(i0:iend,jend-1,:) = py%q_L(i0:iend,jend,:)
+
     call average_parabolas_at_cube_intefaces(px, py)
 
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(px, py, i0, iend, j0, jend)
+ 
+    ! Ghost cell updates
+    !1-2; 2-3; 3-4
+    px%q_L(iend+1,j0:jend,1:3) = px%q_L(i0,j0:jend,2:4)
+    px%q_R(iend+1,j0:jend,1:3) = px%q_R(i0,j0:jend,2:4)
+    px%q_L(i0-1,j0:jend,2:4) = px%q_L(iend,j0:jend,1:3)
+    px%q_R(i0-1,j0:jend,2:4) = px%q_R(iend,j0:jend,1:3)
 
+    ! 4-1
+    px%q_L(iend+1,j0:jend,4) = px%q_L(i0,j0:jend,1)
+    px%q_R(iend+1,j0:jend,4) = px%q_R(i0,j0:jend,1)
+    px%q_L(i0-1,j0:jend,1) = px%q_L(iend,j0:jend,4)
+    px%q_R(i0-1,j0:jend,1) = px%q_R(iend,j0:jend,4)
+
+    ! 1-5
+    py%q_L(i0:iend,jend+1,1) = py%q_L(i0:iend,j0,5)
+    py%q_R(i0:iend,jend+1,1) = py%q_R(i0:iend,j0,5)
+    py%q_L(i0:iend,j0-1,5) = py%q_L(i0:iend,jend,1)
+    py%q_R(i0:iend,j0-1,5) = py%q_R(i0:iend,jend,1)
+
+
+    ! 1-4
+    py%q_L(i0:iend,jend+1,2) = px%q_R(iend,j0:jend,5)
+    py%q_R(i0:iend,jend+1,2) = px%q_L(iend,j0:jend,5)
+    px%q_R(iend+1,j0:jend,5) = py%q_L(i0:iend,jend,2)
+    px%q_L(iend+1,j0:jend,5) = py%q_R(i0:iend,jend,2)
+
+    ! 3-5
+    py%q_L(i0:iend,jend+1,3) = py%q_R(iend:i0:-1,jend,5)
+    py%q_R(i0:iend,jend+1,3) = py%q_L(iend:i0:-1,jend,5)
+    py%q_R(i0:iend,jend+1,5) = py%q_L(iend:i0:-1,jend,3)
+    py%q_L(i0:iend,jend+1,5) = py%q_R(iend:i0:-1,jend,3)
+
+    ! 4-5
+    py%q_L(i0:iend,jend+1,4) = px%q_L(i0,jend:j0:-1,5)
+    py%q_R(i0:iend,jend+1,4) = px%q_R(i0,jend:j0:-1,5)
+    px%q_L(i0-1,j0:jend,5) = py%q_L(iend:i0:-1,jend,4)
+    px%q_R(i0-1,j0:jend,5) = py%q_R(iend:i0:-1,jend,4)
+
+    ! 1-6
+    py%q_L(i0:iend,jend+1,6) = py%q_L(i0:iend,j0,1)
+    py%q_R(i0:iend,jend+1,6) = py%q_R(i0:iend,j0,1)
+    py%q_L(i0:iend,j0-1,1) = py%q_L(i0:iend,jend,6)
+    py%q_R(i0:iend,j0-1,1) = py%q_R(i0:iend,jend,6)
+
+    ! 2-6
+    px%q_L(iend+1,j0:jend,6) = py%q_L(iend:i0:-1,j0,2)
+    px%q_R(iend+1,j0:jend,6) = py%q_R(iend:i0:-1,j0,2)
+    py%q_L(i0:iend,j0-1,2) =   px%q_L(iend,jend:j0:-1,6)
+    py%q_R(i0:iend,j0-1,2) =   px%q_R(iend,jend:j0:-1,6)
+
+    ! 3-6
+    py%q_L(i0:iend,j0-1,6) = py%q_R(iend:i0:-1,j0,3)
+    py%q_R(i0:iend,j0-1,6) = py%q_L(iend:i0:-1,j0,3)
+    py%q_L(i0:iend,j0-1,3) = py%q_R(iend:i0:-1,j0,6)
+    py%q_R(i0:iend,j0-1,3) = py%q_L(iend:i0:-1,j0,6)
+
+    ! 4-6
+    px%q_L(i0-1,j0:jend,6) = py%q_R(i0:iend,j0,4)
+    px%q_R(i0-1,j0:jend,6) = py%q_L(i0:iend,j0,4)
+    py%q_R(i0:iend,j0-1,4) = px%q_L(i0,j0:jend,6)
+    py%q_L(i0:iend,j0-1,4) = px%q_R(i0,j0:jend,6)
+
+    !$OMP END PARALLEL WORKSHARE
 end subroutine edges_extrapolation
-
-
-
 
 
 

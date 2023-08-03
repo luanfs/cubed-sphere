@@ -1,6 +1,6 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-128
+256
 !Kind of mesh use: equiangular
 equiangular
 !Loadable grid? 0-No; 1-Yes
@@ -8,7 +8,7 @@ equiangular
 !Show ongoing process details on screen? 0-No; 1-Yes
 0
 !Test case to be done
-4
+3
 !If mesh read from file give filename (Extensions: .xyz)
 file.xyz
 

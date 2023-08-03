@@ -27,8 +27,9 @@ reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
 dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
-mfixers      = ('none' ,  'pr'  , 'af'  , 'pr') # mass fixers 
+mfixers      = ('none' ,  'gpr'  , 'af'  , 'gpr') # mass fixers 
 edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
+
 
 # Program to be run
 program = "./main"

@@ -246,12 +246,21 @@ subroutine init_adv_vars(mesh)
     advsimul%mass0 = mass_computation(Q, mesh)
 
     ! var used in pr mass fixer
-    advsimul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
-    !advsimul%a2 = sum(mesh%mt_pc(i0  ,j0:jend,:)**2) + &
-    !              sum(mesh%mt_pc(iend,j0:jend,:)**2) + !&
-    !              sum(mesh%mt_pc(i0+1:iend-1,j0  ,:)**2)+&
-    !              sum(mesh%mt_pc(i0+1:iend-1,jend,:)**2)*mesh%dx*mesh%dy
- 
+    if(advsimul%mf == 'gpr')then
+        advsimul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
+    else if(advsimul%mf == 'lpr')then
+        advsimul%a2 = sum(mesh%mt_pc(i0  ,j0:jend,:)*mesh%mt_pc(i0  ,j0:jend,:)) + &
+        sum(mesh%mt_pc(iend,j0:jend,:)*mesh%mt_pc(iend,j0:jend,:)) + &
+        sum(mesh%mt_pc(i0+1:iend-1,j0  ,:)*mesh%mt_pc(i0+1:iend-1,j0  ,:))+&
+        sum(mesh%mt_pc(i0+1:iend-1,jend,:)*mesh%mt_pc(i0+1:iend-1,jend,:))
+        advsimul%a2 = advsimul%a2*mesh%dx*mesh%dy
+    else
+        if(advsimul%mf .ne. 'none' .and. advsimul%mf .ne. 'af')then
+            print*, 'ERROR in  advection_ic: invalid mass fixer: ', advsimul%mf
+            stop
+        end if
+    end if
+
     ! Define wheter exact solution at all time steps is available or not
     if(advsimul%ic == 1 .and. advsimul%vf <= 2)then
         advsimul%exactsolution = .true.
