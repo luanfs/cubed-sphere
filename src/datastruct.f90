@@ -286,6 +286,9 @@ type simulation
     ! Degree of interpolation at ghost cells
     integer(i4) :: id
 
+    ! Degree of interpolation from D grid to A grid (1 or 3)
+    integer(i4) :: id_d2a
+
     ! Logical for exact solution
     logical :: exactsolution
 

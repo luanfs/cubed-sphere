@@ -228,6 +228,7 @@ subroutine init_adv_vars(mesh)
 
     ! Compute lagrange polynomials
     call compute_lagrange_cs(L_pc, mesh)
+    advsimul%id_d2a = 3
 
     ! Time step over 2
     advsimul%dto2 = advsimul%dt*0.5d0
