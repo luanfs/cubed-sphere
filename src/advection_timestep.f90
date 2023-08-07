@@ -18,9 +18,7 @@ use constants, only: &
 ! Spherical geometry
 use sphgeo, only: &
   sph2cart, &
-  deg2rad, &
-  ll2contra, &
-  contra2ll
+  deg2rad
 
 ! Data structures
 use datastruct, only: &
@@ -122,8 +120,12 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
+                ! Update velocity
                 call velocity_adv(ulon, vlat, lat, lon, t, vf)
-                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
+
+                ! LL2contra
+                ucontra = mesh%ll2contra_pu(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pu(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(2,2)*vlat
                 V_pu%ucontra%f(i,j,p) = ucontra
                 V_pu%vcontra%f(i,j,p) = vcontra
             end do
@@ -144,8 +146,13 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
+                ! Update velocity
                 call velocity_adv(ulon, vlat, lat, lon, t, vf)
-                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
+
+                ! LL2contra
+                ucontra = mesh%ll2contra_pv(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pv(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(2,2)*vlat
+
                 V_pv%ucontra%f(i,j,p) = ucontra
                 V_pv%vcontra%f(i,j,p) = vcontra
             end do

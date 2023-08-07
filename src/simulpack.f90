@@ -69,9 +69,14 @@ use diagnostics, only: &
 ! Duogrid interpolation
 use duogrid_interpolation, only: &
     dg_interp, &
-    dg_interp_A2Cghostgrid, &
-    dg_interp_C2Agrid, &
-    dg_interp_D2Agrid
+    interp_C2Aduogrid, &
+    interp_C2Agrid, &
+    interp_A2Cduogrid, &
+    interp_A2Cgrid, &
+    interp_D2Aduogrid, &
+    interp_D2Agrid, &
+    interp_A2Dduogrid, &
+    interp_A2Dgrid
 
 implicit none
 
@@ -164,11 +169,17 @@ subroutine interpolation_test(mesh)
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
 
-    ! first we interpolate to the A grid (including A grid ghost cells)
-    call dg_interp_C2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    ! first we interpolate from C grid to the A grid ghost cells
+    call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
+    ! then we interpolate from C grid to the A grid inner cells
+    call interp_C2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
 
     ! now we fill the ghost cell C grid
-    call dg_interp_A2Cghostgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
+    ! then we interpolate from A grid to the C grid inner cells
+    call interp_A2Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
 
     error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
@@ -178,14 +189,22 @@ subroutine interpolation_test(mesh)
     ! Duogrid interpolation of the vector field on a D grid
 
     ! first we interpolate to the A grid (including A grid ghost cells)
-    call dg_interp_D2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_D2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
+    ! then we interpolate from D grid to the A grid inner cells
+    call interp_D2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
 
     ! now we fill the ghost cell D grid
-    call dg_interp_A2Cghostgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_A2Dduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
-    error_ucovari = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
-    error_vcovari = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+    ! then we interpolate from A grid to the D grid inner cells
+    call interp_A2Dgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+
+
+    error_ucovari = maxval(abs(wind_pu%ucovari%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucovari_old%f(i0-1:iend+2,n0:nend,:)))
+    error_vcovari = maxval(abs(wind_pv%vcovari%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcovari_old%f(n0:nend,j0-1:jend+2,:)))
     error_ucovari = max(error_ucovari, error_vcovari)
+
 
     print*
     print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_ucontra, error_ucovari

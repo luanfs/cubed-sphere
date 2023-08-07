@@ -199,261 +199,100 @@ subroutine meshload(mesh, header)
     close(iunit)
 
     !---------------------------------------
-    ! Read metric tensor at pc
+    ! Read tgx at pu
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pc.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                read(iunit,*) mesh%mt_pc(i,j,p)
-            end do 
-        end do
-    end do
-
-    !---------------------------------------
-    ! Read metric tensor at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pu.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pu.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend
-                read(iunit,*) mesh%mt_pu(i,j,p)
+                read(iunit,*) mesh%tgx_pu(i,j,p)%v(1), mesh%tgx_pu(i,j,p)%v(2), mesh%tgx_pu(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    ! Read metric tensor at pv
+    ! Read tgy at pu
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pv.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                read(iunit,*) mesh%mt_pv(i,j,p)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read ll2contra at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pu.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pu.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend
-                read(iunit,*) mesh%ll2contra_pu(i,j,p)%M(1,1), mesh%ll2contra_pu(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pu(i,j,p)%M(2,1), mesh%ll2contra_pu(i,j,p)%M(2,2)
+                read(iunit,*) mesh%tgy_pu(i,j,p)%v(1), mesh%tgy_pu(i,j,p)%v(2), mesh%tgy_pu(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    ! Read contra2ll at pu
+    ! Read tgx at pv
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pu.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                read(iunit,*) mesh%contra2ll_pu(i,j,p)%M(1,1), mesh%contra2ll_pu(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pu(i,j,p)%M(2,1), mesh%contra2ll_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read ll2contra at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pv.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pv.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend+1
-                read(iunit,*) mesh%ll2contra_pv(i,j,p)%M(1,1), mesh%ll2contra_pv(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pv(i,j,p)%M(2,1), mesh%ll2contra_pv(i,j,p)%M(2,2)
+                read(iunit,*) mesh%tgx_pv(i,j,p)%v(1), mesh%tgx_pv(i,j,p)%v(2), mesh%tgx_pv(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    ! Read contra2ll at pv
+    ! Read tgy at pv
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pv.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pv.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend+1
-                read(iunit,*) mesh%contra2ll_pv(i,j,p)%M(1,1), mesh%contra2ll_pv(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pv(i,j,p)%M(2,1), mesh%contra2ll_pv(i,j,p)%M(2,2)
+                read(iunit,*) mesh%tgy_pv(i,j,p)%v(1), mesh%tgy_pv(i,j,p)%v(2), mesh%tgy_pv(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    ! Read ll2contra at pc
+    ! Read tgx at pc
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pc.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pc.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend
-                read(iunit,*) mesh%ll2contra_pc(i,j,p)%M(1,1), mesh%ll2contra_pc(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pc(i,j,p)%M(2,1), mesh%ll2contra_pc(i,j,p)%M(2,2)
+                read(iunit,*) mesh%tgx_pc(i,j,p)%v(1), mesh%tgx_pc(i,j,p)%v(2), mesh%tgx_pc(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    ! Read contra2ll at pc
+    ! Read tgy at pc
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pc.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pc.dat"
     open(iunit, file=filename, status='old')
     ! Read coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend
-                read(iunit,*) mesh%contra2ll_pc(i,j,p)%M(1,1), mesh%contra2ll_pc(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pc(i,j,p)%M(2,1), mesh%contra2ll_pc(i,j,p)%M(2,2)
+                read(iunit,*) mesh%tgy_pc(i,j,p)%v(1), mesh%tgy_pc(i,j,p)%v(2), mesh%tgy_pc(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
-
-
-
-
-
-
-    !---------------------------------------
-    ! Read covari2contra at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pu.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                read(iunit,*) mesh%covari2contra_pu(i,j,p)%M(1,1), mesh%covari2contra_pu(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pu(i,j,p)%M(2,1), mesh%covari2contra_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read contra2covari at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pu.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                read(iunit,*) mesh%contra2covari_pu(i,j,p)%M(1,1), mesh%contra2covari_pu(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pu(i,j,p)%M(2,1), mesh%contra2covari_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read covari2contra at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pv.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                read(iunit,*) mesh%covari2contra_pv(i,j,p)%M(1,1), mesh%covari2contra_pv(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pv(i,j,p)%M(2,1), mesh%covari2contra_pv(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read contra2covari at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pv.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                read(iunit,*) mesh%contra2covari_pv(i,j,p)%M(1,1), mesh%contra2covari_pv(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pv(i,j,p)%M(2,1), mesh%contra2covari_pv(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read covari2contra at pc
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pc.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                read(iunit,*) mesh%covari2contra_pc(i,j,p)%M(1,1), mesh%covari2contra_pc(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pc(i,j,p)%M(2,1), mesh%covari2contra_pc(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    ! Read contra2covari at pc
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pc.dat"
-    open(iunit, file=filename, status='old')
-    ! Read coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                read(iunit,*) mesh%contra2covari_pc(i,j,p)%M(1,1), mesh%contra2covari_pc(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pc(i,j,p)%M(2,1), mesh%contra2covari_pc(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
 
     !---------------------------------------
     ! Read latlon grid indexes
@@ -468,9 +307,7 @@ subroutine meshload(mesh, header)
     end do
     close(iunit)
 
-    print*
     print*, "Converting latlon to xyz..."
-    print*
 
 
     !---------------------------------------

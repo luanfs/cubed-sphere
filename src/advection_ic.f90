@@ -20,11 +20,7 @@ use constants, only: &
 ! Spherical geometry
 use sphgeo, only: &
   sph2cart, &
-  deg2rad, &
-  ll2contra, &
-  contra2ll, &
-  covari2contra, &
-  contra2covari
+  deg2rad
 
 ! Data structures
 use datastruct, only: &
@@ -337,15 +333,28 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lon  = mesh%pc(i,j,p)%lon
                 Q%f(i,j,p) = q0_adv(lat, lon, advsimul%ic)
 
+                ! Compute velocity
                 call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
-                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pc(i,j,p)%M)
-                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pc(i,j,p)%M)
-                V_pc%ucontra_old%f(i,j,p) = ucovari
-                V_pc%vcontra_old%f(i,j,p) = vcovari
 
+                ! LL2contra
+                ucontra = mesh%ll2contra_pc(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pc(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pc(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pc(i,j,p)%M(2,2)*vlat
+
+                ! LL2covari
+                ucovari = mesh%ll2covari_pc(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pc(i,j,p)%M(1,2)*vlat
+                vcovari = mesh%ll2covari_pc(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pc(i,j,p)%M(2,2)*vlat
+
+                ! debug 
+                !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
+                V_pc%ucontra_old%f(i,j,p) = ulon
+                V_pc%vcontra_old%f(i,j,p) = vlat
+
+                !error = max(error, error1)
             end do
         end do
     end do
+    !print*, error
+
     ! Vector field at pu
     do p = 1 , nbfaces
         do i = n0, nend+1
@@ -353,15 +362,23 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
 
+                ! Compute velocity
                 call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
-                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pu(i,j,p)%M)
+
+                ! LL2contra
+                ucontra = mesh%ll2contra_pu(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pu(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(2,2)*vlat
+
+                ! LL2covari
+                ucovari = mesh%ll2covari_pu(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(1,2)*vlat
+                vcovari = mesh%ll2covari_pu(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(2,2)*vlat
 
                 V_pu%ucontra_old%f(i,j,p) = ucontra
                 V_pu%vcontra_old%f(i,j,p) = vcontra
 
-                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pu(i,j,p)%M)
-                V_pu%ucovari%f(i,j,p) = ucovari
-                V_pu%vcovari%f(i,j,p) = vcovari
+                V_pu%ucovari_old%f(i,j,p) = ucovari
+                V_pu%vcovari_old%f(i,j,p) = vcovari
+
                 ! debug 
                 !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pu(i,j,p)%M)
@@ -372,8 +389,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
         end do
     end do
 
+
     V_pu%ucontra%f(i0:iend+1,j0:jend,:) = V_pu%ucontra_old%f(i0:iend+1,j0:jend,:)
     V_pu%vcontra%f(i0:iend+1,j0:jend,:) = V_pu%vcontra_old%f(i0:iend+1,j0:jend,:)
+    V_pu%vcovari%f(i0:iend+1,j0:jend,:) = V_pu%vcovari_old%f(i0:iend+1,j0:jend,:)
+    V_pu%ucovari%f(i0:iend+1,j0:jend,:) = V_pu%ucovari_old%f(i0:iend+1,j0:jend,:)
  
     ! Vector field at pv
     do p = 1 , nbfaces
@@ -382,15 +402,23 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
 
+                ! Compute velocity
                 call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
-                call ll2contra(ulon, vlat, ucontra, vcontra, mesh%ll2contra_pv(i,j,p)%M)
+
+                ! LL2contra
+                ucontra = mesh%ll2contra_pv(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pv(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(2,2)*vlat
+
+                ! LL2covari
+                ucovari = mesh%ll2covari_pv(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(1,2)*vlat
+                vcovari = mesh%ll2covari_pv(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(2,2)*vlat
+
 
                 V_pv%ucontra_old%f(i,j,p) = ucontra
                 V_pv%vcontra_old%f(i,j,p) = vcontra
 
-                call contra2covari(ucovari, vcovari, ucontra, vcontra, mesh%contra2covari_pv(i,j,p)%M)
-                V_pv%ucovari%f(i,j,p) = ucovari
-                V_pv%vcovari%f(i,j,p) = vcovari
+                V_pv%ucovari_old%f(i,j,p) = ucovari
+                V_pv%vcovari_old%f(i,j,p) = vcovari
 
 
                 ! debug 
@@ -405,6 +433,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
 
     V_pv%ucontra%f(i0:iend,j0:jend+1,:) = V_pv%ucontra_old%f(i0:iend,j0:jend+1,:)
     V_pv%vcontra%f(i0:iend,j0:jend+1,:) = V_pv%vcontra_old%f(i0:iend,j0:jend+1,:)
+    V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
+    V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
  
     ! CFL number
     advsimul%cfl = maxval(abs(V_pu%ucontra%f))

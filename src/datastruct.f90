@@ -114,6 +114,24 @@ type cubedsphere
     ! Contravariant to latlon conversion at pc
     type(matrix), allocatable :: contra2ll_pc(:,:,:)
 
+    ! latlon to covari conversion at pu
+    type(matrix), allocatable :: ll2covari_pu(:,:,:)
+
+    ! latlon to covariant conversion at pv
+    type(matrix), allocatable :: ll2covari_pv(:,:,:)
+
+    ! latlon to covariant conversion at pc
+    type(matrix), allocatable :: ll2covari_pc(:,:,:)
+
+    ! covariant to latlon conversion at pu
+    type(matrix), allocatable :: covari2ll_pu(:,:,:)
+
+    ! covariant to latlon conversion at pv
+    type(matrix), allocatable :: covari2ll_pv(:,:,:)
+
+    ! covariant to latlon conversion at pc
+    type(matrix), allocatable :: covari2ll_pc(:,:,:)
+
     ! Contravariant to covariant conversion at pu
     type(matrix), allocatable :: contra2covari_pu(:,:,:)
 
@@ -242,6 +260,10 @@ type vector_field
     ! Covariant components
     type(scalar_field) :: ucovari
     type(scalar_field) :: vcovari
+
+    ! Covariant components from previous time step
+    type(scalar_field) :: ucovari_old
+    type(scalar_field) :: vcovari_old
 
     ! Position of the values relative to a mesh
     !   0 - Centers (pc)

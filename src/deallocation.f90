@@ -28,12 +28,21 @@ subroutine meshdeallocation(mesh)
     deallocate(mesh%pc) ! Centers
     deallocate(mesh%pu) ! Midpoints at u
     deallocate(mesh%pv) ! Midpoints at v
+
     deallocate(mesh%ll2contra_pu) ! latlon 2 contravariant conversion at u
     deallocate(mesh%ll2contra_pv) ! latlon 2 contravariant conversion at v
     deallocate(mesh%ll2contra_pc) ! latlon 2 contravariant conversion at c
     deallocate(mesh%contra2ll_pu) ! contravariant 2 latlon conversion at u
     deallocate(mesh%contra2ll_pv) ! contravariant 2 latlon conversion at v 
     deallocate(mesh%contra2ll_pc) ! contravariant 2 latlon conversion at c
+
+    deallocate(mesh%ll2covari_pu) ! latlon 2 covariant conversion at u
+    deallocate(mesh%ll2covari_pv) ! latlon 2 covariant conversion at v
+    deallocate(mesh%ll2covari_pc) ! latlon 2 covariant conversion at c
+    deallocate(mesh%covari2ll_pu) ! covariant 2 latlon conversion at u
+    deallocate(mesh%covari2ll_pv) ! covariant 2 latlon conversion at v 
+    deallocate(mesh%covari2ll_pc) ! covariant 2 latlon conversion at c
+ 
     deallocate(mesh%covari2contra_pu) ! covari 2 contravariant conversion at u
     deallocate(mesh%covari2contra_pv) ! covari 2 contravariant conversion at v
     deallocate(mesh%covari2contra_pc) ! covari 2 contravariant conversion at c
@@ -123,6 +132,9 @@ subroutine adv_deallocation()
     deallocate(wind_pc%vcontra_time_centered%f) 
     deallocate(wind_pc%ucovari%f)
     deallocate(wind_pc%vcovari%f)
+    deallocate(wind_pc%ucovari_old%f)
+    deallocate(wind_pc%vcovari_old%f)
+
 
 
 end subroutine adv_deallocation

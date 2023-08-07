@@ -212,258 +212,100 @@ subroutine meshstore(mesh, header)
     close(iunit)
 
     !---------------------------------------
-    !Write metric tensor at pc
+    !Write tgx at pu
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pc.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                write(iunit,*) mesh%mt_pc(i,j,p)
-            end do 
-        end do
-    end do
-
-    !---------------------------------------
-    !Write metric tensor at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pu.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pu.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend
-                write(iunit,*) mesh%mt_pu(i,j,p)
+                write(iunit,*) mesh%tgx_pu(i,j,p)%v(1), mesh%tgx_pu(i,j,p)%v(2), mesh%tgx_pu(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    !Write metric tensor at pv
+    !Write tgy at pu
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_mt_pv.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                write(iunit,*) mesh%mt_pv(i,j,p)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write ll2contra at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pu.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pu.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend
-                write(iunit,*) mesh%ll2contra_pu(i,j,p)%M(1,1), mesh%ll2contra_pu(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pu(i,j,p)%M(2,1), mesh%ll2contra_pu(i,j,p)%M(2,2)
+                write(iunit,*) mesh%tgy_pu(i,j,p)%v(1), mesh%tgy_pu(i,j,p)%v(2), mesh%tgy_pu(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    !Write contra2ll at pu
+    !Write tgx at pv
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pu.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                write(iunit,*) mesh%contra2ll_pu(i,j,p)%M(1,1), mesh%contra2ll_pu(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pu(i,j,p)%M(2,1), mesh%contra2ll_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write ll2contra at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pv.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pv.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend+1
-                write(iunit,*) mesh%ll2contra_pv(i,j,p)%M(1,1), mesh%ll2contra_pv(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pv(i,j,p)%M(2,1), mesh%ll2contra_pv(i,j,p)%M(2,2)
+                write(iunit,*) mesh%tgx_pv(i,j,p)%v(1), mesh%tgx_pv(i,j,p)%v(2), mesh%tgx_pv(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    !Write contra2ll at pv
+    !Write tgy at pv
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pv.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pv.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend+1
-                write(iunit,*) mesh%contra2ll_pv(i,j,p)%M(1,1), mesh%contra2ll_pv(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pv(i,j,p)%M(2,1), mesh%contra2ll_pv(i,j,p)%M(2,2)
+                write(iunit,*) mesh%tgy_pv(i,j,p)%v(1), mesh%tgy_pv(i,j,p)%v(2), mesh%tgy_pv(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    !Write ll2contra at pc
+    !Write tgx at pc
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_ll2contra_pc.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_pc.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend
-                write(iunit,*) mesh%ll2contra_pc(i,j,p)%M(1,1), mesh%ll2contra_pc(i,j,p)%M(1,2), &
-                             mesh%ll2contra_pc(i,j,p)%M(2,1), mesh%ll2contra_pc(i,j,p)%M(2,2)
+                write(iunit,*) mesh%tgx_pc(i,j,p)%v(1), mesh%tgx_pc(i,j,p)%v(2), mesh%tgx_pc(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
 
     !---------------------------------------
-    !Write contra2ll at pc
+    !Write tgy at pc
     !---------------------------------------
     call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2ll_pc.dat"
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_pc.dat"
     open(iunit, file=filename, status='replace')
     !Write coordinates
     do p = 1, nbfaces
         do i = n0, nend
             do j = n0, nend
-                write(iunit,*) mesh%contra2ll_pc(i,j,p)%M(1,1), mesh%contra2ll_pc(i,j,p)%M(1,2), &
-                             mesh%contra2ll_pc(i,j,p)%M(2,1), mesh%contra2ll_pc(i,j,p)%M(2,2)
+                write(iunit,*) mesh%tgy_pc(i,j,p)%v(1), mesh%tgy_pc(i,j,p)%v(2), mesh%tgy_pc(i,j,p)%v(3)
             end do 
         end do
     end do
     close(iunit)
-
-
-    !---------------------------------------
-    !Write covari2contra at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pu.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                write(iunit,*) mesh%covari2contra_pu(i,j,p)%M(1,1), mesh%covari2contra_pu(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pu(i,j,p)%M(2,1), mesh%covari2contra_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write contra2covari at pu
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pu.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend+1
-            do j = n0, nend
-                write(iunit,*) mesh%contra2covari_pu(i,j,p)%M(1,1), mesh%contra2covari_pu(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pu(i,j,p)%M(2,1), mesh%contra2covari_pu(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write covari2contra at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pv.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                write(iunit,*) mesh%covari2contra_pv(i,j,p)%M(1,1), mesh%covari2contra_pv(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pv(i,j,p)%M(2,1), mesh%covari2contra_pv(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write contra2covari at pv
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pv.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend+1
-                write(iunit,*) mesh%contra2covari_pv(i,j,p)%M(1,1), mesh%contra2covari_pv(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pv(i,j,p)%M(2,1), mesh%contra2covari_pv(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write covari2contra at pc
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_covari2contra_pc.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                write(iunit,*) mesh%covari2contra_pc(i,j,p)%M(1,1), mesh%covari2contra_pc(i,j,p)%M(1,2), &
-                             mesh%covari2contra_pc(i,j,p)%M(2,1), mesh%covari2contra_pc(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-    !---------------------------------------
-    !Write contra2covari at pc
-    !---------------------------------------
-    call getunit(iunit)
-    filename=trim(griddir)//trim(mesh%name)//"_contra2covari_pc.dat"
-    open(iunit, file=filename, status='replace')
-    !Write coordinates
-    do p = 1, nbfaces
-        do i = n0, nend
-            do j = n0, nend
-                write(iunit,*) mesh%contra2covari_pc(i,j,p)%M(1,1), mesh%contra2covari_pc(i,j,p)%M(1,2), &
-                             mesh%contra2covari_pc(i,j,p)%M(2,1), mesh%contra2covari_pc(i,j,p)%M(2,2)
-            end do 
-        end do
-    end do
-    close(iunit)
-
-
 
 
     !---------------------------------------

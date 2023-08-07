@@ -24,8 +24,8 @@ use datastruct, only: &
 
 ! Interpolation
 use duogrid_interpolation, only: &
-    dg_interp_A2Cghostgrid, &
-    dg_interp_C2Agrid
+    interp_A2Cduogrid, &
+    interp_C2Aduogrid
 
 implicit none
 
@@ -48,10 +48,10 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
     integer(i4) :: i, j, p
 
     ! Interpolation of the wind at ghost cells
-    ! first we interpolate to the A grid (including A grid ghost cells)
-    call dg_interp_C2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, 3)
+    ! first we interpolate to the A grid ghost cells
+    call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
     ! now we fill the ghost cell C grid
-    call dg_interp_A2Cghostgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, 3)
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     select case (dp)
         case ('rk1')
