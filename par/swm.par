@@ -1,0 +1,52 @@
+#Shallow water test case parameters 
+#Initial condition field 
+2
+#Time step
+0.00625
+#Number of plots
+2
+#1D reconstruction (ppm or hyppm)
+hyppm
+#2D operator splitting (avlt or pl07)
+avlt
+#Metric tensor treatment (pl07 or mt0)
+mt0
+#Departure point scheme (rk1 or rk2)
+rk2
+#Mass fixer (none, af, gpr, lpr) - only for duogrid
+gpr
+#Edge treatment (pl07 or duogrid)
+duogrid
+#Ghost cells interpolation degree
+3
+#-----------Description of parameters -------------------------------------
+#Possible initial conditions	
+#  case(1) - constant flow
+#  case(2) - gaussian hill
+#  case(3) - two gaussian hills
+#  case(4) - steady state
+#Possible vector fields
+#  case(1) - rotated zonal wind (divergence free)
+#  case(2) - Non divergent field 4 from Nair and Lauritzen 2010
+#  case(3) - Divergent field 3 from Nair and Lauritzen 2010
+#Possible flux methods
+#  case(ppm)   - PPM from Collela and Woodward 1984
+#  case(hyppm) - Hybrid PPM from Putman and Lin 2007
+#Possible 2d operator splitting schemes
+#  case(avlt) - Average of Lie-Trotter splitting in x and y direction 
+#  case(pl07) - Splitting from Putman and Lin 2007
+#Possible metric tensor formulation
+#  case(pl07) - assume a constant metric tensor in each 1D integration domain
+#  case(mt0)  - incorporates the metric tensor in PPM reconstruction
+#Possible mass fixers
+#  case(none) - none
+#  case(af) - average flux at cube edges
+#  case(gpr) - global divergence projection
+#  case(lpr) - local divergence projection
+#Possible departure point computation
+#  case(rk1) - Euler
+#  case(rk2) - Second-order Runge Kutta
+#Possible cube edges treatment (used in reconstruction)
+#  case(duogrid) - extends the gridlines to adjacent panels
+#  case(pl07)    - uses the extrapolation from Putman and Lin 2007
+

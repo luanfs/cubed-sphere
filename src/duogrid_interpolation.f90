@@ -587,14 +587,13 @@ subroutine interp_C2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
 end subroutine interp_C2Aduogrid
 
 
-subroutine interp_C2Agrid(U_pu, U_pv, U_pc, L, mesh, id)
+subroutine interp_C2Agrid(u_pu, v_pv, u_pc, v_pc, id)
     !---------------------------------------------------
-    ! duogrid interpolation of vector field given at C grid (contravariant)
-    ! to the A grid (contravariant), but not including its ghost cell values at centers
+    ! duogrid interpolation of vector field given at C grid (contra/covar/latlon)
+    ! to the A grid (contra/covar/latlon),
+    ! but not including its ghost cell values at centers
     !---------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    type(lagrange_poly_cs), intent(inout):: L
+    type(scalar_field), intent(inout) :: u_pu, v_pv, u_pc, v_pc
     integer(i4), intent(in) :: id
     integer(i4):: i, j, p
     real(kind=8) :: a1, a2, a3, a4
@@ -604,9 +603,11 @@ subroutine interp_C2Agrid(U_pu, U_pv, U_pc, L, mesh, id)
         ! linear interpolation
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-        U_pc%ucontra%f(i0:iend,j0:jend,:) = (U_pu%ucontra%f(i0:iend,j0:jend,:)+U_pu%ucontra%f(i0+1:iend+1,j0:jend,:))*0.5d0
-        U_pc%vcontra%f(i0:iend,j0:jend,:) = (U_pv%vcontra%f(i0:iend,j0:jend,:)+U_pv%vcontra%f(i0:iend,j0+1:jend+1,:))*0.5d0
+        !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
+        u_pc%f(i0:iend,j0:jend,:) = &
+        (u_pu%f(i0:iend,j0:jend,:) + u_pu%f(i0+1:iend+1,j0:jend,:))*0.5d0
+        v_pc%f(i0:iend,j0:jend,:) = &
+        (v_pv%f(i0:iend,j0:jend,:) + v_pv%f(i0:iend,j0+1:jend+1,:))*0.5d0
         !$OMP END PARALLEL WORKSHARE
 
     elseif(id == 3) then
@@ -625,48 +626,41 @@ subroutine interp_C2Agrid(U_pu, U_pv, U_pc, L, mesh, id)
         !$OMP SHARED(i0, iend, j0, jend) &
         !$OMP SHARED(a1, a2, a3, a4) &
         !$OMP SHARED(b1, b2, b3, b4) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-
+        !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
         ! west boundary
-        U_pc%ucontra%f(i0,j0:jend,:) = &
-          a1*U_pu%ucontra%f(i0,j0:jend,:) &
-        + a2*U_pu%ucontra%f(i0+1,j0:jend,:) &
-        + a3*U_pu%ucontra%f(i0+2,j0:jend,:) &
-        + a4*U_pu%ucontra%f(i0+3,j0:jend,:)
+        u_pc%f(i0,j0:jend,:) = a1*u_pu%f(i0,j0:jend,:) &
+                             + a2*u_pu%f(i0+1,j0:jend,:) &
+                             + a3*u_pu%f(i0+2,j0:jend,:) &
+                             + a4*u_pu%f(i0+3,j0:jend,:)
 
         ! east boundary
-        U_pc%ucontra%f(iend,j0:jend,:) = &
-          a4*U_pu%ucontra%f(iend-2,j0:jend,:) &
-        + a3*U_pu%ucontra%f(iend-1,j0:jend,:) &
-        + a2*U_pu%ucontra%f(iend,j0:jend,:) &
-        + a1*U_pu%ucontra%f(iend+1,j0:jend,:)
+        u_pc%f(iend,j0:jend,:) = a4*u_pu%f(iend-2,j0:jend,:) &
+                               + a3*u_pu%f(iend-1,j0:jend,:) &
+                               + a2*u_pu%f(iend,j0:jend,:) &
+                               + a1*u_pu%f(iend+1,j0:jend,:)
 
         ! south boundary
-        U_pc%vcontra%f(i0:iend,j0,:) = &
-          a1*U_pv%vcontra%f(i0:iend,j0,:) &
-        + a2*U_pv%vcontra%f(i0:iend,j0+1,:) &
-        + a3*U_pv%vcontra%f(i0:iend,j0+2,:) &
-        + a4*U_pv%vcontra%f(i0:iend,j0+3,:)
+        v_pc%f(i0:iend,j0,:) = a1*v_pv%f(i0:iend,j0,:) &
+                             + a2*v_pv%f(i0:iend,j0+1,:) &
+                             + a3*v_pv%f(i0:iend,j0+2,:) &
+                             + a4*v_pv%f(i0:iend,j0+3,:)
 
         ! north boundary
-        U_pc%vcontra%f(i0:iend,jend,:) = &
-        a4*U_pv%vcontra%f(i0:iend,jend-2,:) + &
-        a3*U_pv%vcontra%f(i0:iend,jend-1,:) + &
-        a2*U_pv%vcontra%f(i0:iend,jend-0,:) + &
-        a1*U_pv%vcontra%f(i0:iend,jend+1,:)
+        v_pc%f(i0:iend,jend,:) = a4*v_pv%f(i0:iend,jend-2,:) &
+                               + a3*v_pv%f(i0:iend,jend-1,:) &
+                               + a2*v_pv%f(i0:iend,jend-0,:) &
+                               + a1*v_pv%f(i0:iend,jend+1,:)
 
         ! remaing cells
-        U_pc%ucontra%f(i0+1:iend-1,j0:jend,:) = & 
-          b1*U_pu%ucontra%f(i0:iend-2,j0:jend,:) &
-        + b2*U_pu%ucontra%f(i0+1:iend-1,j0:jend,:) &
-        + b3*U_pu%ucontra%f(i0+2:iend  ,j0:jend,:) &
-        + b4*U_pu%ucontra%f(i0+3:iend+1,j0:jend,:)
+        u_pc%f(i0+1:iend-1,j0:jend,:) = b1*u_pu%f(i0:iend-2,j0:jend,:) &
+                                      + b2*u_pu%f(i0+1:iend-1,j0:jend,:) &
+                                      + b3*u_pu%f(i0+2:iend  ,j0:jend,:) &
+                                      + b4*u_pu%f(i0+3:iend+1,j0:jend,:)
 
-        U_pc%vcontra%f(i0:iend,j0+1:jend-1,:) = & 
-          b1*U_pv%vcontra%f(i0:iend,j0:jend-2,:) &
-        + b2*U_pv%vcontra%f(i0:iend,j0+1:jend-1,:) &
-        + b3*U_pv%vcontra%f(i0:iend,j0+2:jend  ,:) &
-        + b4*U_pv%vcontra%f(i0:iend,j0+3:jend+1,:)
+        v_pc%f(i0:iend,j0+1:jend-1,:) = b1*v_pv%f(i0:iend,j0:jend-2,:) &
+                                      + b2*v_pv%f(i0:iend,j0+1:jend-1,:) &
+                                      + b3*v_pv%f(i0:iend,j0+2:jend  ,:) &
+                                      + b4*v_pv%f(i0:iend,j0+3:jend+1,:)
 
         !$OMP END PARALLEL WORKSHARE
     else
@@ -676,13 +670,11 @@ subroutine interp_C2Agrid(U_pu, U_pv, U_pc, L, mesh, id)
 end subroutine interp_C2Agrid
 
 
-subroutine interp_A2Cduogrid(U_pu, U_pv, U_pc, L, mesh)
+subroutine interp_A2Cduogrid(U_pu, U_pv, U_pc)
     !---------------------------------------------------
     ! duogrid interpolation of vector field given at A grid (contravariant)
     ! to the C grid (contravariant) ghost cells only
-    type(cubedsphere), intent(inout) :: mesh
     type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    type(lagrange_poly_cs), intent(inout):: L
     integer(i4):: i, j, p, h
     real(kind=8) :: c1, c2
     
@@ -775,14 +767,12 @@ subroutine interp_A2Cduogrid(U_pu, U_pv, U_pc, L, mesh)
 end subroutine interp_A2Cduogrid
 
 
-subroutine interp_A2Cgrid(U_pu, U_pv, U_pc, L, mesh, id)
+subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
     !---------------------------------------------------
-    ! duogrid interpolation of vector field given at A grid (contravariant)
-    ! to the C grid (contravariant) inner cells
-    type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
+    ! interpolation of vector field (contra/covar/latlon) given at A grid 
+    ! (including ghost cells) to the C grid (contra/covar/latlon) inner cells
+    type(scalar_field), intent(inout) :: u_pu, v_pv, u_pc, v_pc
     integer(i4), intent(in) :: id
-    type(lagrange_poly_cs), intent(inout):: L
     integer(i4):: i, j, p, h
     real(kind=8) :: c1, c2
     
@@ -795,24 +785,26 @@ subroutine interp_A2Cgrid(U_pu, U_pv, U_pc, L, mesh, id)
     if(id == 1) then
         ! linear interpolation
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-        U_pu%ucontra%f(i0:iend+1,j0:jend,:) = (U_pc%ucontra%f(i0-1:iend,j0:jend,:)+U_pc%ucontra%f(i0:iend+1,j0:jend,:))*0.5d0
-        U_pv%vcontra%f(i0:iend,j0:jend+1,:) = (U_pc%vcontra%f(i0:iend,j0-1:jend,:)+U_pc%vcontra%f(i0:iend,j0:jend+1,:))*0.5d0
+        !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+        !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
+        u_pu%f(i0:iend+1,j0:jend,:) = &
+        (u_pc%f(i0-1:iend,j0:jend,:) + u_pc%f(i0:iend+1,j0:jend,:))*0.5d0
+        v_pv%f(i0:iend,j0:jend+1,:) = &
+        (v_pc%f(i0:iend,j0-1:jend,:) + v_pc%f(i0:iend,j0:jend+1,:))*0.5d0
         !$OMP END PARALLEL WORKSHARE
 
     elseif(id == 3) then
         ! cubic interpolation
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc, c1, c2)
-        U_pu%ucontra%f(i0:iend+1,j0:jend,:) = &
-        c1*(U_pc%ucontra%f(i0-1:iend,j0:jend,:)+U_pc%ucontra%f(i0:iend+1,j0:jend,:)) + &
-        c2*(U_pc%ucontra%f(i0-2:iend-1,j0:jend,:)+U_pc%ucontra%f(i0+1:iend+2,j0:jend,:))
+        !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
+        !$OMP SHARED(u_pu, v_pv, u_pc, v_pc, c1, c2)
+        u_pu%f(i0:iend+1,j0:jend,:) = &
+        c1*(u_pc%f(i0-1:iend  ,j0:jend,:) + u_pc%f(i0:iend+1  ,j0:jend,:)) + &
+        c2*(u_pc%f(i0-2:iend-1,j0:jend,:) + u_pc%f(i0+1:iend+2,j0:jend,:))
 
-        U_pv%vcontra%f(i0:iend,j0:jend+1,:) = &
-        c1*(U_pc%vcontra%f(i0:iend,j0-1:jend,:)+U_pc%vcontra%f(i0:iend,j0:jend+1,:)) + &
-        c2*(U_pc%vcontra%f(i0:iend,j0-2:jend-1,:)+U_pc%vcontra%f(i0:iend,j0+1:jend+2,:))
+        v_pv%f(i0:iend,j0:jend+1,:) = &
+        c1*(v_pc%f(i0:iend,j0-1:jend  ,:) + v_pc%f(i0:iend,j0:jend+1  ,:)) + &
+        c2*(v_pc%f(i0:iend,j0-2:jend-1,:) + v_pc%f(i0:iend,j0+1:jend+2,:))
         !$OMP END PARALLEL WORKSHARE
 
     else
@@ -820,6 +812,7 @@ subroutine interp_A2Cgrid(U_pu, U_pv, U_pc, L, mesh, id)
         stop
     end if
 end subroutine interp_A2Cgrid
+
 
 
 
@@ -1014,103 +1007,11 @@ end subroutine interp_D2Aduogrid
 
 
 
-
-subroutine interp_D2Agrid(U_pu, U_pv, U_pc, L, mesh, id)
-    !---------------------------------------------------
-    ! duogrid interpolation of vector field given at D grid (covariant)
-    ! to the A grid (contravariant), but not including its ghost cell values at centers
-    !---------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    type(lagrange_poly_cs), intent(inout):: L
-    integer(i4), intent(in) :: id
-    integer(i4):: i, j, p
-    real(kind=8) :: a1, a2, a3, a4
-    real(kind=8) :: b1, b2, b3, b4
-
-    if(id == 1) then
-        ! linear interpolation
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-        U_pc%ucovari%f(i0:iend,j0:jend,:) = (U_pu%ucovari%f(i0:iend,j0:jend,:)+U_pu%ucovari%f(i0+1:iend+1,j0:jend,:))*0.5d0
-        U_pc%vcovari%f(i0:iend,j0:jend,:) = (U_pv%vcovari%f(i0:iend,j0:jend,:)+U_pv%vcovari%f(i0:iend,j0+1:jend+1,:))*0.5d0
-        !$OMP END PARALLEL WORKSHARE
-
-    elseif(id == 3) then
-        ! cubic interpolation coeffs
-        a1 =  5.d0/16.d0
-        a2 = 15.d0/16.d0
-        a3 = -5.d0/16.d0
-        a4 =  1.d0/16.d0
-
-        b1 = -1.d0/16.d0
-        b2 =  9.d0/16.d0
-        b3 =  9.d0/16.d0
-        b4 = -1.d0/16.d0
-     
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(a1, a2, a3, a4) &
-        !$OMP SHARED(b1, b2, b3, b4) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-
-        ! west boundary
-        U_pc%vcovari%f(i0,j0:jend,:) = &
-          a1*U_pu%vcovari%f(i0,j0:jend,:) &
-        + a2*U_pu%vcovari%f(i0+1,j0:jend,:) &
-        + a3*U_pu%vcovari%f(i0+2,j0:jend,:) &
-        + a4*U_pu%vcovari%f(i0+3,j0:jend,:)
-
-        ! east boundary
-        U_pc%vcovari%f(iend,j0:jend,:) = &
-          a4*U_pu%vcovari%f(iend-2,j0:jend,:) &
-        + a3*U_pu%vcovari%f(iend-1,j0:jend,:) &
-        + a2*U_pu%vcovari%f(iend,j0:jend,:) &
-        + a1*U_pu%vcovari%f(iend+1,j0:jend,:)
-
-        ! south boundary
-        U_pc%ucovari%f(i0:iend,j0,:) = &
-          a1*U_pv%ucovari%f(i0:iend,j0,:) &
-        + a2*U_pv%ucovari%f(i0:iend,j0+1,:) &
-        + a3*U_pv%ucovari%f(i0:iend,j0+2,:) &
-        + a4*U_pv%ucovari%f(i0:iend,j0+3,:)
-
-        ! north boundary
-        U_pc%ucovari%f(i0:iend,jend,:) = &
-        a4*U_pv%ucovari%f(i0:iend,jend-2,:) + &
-        a3*U_pv%ucovari%f(i0:iend,jend-1,:) + &
-        a2*U_pv%ucovari%f(i0:iend,jend-0,:) + &
-        a1*U_pv%ucovari%f(i0:iend,jend+1,:)
-
-        ! remaing cells
-        U_pc%vcovari%f(i0+1:iend-1,j0:jend,:) = & 
-          b1*U_pu%vcovari%f(i0:iend-2,j0:jend,:) &
-        + b2*U_pu%vcovari%f(i0+1:iend-1,j0:jend,:) &
-        + b3*U_pu%vcovari%f(i0+2:iend  ,j0:jend,:) &
-        + b4*U_pu%vcovari%f(i0+3:iend+1,j0:jend,:)
-
-        U_pc%ucovari%f(i0:iend,j0+1:jend-1,:) = & 
-          b1*U_pv%ucovari%f(i0:iend,j0:jend-2,:) &
-        + b2*U_pv%ucovari%f(i0:iend,j0+1:jend-1,:) &
-        + b3*U_pv%ucovari%f(i0:iend,j0+2:jend  ,:) &
-        + b4*U_pv%ucovari%f(i0:iend,j0+3:jend+1,:)
-
-        !$OMP END PARALLEL WORKSHARE
-    else
-        print*, 'ERROR in interp_D2Agrid: invalid id, ', id
-        stop
-    end if
- 
-end subroutine interp_D2Agrid
-
-subroutine interp_A2Dduogrid(U_pu, U_pv, U_pc, L, mesh)
+subroutine interp_A2Dduogrid(U_pu, U_pv, U_pc)
     !---------------------------------------------------
     ! duogrid interpolation of vector field given at A grid (covariant)
     ! to the D grid (covariant) ghost cells only
-    type(cubedsphere), intent(inout) :: mesh
     type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    type(lagrange_poly_cs), intent(inout):: L
     integer(i4):: i, j, p, h
     real(kind=8) :: c1, c2
     
@@ -1201,57 +1102,6 @@ subroutine interp_A2Dduogrid(U_pu, U_pv, U_pc, L, mesh)
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine interp_A2Dduogrid
-
-
-
-
-subroutine interp_A2Dgrid(U_pu, U_pv, U_pc, L, mesh, id)
-    !---------------------------------------------------
-    ! duogrid interpolation of vector field given at A grid (covariant)
-    ! to the D grid (covariant) inner cells
-    type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    integer(i4), intent(in) :: id
-    type(lagrange_poly_cs), intent(inout):: L
-    integer(i4):: i, j, p, h
-    real(kind=8) :: c1, c2
-    
-    ! cubic interpolation coeffs
-    c1 =  9.d0/16.d0
-    c2 = -1.d0/16.d0
-
-    ! Now, let us interpolate from the A grid to the C-grid points
-    ! that are not ghost cells
-    if(id == 1) then
-        ! linear interpolation
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc)
-        U_pu%vcovari%f(i0:iend+1,j0:jend,:) = (U_pc%vcovari%f(i0-1:iend,j0:jend,:)+U_pc%ucontra%f(i0:iend+1,j0:jend,:))*0.5d0
-        U_pv%ucovari%f(i0:iend,j0:jend+1,:) = (U_pc%ucovari%f(i0:iend,j0-1:jend,:)+U_pc%ucovari%f(i0:iend,j0:jend+1,:))*0.5d0
-        !$OMP END PARALLEL WORKSHARE
-
-    elseif(id == 3) then
-        ! cubic interpolation
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(i0, iend, j0, jend) &
-        !$OMP SHARED(U_pu, U_pv, U_pc, c1, c2)
-        U_pu%vcovari%f(i0:iend+1,j0:jend,:) = &
-        c1*(U_pc%vcovari%f(i0-1:iend,j0:jend,:)+U_pc%vcovari%f(i0:iend+1,j0:jend,:)) + &
-        c2*(U_pc%vcovari%f(i0-2:iend-1,j0:jend,:)+U_pc%vcovari%f(i0+1:iend+2,j0:jend,:))
-
-        U_pv%ucovari%f(i0:iend,j0:jend+1,:) = &
-        c1*(U_pc%ucovari%f(i0:iend,j0-1:jend,:)+U_pc%ucovari%f(i0:iend,j0:jend+1,:)) + &
-        c2*(U_pc%ucovari%f(i0:iend,j0-2:jend-1,:)+U_pc%ucovari%f(i0:iend,j0+1:jend+2,:))
-        !$OMP END PARALLEL WORKSHARE
-
-    else
-        print*, 'ERROR in interp_A2Dgrid: invalid id, ', id
-        stop
-    end if
-end subroutine interp_A2Dgrid
-
-
 
 
 

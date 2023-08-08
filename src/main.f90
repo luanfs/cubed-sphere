@@ -33,6 +33,7 @@ use simulpack, only: &
    grid_quality, &
    div_test, &
    adv_test, &
+   swm_test, &
    interpolation_test
 
 !Deallocation routines
@@ -68,6 +69,9 @@ select case(simulcase)
 
     case(4) ! Advection test
         call adv_test(mesh)
+
+    case(5) ! Shallow water test
+        call swm_test(mesh)
 
     case default
         print*, "Please select a proper simulation case ...:", simulcase

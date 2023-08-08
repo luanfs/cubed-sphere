@@ -53,5 +53,21 @@ subroutine adv_diagnostics(advsimul, mesh, Q)
     advsimul%mass_variation = abs(advsimul%mass-advsimul%mass0)/abs(advsimul%mass0)
 end subroutine adv_diagnostics
 
+subroutine swm_diagnostics(swm_simul, mesh, H)
+    !---------------------------------------------------------
+    ! Computes the diagnostics for the shallow water model
+    !---------------------------------------------------------
+    type(cubedsphere),  intent(in) :: mesh
+    type(simulation),   intent(inout) :: swm_simul
+    type(scalar_field), intent(in) :: H
+
+    ! compute mass
+    swm_simul%mass = mass_computation(H,mesh)
+
+    ! mass change
+    swm_simul%mass_variation = abs(swm_simul%mass-swm_simul%mass0)/abs(swm_simul%mass0)
+end subroutine swm_diagnostics
+
+
 
 end module diagnostics

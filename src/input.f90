@@ -447,6 +447,55 @@ subroutine getadvparameters(advsimul)
 end subroutine getadvparameters
 
 
+subroutine getswmparameters(swm_simul)
+    !---------------------------------------------------
+    ! GETSWMPARAMETERS
+    ! Reads swm parameters from file named "swm.par"
+    !--------------------------------------------------
+    type(simulation), intent(inout):: swm_simul
+    character (len=60):: filename
+    character (len=300):: buffer
+    integer (i4):: fileunit
+    integer:: i
+    integer:: n
+
+    !Standard swmection parameters file
+    filename=trim(pardir)//"swm.par"
+
+    print*,"Shallow water parameters: ", trim(filename)
+    print*
+    call getunit(fileunit)
+
+    !A parameters file must exist 
+    open(fileunit,file=filename,status='old')
+
+    read(fileunit,*)  buffer
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%ic
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%dt
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%nplot
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%recon1d
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%opsplit
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%mt
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%dp
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%mf
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%et
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%id
+
+    close(fileunit)
+    return
+end subroutine getswmparameters
+
+
 subroutine getinterp_parameters(advsimul)
     !---------------------------------------------------
     ! GETINTERP_PARAMETERS

@@ -43,7 +43,8 @@ use advection_vars
 
 ! Diagnostics 
 use diagnostics, only: &
-    adv_diagnostics
+    adv_diagnostics, &
+    swm_diagnostics
 
 ! Linear algebra
 use linear_algebra, only: &
@@ -422,6 +423,36 @@ subroutine write_final_errors_adv(advsimul, mesh, filename)
     close(iunit)
 end subroutine write_final_errors_adv
 
+subroutine write_final_errors_swm(swm_simul, mesh, filename) 
+    !----------------------------------------------------------
+    !  write the final errors of shallow water model simulation in a file
+    !----------------------------------------------------------
+    type(simulation), intent(in) :: swm_simul
+    type(cubedsphere), intent(in) :: mesh
+
+    !File name for output
+    character (len=256), intent(inout) :: filename
+    character (len=256):: name
+
+    !File units
+    integer (i4):: iunit
+    logical::  iopen
+
+    !File for errors
+    filename=trim(datadir)//trim(filename)//".txt"
+    call getunit(iunit)
+
+    open(iunit,file=filename, status='replace')
+    write(iunit, *) swm_simul%linf_error
+    write(iunit, *) swm_simul%l1_error
+    write(iunit, *) swm_simul%l2_error
+    write(iunit, *) swm_simul%cfl
+    write(iunit, *) swm_simul%mass_variation
+    close(iunit)
+end subroutine write_final_errors_swm
+
+
+
 subroutine write_final_errors_interp(filename, error_q, error_u, error_v)
     !----------------------------------------------------------
     !  write the final errors of advection simulation in a file
@@ -459,14 +490,6 @@ subroutine output_adv(mesh)
     if(advsimul%n>0 .and. (showonscreen .or. advsimul%n==advsimul%nsteps)) then
         ! Compute diagnostics
         call adv_diagnostics(advsimul, mesh, Q)
-
-        !
-        !if(maxval(abs(Q%f))>20.d0) then
-        !    print*
-        !    print*, 'Stopping due to large errors.'
-        !    print*, 'The CFL number is: ', advsimul%cfl
-        !    stop
-        !end if
 
         if(advsimul%n==advsimul%nsteps)then
             advsimul%exactsolution = .true.
@@ -554,6 +577,109 @@ subroutine output_adv(mesh)
  
     end if
 end subroutine output_adv
+
+
+subroutine output_swm(mesh)
+    use swm_vars
+    !----------------------------------------------------------
+    !  output of the shallow water model
+    !----------------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    real(kind=8) :: lat, lon
+    integer(i4):: i, j, p
+    character (len=60):: an
+
+    if(swm_simul%n>0 .and. (showonscreen .or. swm_simul%n==swm_simul%nsteps)) then
+        ! Compute diagnostics
+        call swm_diagnostics(swm_simul, mesh, H)
+
+        if(swm_simul%n==swm_simul%nsteps)then
+            swm_simul%exactsolution = .true.
+        end if
+
+        ! Screen output
+        print*
+        print*, "Step = ", swm_simul%n, " of ", swm_simul%nsteps
+ 
+        ! Compute exact solution and errors
+        if (swm_simul%exactsolution .or. swm_simul%n==swm_simul%nsteps) then
+            ! this is the only case where we need to update the exact solution
+            if(swm_simul%ic==2)then
+                !$OMP PARALLEL DO &
+                !$OMP DEFAULT(NONE) & 
+                !$OMP SHARED(H_exact, H, H_error, mesh, swm_simul) & 
+                !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
+                !$OMP PRIVATE(i, j, p, lat, lon) &
+                !$OMP SCHEDULE(static) 
+                do p = 1, nbfaces
+                    do i = i0, iend
+                        do j = j0, jend
+                            lat  = mesh%pc(i,j,p)%lat
+                            lon  = mesh%pc(i,j,p)%lon
+                            H_exact%f(i,j,p) = qexact_adv(lat, lon, swm_simul%ic, swm_simul%t)
+                            H_error%f(i,j,p) = H_exact%f(i,j,p) - H%f(i,j,p)
+                        end do
+                    end do
+                end do
+                !$OMP END PARALLEL DO
+            end if
+
+            call compute_errors_field(H, H_exact, H_error, &
+            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+
+            print '(a22, 3e16.8)','linf, l1, l2 errors:', &
+            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
+
+        else if(.not. swm_simul%exactsolution)then
+            call compute_norms_field(H,&
+            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+
+            print '(a22, 3e16.8)','linf, l1, l2 Q norms:', &
+            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
+
+        end if
+
+        print '(a22, 1e16.8)','mass change:', swm_simul%mass_variation
+    end if
+
+
+    ! Plot the solution
+    if (mod(swm_simul%n,swm_simul%nplot)==0 .or. swm_simul%n==swm_simul%nsteps .or. &
+        swm_simul%n==0) then
+        ! Plot scalar fields
+        write(an,'(i8)') swm_simul%plotcounter
+
+        H%name = "adv_"//trim(swm_simul%name)//"_H_t"//trim(adjustl(an))
+        call plot_scalarfield(H, mesh)
+
+        if(swm_simul%exactsolution .and. swm_simul%n>0)then
+            if(swm_simul%ic==2)then
+                !$OMP PARALLEL DO &
+                !$OMP DEFAULT(NONE) & 
+                !$OMP SHARED(Q_exact, Q, Q_error, mesh, swm_simul) & 
+                !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
+                !$OMP PRIVATE(i, j, p, lat, lon) &
+                !$OMP SCHEDULE(static) 
+                do p = 1, nbfaces
+                    do i = i0, iend
+                        do j = j0, jend
+                            lat  = mesh%pc(i,j,p)%lat
+                            lon  = mesh%pc(i,j,p)%lon
+                            !Q_exact%f(i,j,p) = qexact_adv(lat, lon, swm_simul%ic, swm_simul%t)
+                            !Q_error%f(i,j,p) = Q_exact%f(i,j,p) - Q%f(i,j,p)
+                        end do
+                    end do
+                end do
+                !$OMP END PARALLEL DO
+            end if
+            !Q_error%name = "swm_"//trim(swm_simul%name)//"_Q_error_t"//trim(adjustl(an))
+            call plot_scalarfield(H_error, mesh)
+        end if
+        swm_simul%plotcounter = swm_simul%plotcounter + 1
+ 
+    end if
+end subroutine output_swm
+
 
 subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
     !---------------------------------------------------
@@ -773,6 +899,28 @@ subroutine print_advparameters(advsimul)
     print*
 return
 end subroutine print_advparameters
+
+subroutine print_swmparameters(swm_simul)
+    !-------------------------------------------
+    ! PRINT_SWMPARAMETERS
+    ! Prints sw parameters from file named "swm.par"
+    !--------------------------------------------------
+    type(simulation), intent(inout):: swm_simul
+
+    print*
+    print '(a,i8)',      " Test case                    : ", swm_simul%ic
+    print '(a, 3e16.8)', " dt                           : ", swm_simul%dt
+    print '(a, 3e16.8)', " CFL                          : ", swm_simul%cfl
+    print '(a, a21)',    " 1D reconstruction            : ", swm_simul%recon1d
+    print '(a, a21)',    " Operator spltting            : ", swm_simul%opsplit
+    print '(a, a21)',    " Metric tensor                : ", swm_simul%mt
+    print '(a, a21)',    " Departure point              : ", swm_simul%dp
+    print '(a, a21)',    " Mass fixer                   : ", swm_simul%dp
+    print '(a, a21)',    " Edge treatment               : ", swm_simul%et
+    print '(a, i8)',     " Duo grid interpolation degree: ", swm_simul%id
+    print*
+return
+end subroutine print_swmparameters
 
 
 end module output

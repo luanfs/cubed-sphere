@@ -21,6 +21,7 @@ bin/mass_fixer.obj \
 bin/duogrid_interpolation.obj \
 bin/ppm_flux.obj \
 bin/advection_vars.obj \
+bin/swm_vars.obj \
 bin/discrete_operators.obj \
 bin/allocation.obj \
 bin/deallocation.obj \
@@ -29,6 +30,7 @@ bin/input.obj \
 bin/cubed_sphere.obj \
 bin/departure_point.obj \
 bin/advection_ic.obj \
+bin/swm_ic.obj \
 bin/advection_timestep.obj \
 bin/simulpack.obj \
 
@@ -137,10 +139,20 @@ bin/advection_vars.obj: src/advection_vars.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv advection_vars.mod bin/.
 
+#shallow water vars
+bin/swm_vars.obj: src/swm_vars.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv swm_vars.mod bin/.
+
 #Advection initial condition
 bin/advection_ic.obj: src/advection_ic.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv advection_ic.mod bin/.
+
+#shallow water ic
+bin/swm_ic.obj: src/swm_ic.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv swm_ic.mod bin/.
 
 #Output
 bin/output.obj: src/output.f90

@@ -574,7 +574,44 @@ subroutine allocate_adv_vars(mesh)
     ! Lagrange polynomial vars
     call lagrange_poly_allocation(L_pc, mesh)
     !---------------------------------------------------
-end subroutine
+end subroutine allocate_adv_vars
+
+subroutine allocate_swm_vars(mesh)
+    use swm_vars
+    !---------------------------------------------------
+    ! ALLOCATE_SWM_VARS 
+    !
+    ! This routine allocated the variables of 
+    ! the shallow water simulation testcase
+    !--------------------------------------------------
+    type(cubedsphere), intent(in) :: mesh
+
+    ! Allocate variables
+    call scalar_field_allocation(H, mesh, 0)
+    call scalar_field_allocation(H_exact, mesh, 0)
+    call scalar_field_allocation(H_error, mesh, 0)
+    call vector_field_allocation(wind_pc, mesh, 0)
+    call vector_field_allocation(wind_pu, mesh, 2)
+    call vector_field_allocation(wind_pv, mesh, 3)
+    call scalar_field_allocation(cx_pu, mesh, 2)
+    call scalar_field_allocation(cy_pv, mesh, 3)
+    call scalar_field_allocation(div_ugH, mesh, 0)
+    call scalar_field_allocation(div_ugH_exact, mesh, 0)
+    call scalar_field_allocation(div_ugH_error, mesh, 0)
+
+    ! Operator splitting variables
+    call scalar_field_allocation(Qx, mesh, 0)
+    call scalar_field_allocation(Qy, mesh, 0)
+
+    ! PPM vars
+    call ppm_parabola_allocation(px, mesh)
+    call ppm_parabola_allocation(py, mesh)
+
+    ! Lagrange polynomial vars
+    call lagrange_poly_allocation(L_pc, mesh)
+    !---------------------------------------------------
+end subroutine allocate_swm_vars
+
 
 end module allocation 
 

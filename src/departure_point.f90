@@ -51,7 +51,7 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
     ! first we interpolate to the A grid ghost cells
     call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
     ! now we fill the ghost cell C grid
-    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc)
 
     select case (dp)
         case ('rk1')

@@ -36,20 +36,25 @@ use allocation, only: &
 
 ! Deallocation
 use deallocation, only: &
-    adv_deallocation
+    adv_deallocation, &
+    swm_deallocation
 
 ! Output
 use output, only: &
     plot_scalarfield, &
     write_final_errors_adv, &
+    write_final_errors_swm, &
     write_final_errors_interp, &
     output_adv, &
+    output_swm, &
     compute_errors_field, &
-    print_advparameters
+    print_advparameters, &
+    print_swmparameters
 
 ! Input
 use input, only: &
     getadvparameters, &
+    getswmparameters, &
     getinterp_parameters
 
 ! Initial conditions
@@ -58,6 +63,9 @@ use advection_ic, only: &
     compute_exact_div, &
     compute_ic_adv
 
+use swm_ic, only: &
+    init_swm_vars
+ 
 ! Advection timestep
 use advection_timestep, only: &
     adv_timestep, &
@@ -75,9 +83,7 @@ use duogrid_interpolation, only: &
     interp_A2Cduogrid, &
     interp_A2Cgrid, &
     interp_D2Aduogrid, &
-    interp_D2Agrid, &
-    interp_A2Dduogrid, &
-    interp_A2Dgrid
+    interp_A2Dduogrid
 
 implicit none
 
@@ -169,18 +175,17 @@ subroutine interpolation_test(mesh)
 
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
-
     ! first we interpolate from C grid to the A grid ghost cells
     call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! then we interpolate from C grid to the A grid inner cells
-    call interp_C2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_C2Agrid(wind_pu%ucontra, wind_pv%vcontra, wind_pc%ucontra, wind_pc%vcontra,  advsimul%id_d2a)
 
     ! now we fill the ghost cell C grid
-    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc)
 
     ! then we interpolate from A grid to the C grid inner cells
-    call interp_A2Cgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_A2Cgrid(wind_pu%ucontra, wind_pv%vcontra, wind_pc%ucontra, wind_pc%vcontra, advsimul%id_d2a)
 
     error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
@@ -188,24 +193,21 @@ subroutine interpolation_test(mesh)
 
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a D grid
-
     ! first we interpolate to the A grid (including A grid ghost cells)
     call interp_D2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! then we interpolate from D grid to the A grid inner cells
-    call interp_D2Agrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
+    call interp_C2Agrid(wind_pu%vcovari, wind_pv%ucovari, wind_pc%vcovari, wind_pc%ucovari,  advsimul%id_d2a)
 
     ! now we fill the ghost cell D grid
-    call interp_A2Dduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call interp_A2Dduogrid(wind_pu, wind_pv, wind_pc)
 
     ! then we interpolate from A grid to the D grid inner cells
-    call interp_A2Dgrid(wind_pu, wind_pv, wind_pc, L_pc, mesh, advsimul%id_d2a)
-
+    call interp_A2Cgrid(wind_pu%ucovari, wind_pv%vcovari, wind_pc%ucovari, wind_pc%vcovari, advsimul%id_d2a)
 
     error_ucovari = maxval(abs(wind_pu%ucovari%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucovari_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcovari = maxval(abs(wind_pv%vcovari%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcovari_old%f(n0:nend,j0-1:jend+2,:)))
     error_ucovari = max(error_ucovari, error_vcovari)
-
 
     print*
     print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_ucontra, error_ucovari
@@ -304,7 +306,7 @@ subroutine adv_test(mesh)
     call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! now we fill the ghost cell C grid
-    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc)
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
 
@@ -335,6 +337,70 @@ subroutine adv_test(mesh)
     call adv_deallocation()
 
 end subroutine adv_test
+
+subroutine swm_test(mesh)
+    use swm_vars
+    !---------------------------------------------------
+    ! SWM_TEST
+    !--------------------------------------------------
+    type(cubedsphere),intent(inout):: mesh
+
+    ! aux integer
+    integer(i4) :: n
+
+    !File name for output
+    character (len=256):: filename
+
+    ! Get test parameter from par/swm.par
+    call getswmparameters(swm_simul)
+
+    ! Initialize the variables (allocation, initial condition,...)
+    call init_swm_vars(mesh)
+
+    ! print parameters
+    call print_swmparameters(swm_simul)
+
+    stop
+    ! Initial output
+    call output_swm(mesh)
+
+    !-----------------------------------------------------------------------------
+    ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
+    ! first we interpolate from C grid to the A grid ghost cells
+    call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
+    ! now we fill the ghost cell C grid
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc)
+    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
+    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
+
+    ! Temporal loop
+    swm_simul%t = 0.d0
+    do n = 1, swm_simul%nsteps
+        ! Update time
+        swm_simul%t = swm_simul%t + swm_simul%dt
+        swm_simul%n = n
+
+        ! Update the solution
+        call swm_timestep(mesh)
+
+        ! Output
+        call output_swm(mesh)
+
+        ! Update the velocity field for the next time step - only for variable velocity
+        if(swm_simul%vf>=2)then
+            call swm_update(wind_pu, wind_pv, mesh, swm_simul%vf, swm_simul%t)
+        end if
+    end do
+
+    ! Write errors in a file
+    filename = "swm_"//trim(swm_simul%name)//"_"//trim(mesh%name)//"_errors"
+    call write_final_errors_swm(swm_simul, mesh, filename) 
+
+    ! Deallocate vars
+    call swm_deallocation()
+
+end subroutine swm_test
 
 
 end module simulpack 

@@ -138,5 +138,73 @@ subroutine adv_deallocation()
 
 
 end subroutine adv_deallocation
+
+
+subroutine swm_deallocation()
+    use swm_vars
+    !---------------------------------------------------
+    ! SWM_DEALLOCATION
+    ! deallocate all the variables of the shallow water model
+    !--------------------------------------------------
+
+    deallocate(H%f)
+    deallocate(H_exact%f)
+    deallocate(div_ugH%f)
+    deallocate(div_ugH_exact%f)
+    deallocate(div_ugH_error%f)
+    deallocate(Qx%f, Qy%f)
+
+    deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
+    deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)
+
+    deallocate(L_pc%y_support, L_pc%f_support, L_pc%x_nodes, L_pc%y_nodes)
+    deallocate(L_pc%p_nodes, L_pc%f_nodes, L_pc%k0, L_pc%kend) 
+    deallocate(L_pc%halodata_east, L_pc%halodata_west, L_pc%halodata_north, L_pc%halodata_south) 
+
+
+    deallocate(wind_pu%u%f)
+    deallocate(wind_pu%v%f)
+    deallocate(wind_pu%ucontra%f)
+    deallocate(wind_pu%vcontra%f)
+    deallocate(wind_pu%ucontra_old%f)
+    deallocate(wind_pu%vcontra_old%f)
+    deallocate(wind_pu%ucontra_time_av%f)
+    deallocate(wind_pu%vcontra_time_av%f)
+    deallocate(wind_pu%ucontra_time_centered%f)
+    deallocate(wind_pu%vcontra_time_centered%f) 
+    deallocate(wind_pu%ucovari%f)
+    deallocate(wind_pu%vcovari%f)
+
+    deallocate(wind_pv%u%f)
+    deallocate(wind_pv%v%f)
+    deallocate(wind_pv%ucontra%f)
+    deallocate(wind_pv%vcontra%f)
+    deallocate(wind_pv%ucontra_old%f)
+    deallocate(wind_pv%vcontra_old%f)
+    deallocate(wind_pv%ucontra_time_av%f)
+    deallocate(wind_pv%vcontra_time_av%f)
+    deallocate(wind_pv%ucontra_time_centered%f)
+    deallocate(wind_pv%vcontra_time_centered%f) 
+    deallocate(wind_pv%ucovari%f)
+    deallocate(wind_pv%vcovari%f)
+
+    deallocate(wind_pc%u%f)
+    deallocate(wind_pc%v%f)
+    deallocate(wind_pc%ucontra%f)
+    deallocate(wind_pc%vcontra%f)
+    deallocate(wind_pc%ucontra_old%f)
+    deallocate(wind_pc%vcontra_old%f)
+    deallocate(wind_pc%ucontra_time_av%f)
+    deallocate(wind_pc%vcontra_time_av%f)
+    deallocate(wind_pc%ucontra_time_centered%f)
+    deallocate(wind_pc%vcontra_time_centered%f) 
+    deallocate(wind_pc%ucovari%f)
+    deallocate(wind_pc%vcovari%f)
+    deallocate(wind_pc%ucovari_old%f)
+    deallocate(wind_pc%vcovari_old%f)
+
+end subroutine swm_deallocation
+
+
 end module deallocation 
 
