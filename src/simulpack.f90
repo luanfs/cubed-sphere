@@ -291,6 +291,16 @@ subroutine adv_test(mesh)
     ! Initial output
     call output_adv(mesh)
 
+    !-----------------------------------------------------------------------------
+    ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
+    ! first we interpolate from C grid to the A grid ghost cells
+    call interp_C2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+
+    ! now we fill the ghost cell C grid
+    call interp_A2Cduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
+    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
+    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
+
     ! Temporal loop
     advsimul%t = 0.d0
     do n = 1, advsimul%nsteps

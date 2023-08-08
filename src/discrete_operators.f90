@@ -302,8 +302,6 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         end select
 
 
-        !print*,maxval(abs(Q%f(iend+1:iend+4,j0:jend,1:3)-Q%f(i0:i0+3,j0:jend,2:4)))
-
         ! Compute fluxes
         call ppm_fluxes_PL07(Qy, Qx, px, py, wind_pu%ucontra_time_av, &
         wind_pv%vcontra_time_av, cx_pu, cy_pv, mesh)
@@ -324,39 +322,39 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
 end subroutine divergence
 
 
-subroutine cfl_x(mesh, wind_pu, cx_pu, dt)
+subroutine cfl_x(mesh, ucontra_pu, cx_pu, dt)
     !-----------------------------------------------------
     ! Routine for computing the CFL number at pu in x 
     ! direction
     !----------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(vector_field), intent(in)  :: wind_pu
+    type(scalar_field), intent(in)  :: ucontra_pu
     type(scalar_field), intent(inout) :: cx_pu
     real(kind=8), intent(in)::dt
 
     ! Compute CFL
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(cx_pu, wind_pu, dt, mesh)
-    cx_pu%f = wind_pu%ucontra%f*(dt/mesh%dx)
+    !$OMP SHARED(cx_pu, ucontra_pu, dt, mesh)
+    cx_pu%f = ucontra_pu%f*(dt/mesh%dx)
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine cfl_x
 
 
-subroutine cfl_y(mesh, wind_pv, cy_pv, dt)
+subroutine cfl_y(mesh, vcontra_pv, cy_pv, dt)
     !-----------------------------------------------------
     ! Routine for computing the CFL number at pv in y 
     ! direction
     !----------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(vector_field), intent(in)  :: wind_pv
+    type(scalar_field), intent(in)  :: vcontra_pv
     type(scalar_field), intent(inout) :: cy_pv
     real(kind=8), intent(in)::dt
 
     ! Compute CFL
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(cy_pv, wind_pv, dt, mesh)
-    cy_pv%f = wind_pv%vcontra%f*(dt/mesh%dy)
+    !$OMP SHARED(cy_pv, vcontra_pv, dt, mesh)
+    cy_pv%f = vcontra_pv%f*(dt/mesh%dy)
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine cfl_y

@@ -460,6 +460,14 @@ subroutine output_adv(mesh)
         ! Compute diagnostics
         call adv_diagnostics(advsimul, mesh, Q)
 
+        !
+        !if(maxval(abs(Q%f))>20.d0) then
+        !    print*
+        !    print*, 'Stopping due to large errors.'
+        !    print*, 'The CFL number is: ', advsimul%cfl
+        !    stop
+        !end if
+
         if(advsimul%n==advsimul%nsteps)then
             advsimul%exactsolution = .true.
         end if

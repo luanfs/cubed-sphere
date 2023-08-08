@@ -62,8 +62,8 @@ subroutine adv_timestep(mesh)
         advsimul%dto2, mesh%dx, mesh, L_pc)
 
         ! CFL number
-        call cfl_x(mesh, wind_pu, cx_pu, advsimul%dt)
-        call cfl_y(mesh, wind_pv, cy_pv, advsimul%dt)
+        call cfl_x(mesh, wind_pu%ucontra_time_av, cx_pu, advsimul%dt)
+        call cfl_y(mesh, wind_pv%vcontra_time_av, cy_pv, advsimul%dt)
     end if
 
     ! Discrete divergence
@@ -101,18 +101,18 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     real(kind=8) :: lat, lon
     real(kind=8) :: ulon, vlat, ucontra, vcontra
 
-    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !!$OMP SHARED(V_pu, V_pv)
-    V_pu%ucontra%f(:,:,:) = V_pu%ucontra_old%f(:,:,:)
-    V_pv%vcontra%f(:,:,:) = V_pv%vcontra_old%f(:,:,:)
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(V_pu, V_pv)
+    V_pu%ucontra_old%f(:,:,:) = V_pu%ucontra%f(:,:,:)
+    V_pv%vcontra_old%f(:,:,:) = V_pv%vcontra%f(:,:,:)
+    !$OMP END PARALLEL WORKSHARE
 
-    !!$OMP END PARALLEL WORKSHARE
-    !!$OMP PARALLEL DO &
-    !!$OMP DEFAULT(NONE) & 
-    !!$OMP SHARED(V_pu, mesh) & 
-    !!$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
-    !!$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
-    !!$OMP SCHEDULE(static) 
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pu, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf, t) &
+    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !$OMP SCHEDULE(static) 
     ! Vector field at pu
     do i = i0, iend+1
         do j = j0, jend
@@ -131,15 +131,15 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
             end do
         end do
     end do    
-    !!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
 
     ! Vector field at pv
-    !!$OMP PARALLEL DO &
-    !!$OMP DEFAULT(NONE) & 
-    !!$OMP SHARED(V_pv, mesh) & 
-    !!$OMP SHARED(i0, iend, j0, jend, nbfaces, vf) &
-    !!$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
-    !!$OMP SCHEDULE(static) 
+    !$OMP PARALLEL DO &
+    !$OMP DEFAULT(NONE) & 
+    !$OMP SHARED(V_pv, mesh) & 
+    !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf, t) &
+    !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+    !$OMP SCHEDULE(static) 
     do i = i0, iend
         do j = j0, jend+1
             do p = 1, nbfaces
@@ -158,7 +158,7 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
             end do
         end do
     end do
-    !!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
 end subroutine adv_update
 
 end module advection_timestep
