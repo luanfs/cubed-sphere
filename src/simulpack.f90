@@ -44,7 +44,8 @@ use output, only: &
     write_final_errors_adv, &
     write_final_errors_interp, &
     output_adv, &
-    compute_errors_field
+    compute_errors_field, &
+    print_advparameters
 
 ! Input
 use input, only: &
@@ -238,6 +239,9 @@ subroutine div_test(mesh)
     advsimul%n = 1
     call init_adv_vars(mesh)
 
+    ! print parameters
+    call print_advparameters(advsimul)
+
     ! Compute the divergence obtained in one timestep
     call adv_timestep(mesh)
 
@@ -287,6 +291,9 @@ subroutine adv_test(mesh)
 
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
+
+    ! print parameters
+    call print_advparameters(advsimul)
 
     ! Initial output
     call output_adv(mesh)

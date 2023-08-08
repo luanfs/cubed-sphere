@@ -751,5 +751,28 @@ function qexact_adv(lat, lon, ic, t)
     return
 end function qexact_adv
 
+subroutine print_advparameters(advsimul)
+    !-------------------------------------------
+    ! PRINT_ADVPARAMETERS
+    ! Prints advection parameters from file named "advection.par"
+    !--------------------------------------------------
+    type(simulation), intent(inout):: advsimul
+
+    print*
+    print '(a,i8)',      " Initial condition            : ", advsimul%ic
+    print '(a,i8)',      " Velocity field               : ", advsimul%vf
+    print '(a, 3e16.8)', " dt                           : ", advsimul%dt
+    print '(a, 3e16.8)', " CFL                          : ", advsimul%cfl
+    print '(a, a21)',    " 1D reconstruction            : ", advsimul%recon1d
+    print '(a, a21)',    " Operator spltting            : ", advsimul%opsplit
+    print '(a, a21)',    " Metric tensor                : ", advsimul%mt
+    print '(a, a21)',    " Departure point              : ", advsimul%dp
+    print '(a, a21)',    " Mass fixer                   : ", advsimul%dp
+    print '(a, a21)',    " Edge treatment               : ", advsimul%et
+    print '(a, i8)',     " Duo grid interpolation degree: ", advsimul%id
+    print*
+return
+end subroutine print_advparameters
+
 
 end module output
