@@ -48,6 +48,11 @@ use duogrid_interpolation, only: &
 use swm_timestep, only: &
     sw_timestep_Cgrid
 
+! Constants
+use constants,  only: &
+    erad, &
+    day2sec, &
+    sec2day
 implicit none
 
 contains 
@@ -126,7 +131,8 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
     select case(vf)
         case(1,2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
-            u0    =  2.d0*pi/5.d0 ! Wind speed
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            u0    =  2.d0*pi/12.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
 
@@ -188,8 +194,8 @@ subroutine init_swm_vars(mesh)
     ! Time step over 2
     swm_simul%dto2 = swm_simul%dt*0.5d0
 
-    ! Final time step - we adopt 5 units for all simulations
-    swm_simul%tf = 5.d0
+    ! Final time step converted to seconds
+    !swm_simul%tf = swm_simul%tf*day2sec
 
     ! Number of time steps
     swm_simul%nsteps = int(swm_simul%tf/swm_simul%dt)

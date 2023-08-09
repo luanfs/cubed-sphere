@@ -50,26 +50,30 @@ def main():
     ic = '1'
     replace_line(pardir+'swm.par', ic, 3)
 
+    # final integration time (days)
+    tf = '12'
+    replace_line(pardir+'swm.par', tf, 5)
+
     # interpolation degree
     interpd = '3'
-    replace_line(pardir+'swm.par', interpd, 21)
+    replace_line(pardir+'swm.par', interpd, 23)
 
     # average process degree (linear or cubic)
     avd = '3'
-    replace_line(pardir+'swm.par', avd, 23)
+    replace_line(pardir+'swm.par', avd, 25)
 
     # time steps
     dt = np.zeros(len(N))
 
     # number of plots
     Nplots = 2
-    replace_line(pardir+'swm.par', str(Nplots), 7)
+    replace_line(pardir+'swm.par', str(Nplots), 9)
     tplots = np.linspace(0, Nplots-1, Nplots, dtype=np.uint8)
     timeplots = np.linspace(0.0, 5.0, Nplots)
 
     # Initial time step
     if ic=='1' or ic=='2':
-        dt[0] = 0.025
+        dt[0] = '0.05'
     else:
         print('Error - invalid ic')
         exit()
@@ -108,27 +112,27 @@ def main():
         et = edgetreat[i]
 
         # Update reconstruction method in swm.par
-        replace_line(pardir+'swm.par', recon, 9)
+        replace_line(pardir+'swm.par', recon, 11)
 
         # Update splitting method in swm.par
-        replace_line(pardir+'swm.par', opsplit, 11)
+        replace_line(pardir+'swm.par', opsplit, 13)
 
         # Update metric tensor method in swm.par
-        replace_line(pardir+'swm.par', mt, 13)
+        replace_line(pardir+'swm.par', mt, 15)
 
         # Update departure point method in swm.par
-        replace_line(pardir+'swm.par', dp, 15)
+        replace_line(pardir+'swm.par', dp, 17)
 
         # Update mass fixer in swm.par
-        replace_line(pardir+'swm.par', mf, 17)
+        replace_line(pardir+'swm.par', mf, 19)
 
         # Update edge treatment swm.par
-        replace_line(pardir+'swm.par', et, 19)
+        replace_line(pardir+'swm.par', et, 21)
 
         k = 0
         for n in N:
             # Update time step
-            replace_line(pardir+'swm.par', str(dt[k]), 5)
+            replace_line(pardir+'swm.par', str(dt[k]), 7)
 
             # Grid name
             grid_name = gridname(n, kind)

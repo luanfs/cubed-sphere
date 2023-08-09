@@ -473,6 +473,8 @@ subroutine getswmparameters(swm_simul)
     read(fileunit,*)  buffer
     read(fileunit,*)  swm_simul%ic
     read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%tf
+    read(fileunit,*)  buffer
     read(fileunit,*)  swm_simul%dt
     read(fileunit,*)  buffer
     read(fileunit,*)  swm_simul%nplot

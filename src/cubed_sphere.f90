@@ -17,10 +17,12 @@ use constants, only: &
     pi2, &
     pio2, &
     pio4, &
+    erad, &
     unitspharea, &
     acube, &
     rad2deg, &
     showonscreen, &
+    simulcase, &
     i0, iend, &
     j0, jend, &
     n0, nend, &
@@ -410,6 +412,34 @@ subroutine cubedsphere_properties(mesh)
     ! Integer auxs
     integer(i4) :: i, j ! 2D grid counters
     integer(i4) :: p ! Panel counter
+
+    ! multiply the vectors by the earth radius
+
+    if (simulcase==6) then
+        mesh%tgx_pc(:,:,:)%v(1) = erad*mesh%tgx_pc(:,:,:)%v(1) 
+        mesh%tgx_pc(:,:,:)%v(2) = erad*mesh%tgx_pc(:,:,:)%v(2) 
+        mesh%tgx_pc(:,:,:)%v(3) = erad*mesh%tgx_pc(:,:,:)%v(3) 
+
+        mesh%tgy_pc(:,:,:)%v(1) = erad*mesh%tgy_pc(:,:,:)%v(1) 
+        mesh%tgy_pc(:,:,:)%v(2) = erad*mesh%tgy_pc(:,:,:)%v(2) 
+        mesh%tgy_pc(:,:,:)%v(3) = erad*mesh%tgy_pc(:,:,:)%v(3) 
+
+        mesh%tgx_pu(:,:,:)%v(1) = erad*mesh%tgx_pu(:,:,:)%v(1) 
+        mesh%tgx_pu(:,:,:)%v(2) = erad*mesh%tgx_pu(:,:,:)%v(2) 
+        mesh%tgx_pu(:,:,:)%v(3) = erad*mesh%tgx_pu(:,:,:)%v(3) 
+
+        mesh%tgy_pu(:,:,:)%v(1) = erad*mesh%tgy_pu(:,:,:)%v(1) 
+        mesh%tgy_pu(:,:,:)%v(2) = erad*mesh%tgy_pu(:,:,:)%v(2) 
+        mesh%tgy_pu(:,:,:)%v(3) = erad*mesh%tgy_pu(:,:,:)%v(3) 
+
+        mesh%tgx_pv(:,:,:)%v(1) = erad*mesh%tgx_pv(:,:,:)%v(1) 
+        mesh%tgx_pv(:,:,:)%v(2) = erad*mesh%tgx_pv(:,:,:)%v(2) 
+        mesh%tgx_pv(:,:,:)%v(3) = erad*mesh%tgx_pv(:,:,:)%v(3) 
+
+        mesh%tgy_pv(:,:,:)%v(1) = erad*mesh%tgy_pv(:,:,:)%v(1) 
+        mesh%tgy_pv(:,:,:)%v(2) = erad*mesh%tgy_pv(:,:,:)%v(2) 
+        mesh%tgy_pv(:,:,:)%v(3) = erad*mesh%tgy_pv(:,:,:)%v(3) 
+    end if
 
     ! Compute metric tensor
     call compute_metric_tensor(mesh)
