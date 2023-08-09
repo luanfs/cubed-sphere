@@ -29,6 +29,7 @@ use datastruct, only: &
     cubedsphere, &
     scalar_field, &
     vector_field, &
+    matrix, &
     simulation, &
     lagrange_poly_cs
 
@@ -45,7 +46,7 @@ subroutine gethalodata(Q, L)
     ! Fill the center ghost cell values of Q that are needed
     ! for duogrid interpolation
     !--------------------------------------------------
-    type(scalar_field), intent(inout) :: Q
+    real(kind=8), allocatable, intent(inout) :: Q(:,:,:)
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4) :: p, east, north, south, west
 
@@ -61,16 +62,16 @@ subroutine gethalodata(Q, L)
     west  = 4
  
     ! Data of panel 1 from east
-    L%halodata_east(1:nghost,n0:nend,p) = Q%f(i0:i0+nghost-1, n0:nend, east) ! Panel 2
+    L%halodata_east(1:nghost,n0:nend,p) = Q(i0:i0+nghost-1, n0:nend, east) ! Panel 2
 
     ! Data of panel 1 from  west
-    L%halodata_west(1:nghost,n0:nend,p) = Q%f(iend-nghost+1:iend, n0:nend, west) ! Panel 4
+    L%halodata_west(1:nghost,n0:nend,p) = Q(iend-nghost+1:iend, n0:nend, west) ! Panel 4
 
     ! Data of panel 1 from north
-    L%halodata_north(n0:nend,1:nghost,p) = Q%f(n0:nend, j0:j0+nghost-1, north) ! Panel 5
+    L%halodata_north(n0:nend,1:nghost,p) = Q(n0:nend, j0:j0+nghost-1, north) ! Panel 5
 
     ! Data of panel 1 from south
-    L%halodata_south(n0:nend,1:nghost,p) = Q%f(n0:nend, jend-nghost+1:jend, south) ! Panel 6
+    L%halodata_south(n0:nend,1:nghost,p) = Q(n0:nend, jend-nghost+1:jend, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
     ! --------------------- Panel 2 ----------------------------
@@ -84,16 +85,16 @@ subroutine gethalodata(Q, L)
     west  = 1
 
     ! Data of panel 2 from east
-    L%halodata_east(1:nghost,n0:nend,p) = Q%f(i0:i0+nghost-1, n0:nend, east) ! Panel 3
+    L%halodata_east(1:nghost,n0:nend,p) = Q(i0:i0+nghost-1, n0:nend, east) ! Panel 3
 
     ! Data of panel 2 from west
-    L%halodata_west(1:nghost,n0:nend,p) = Q%f(iend-nghost+1:iend, n0:nend, west) ! Panel 1
+    L%halodata_west(1:nghost,n0:nend,p) = Q(iend-nghost+1:iend, n0:nend, west) ! Panel 1
 
     ! Data of panel 2 from north
-    L%halodata_north(n0:nend,1:nghost,p) = transpose(Q%f(jend:jend-nghost+1:-1, n0:nend, north)) ! Panel 5
+    L%halodata_north(n0:nend,1:nghost,p) = transpose(Q(jend:jend-nghost+1:-1, n0:nend, north)) ! Panel 5
 
     ! Data of panel 2 from south
-    L%halodata_south(n0:nend,1:nghost,p) = transpose(Q%f(jend-nghost+1:jend, nend:n0:-1,south)) ! Panel 6
+    L%halodata_south(n0:nend,1:nghost,p) = transpose(Q(jend-nghost+1:jend, nend:n0:-1,south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -109,16 +110,16 @@ subroutine gethalodata(Q, L)
     west  = 2
 
     ! Data of panel 3 from east
-    L%halodata_east(1:nghost,n0:nend,p) = Q%f(i0:i0+nghost-1, n0:nend, east) ! Panel 4
+    L%halodata_east(1:nghost,n0:nend,p) = Q(i0:i0+nghost-1, n0:nend, east) ! Panel 4
 
     ! Data of panel 3 from west
-    L%halodata_west(1:nghost,n0:nend,p) = Q%f(iend-nghost+1:iend, n0:nend, west) ! Panel 2
+    L%halodata_west(1:nghost,n0:nend,p) = Q(iend-nghost+1:iend, n0:nend, west) ! Panel 2
 
     ! Data of panel 3 from north
-    L%halodata_north(n0:nend,1:nghost,p) = Q%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
+    L%halodata_north(n0:nend,1:nghost,p) = Q(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
 
     ! Data of panel 3 from south
-    L%halodata_south(n0:nend,1:nghost,p) = Q%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
+    L%halodata_south(n0:nend,1:nghost,p) = Q(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -134,16 +135,16 @@ subroutine gethalodata(Q, L)
     west  = 3
 
     ! Data of panel 4 from east
-    L%halodata_east(1:nghost,n0:nend,p) = Q%f(i0:i0+nghost-1, n0:nend, east) ! Panel 1
+    L%halodata_east(1:nghost,n0:nend,p) = Q(i0:i0+nghost-1, n0:nend, east) ! Panel 1
 
     ! Data of panel 4 from west
-    L%halodata_west(1:nghost,n0:nend,p) = Q%f(iend-nghost+1:iend, n0:nend, west) ! Panel 3
+    L%halodata_west(1:nghost,n0:nend,p) = Q(iend-nghost+1:iend, n0:nend, west) ! Panel 3
 
     ! Data of panel 4 from north
-    L%halodata_north(n0:nend,1:nghost,p) = transpose(Q%f(i0:i0+nghost-1, nend:n0:-1, north)) ! Panel 5
+    L%halodata_north(n0:nend,1:nghost,p) = transpose(Q(i0:i0+nghost-1, nend:n0:-1, north)) ! Panel 5
 
     ! Data of panel 4 from south
-    L%halodata_south(n0:nend,1:nghost,p) = transpose(Q%f(i0+nghost-1:i0:-1, n0:nend, south)) ! Panel 6
+    L%halodata_south(n0:nend,1:nghost,p) = transpose(Q(i0+nghost-1:i0:-1, n0:nend, south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -159,16 +160,16 @@ subroutine gethalodata(Q, L)
     west  = 4
 
     ! Data of panel 5 from east
-    L%halodata_east(1:nghost,n0:nend,p) = transpose(Q%f(n0:nend, jend:jend-nghost+1:-1, east)) ! Panel 2
+    L%halodata_east(1:nghost,n0:nend,p) = transpose(Q(n0:nend, jend:jend-nghost+1:-1, east)) ! Panel 2
 
     ! Data of panel 5 from west
-    L%halodata_west(1:nghost,n0:nend,p) = transpose(Q%f(nend:n0:-1,jend-nghost+1:jend, west)) ! Panel 4
+    L%halodata_west(1:nghost,n0:nend,p) = transpose(Q(nend:n0:-1,jend-nghost+1:jend, west)) ! Panel 4
 
     ! Data of panel 5 from north
-    L%halodata_north(n0:nend,1:nghost,p) = Q%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
+    L%halodata_north(n0:nend,1:nghost,p) = Q(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
 
     ! Data of panel 5 from south
-    L%halodata_south(n0:nend,1:nghost,p) = Q%f(n0:nend, jend-nghost+1:jend, south) ! Panel 1
+    L%halodata_south(n0:nend,1:nghost,p) = Q(n0:nend, jend-nghost+1:jend, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
     ! --------------------- Panel 6 ----------------------------
@@ -182,16 +183,16 @@ subroutine gethalodata(Q, L)
     west  = 4
 
     ! Data of panel 6 from east
-    L%halodata_east(1:nghost,n0:nend,p) = transpose(Q%f(nend:n0:-1, j0:j0+nghost-1, east)) ! Panel 2
+    L%halodata_east(1:nghost,n0:nend,p) = transpose(Q(nend:n0:-1, j0:j0+nghost-1, east)) ! Panel 2
 
     ! Data of panel 6 from west
-    L%halodata_west(1:nghost,n0:nend,p) = transpose(Q%f(n0:nend,j0+nghost-1:j0:-1, west)) ! Panel 4
+    L%halodata_west(1:nghost,n0:nend,p) = transpose(Q(n0:nend,j0+nghost-1:j0:-1, west)) ! Panel 4
 
     ! Data of panel 6 from north
-    L%halodata_north(n0:nend,1:nghost,p) = Q%f(n0:nend, j0:j0+nghost-1, north) ! Panel 3
+    L%halodata_north(n0:nend,1:nghost,p) = Q(n0:nend, j0:j0+nghost-1, north) ! Panel 3
 
     ! Data of panel 6 from south
-    L%halodata_south(n0:nend,1:nghost,p) = Q%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
+    L%halodata_south(n0:nend,1:nghost,p) = Q(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -204,7 +205,7 @@ subroutine dg_interp(Q, L)
     !   duogrid interpolation of scalar field Q
     ! (ghost cells are defined at cell centers)
     !--------------------------------------------------
-    type(scalar_field), intent(inout) :: Q
+    real(kind=8), allocatable, intent(inout) :: Q(:,:,:)
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4) :: i, j, p, g, d, g2, h
 
@@ -220,9 +221,9 @@ subroutine dg_interp(Q, L)
                 L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
                 !print*, L%f_nodes(j,g,:)
                 ! Does the interpolation
-                Q%f(iend+g,j,p) = 0.d0
+                Q(iend+g,j,p) = 0.d0
                 do d = 1, L%order
-                    Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                    Q(iend+g,j,p) = Q(iend+g,j,p) + L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
                 end do
                 !print*,Q%f(iend+g,j,p)
             end do
@@ -240,9 +241,9 @@ subroutine dg_interp(Q, L)
             do j = j0-h, jend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-                Q%f(i0-g2,j,p) = 0.d0
+                Q(i0-g2,j,p) = 0.d0
                 do d = 1, L%order
-                    Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                    Q(i0-g2,j,p) = Q(i0-g2,j,p) + L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
                 end do
             end do
         end do
@@ -256,9 +257,9 @@ subroutine dg_interp(Q, L)
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
                 ! Does the interpolation
-                Q%f(i,jend+g,p) = 0.d0
+                Q(i,jend+g,p) = 0.d0
                 do d = 1, L%order
-                    Q%f(i,jend+g,p) = Q%f(i,jend+g,p) + L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
+                    Q(i,jend+g,p) = Q(i,jend+g,p) + L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
                 end do
             end do
         end do
@@ -273,9 +274,9 @@ subroutine dg_interp(Q, L)
             do i = i0-h, iend+h
                 ! Store in f the support points used in Lagrange interpolation
                 L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
-                Q%f(i,j0-g2,p) = 0.d0
+                Q(i,j0-g2,p) = 0.d0
                 do d = 1, L%order
-                    Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
+                    Q(i,j0-g2,p) = Q(i,j0-g2,p) + L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
                 end do
             end do
         end do
@@ -296,9 +297,9 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
             ! Does the interpolation
-            Q%f(iend+g,j,p) = 0.d0
+            Q(iend+g,j,p) = 0.d0
             do d = 1, L%order
-                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
 
@@ -310,7 +311,7 @@ subroutine dg_interp(Q, L)
             L%f_nodes(j,g,:) = L%halodata_north(L%k0(j,g):L%kend(j,g), g, p)
             ! Does the interpolation
             do d = 1, L%order
-                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -323,9 +324,9 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
             ! Does the interpolation
-            Q%f(iend+g,j,p) = 0.d0
+            Q(iend+g,j,p) = 0.d0
             do d = 1, L%order
-                Q%f(iend+g,j,p) = Q%f(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
+                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
             end do
         end do
 
@@ -336,7 +337,7 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
             do d = 1, L%order
-                Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
+                Q(i,j0-g2,p) = Q(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
             end do
         end do
 
@@ -348,9 +349,9 @@ subroutine dg_interp(Q, L)
             j = jend+g2
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            Q%f(i0-g2,j,p) = 0.d0
+            Q(i0-g2,j,p) = 0.d0
             do d = 1, L%order
-                Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                Q(i0-g2,j,p) = Q(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
             end do
         end do
 
@@ -361,7 +362,7 @@ subroutine dg_interp(Q, L)
             L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
             ! Does the interpolation
             do d = 1, L%order
-                Q%f(i,jend+g,p) = Q%f(i,jend+g,p) + 0.5d0*L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
+                Q(i,jend+g,p) = Q(i,jend+g,p) + 0.5d0*L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -374,9 +375,9 @@ subroutine dg_interp(Q, L)
             j = i0-g2
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            Q%f(i0-g2,j,p) = 0.d0
+            Q(i0-g2,j,p) = 0.d0
             do d = 1, L%order
-                Q%f(i0-g2,j,p) = Q%f(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
+                Q(i0-g2,j,p) = Q(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
             end do
         end do
 
@@ -388,7 +389,7 @@ subroutine dg_interp(Q, L)
             ! Store in f the support points used in Lagrange interpolation
             L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
             do d = 1, L%order
-                Q%f(i,j0-g2,p) = Q%f(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
+                Q(i,j0-g2,p) = Q(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
             end do
         end do
         !--------------------------------------------------------------------------
@@ -397,13 +398,15 @@ subroutine dg_interp(Q, L)
 end subroutine dg_interp
 
 
-subroutine interp_C2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
+subroutine interp_C2Aduogrid(u_pu, v_pv, ulon_pc, vlat_pc, u_pc, v_pc, L, A, Ainv)
     !---------------------------------------------------
-    ! duogrid interpolation of vector field given at C grid (contravariant)
-    ! to the A grid (contravariant) at ghost cell values at centers
+    ! duogrid interpolation of vector field given at C grid (contravariant/covariant)
+    ! to the A grid (contravariant/covariant) at ghost cell values at centers
     !---------------------------------------------------
-    type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
+    type(matrix), allocatable, intent(in) :: A(:,:,:), Ainv(:,:,:) ! conversion matrix
+    real(kind=8), allocatable, intent(inout) :: u_pu(:,:,:), v_pv(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: u_pc(:,:,:), v_pc(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: ulon_pc(:,:,:), vlat_pc(:,:,:)
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4):: i, j, p, h
     real(kind=8) :: a1, a2, a3, a4
@@ -430,157 +433,145 @@ subroutine interp_C2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
     !$OMP SHARED(a1, a2, a3, a4) &
     !$OMP SHARED(b1, b2, b3, b4) &
     !$OMP SHARED(h, hs) &
-    !$OMP SHARED(U_pc, U_pu, U_pv, mesh)
+    !$OMP SHARED(u_pc, v_pc, ulon_pc, vlat_pc, u_pu, v_pv, A)
     ! west boundary
-    U_pc%ucontra%f(i0,j0:jend,:) = &
-      a1*U_pu%ucontra%f(i0,j0:jend,:) &
-    + a2*U_pu%ucontra%f(i0+1,j0:jend,:) &
-    + a3*U_pu%ucontra%f(i0+2,j0:jend,:) &
-    + a4*U_pu%ucontra%f(i0+3,j0:jend,:)
+    u_pc(i0,j0:jend,:) = a1*u_pu(i0  ,j0:jend,:) &
+                       + a2*u_pu(i0+1,j0:jend,:) &
+                       + a3*u_pu(i0+2,j0:jend,:) &
+                       + a4*u_pu(i0+3,j0:jend,:)
 
-    U_pc%ucontra%f(i0+1:i0+h,j0:jend,:) = & 
-      b1*U_pu%ucontra%f(i0:i0-1+h,j0:jend,:) &
-    + b2*U_pu%ucontra%f(i0+1:i0+h,j0:jend,:) &
-    + b3*U_pu%ucontra%f(i0+2:i0+1+h,j0:jend,:) &
-    + b4*U_pu%ucontra%f(i0+3:i0+2+h,j0:jend,:)
+    u_pc(i0+1:i0+h,j0:jend,:) = b1*u_pu(i0:i0-1+h  ,j0:jend,:) &
+                              + b2*u_pu(i0+1:i0+h  ,j0:jend,:) &
+                              + b3*u_pu(i0+2:i0+1+h,j0:jend,:) &
+                              + b4*u_pu(i0+3:i0+2+h,j0:jend,:)
 
-    U_pc%vcontra%f(i0:i0+h,j0+hs:jend-h,:) = &
-      b1*U_pv%vcontra%f(i0:j0+h,j0+hs-1:jend-h-1,:) &
-    + b2*U_pv%vcontra%f(i0:i0+h,j0+hs:jend-h,:) &
-    + b3*U_pv%vcontra%f(i0:i0+h,j0+hs+1:jend-h+1,:) &
-    + b4*U_pv%vcontra%f(i0:i0+h,j0+hs+2:jend-h+2,:)
+    v_pc(i0:i0+h,j0+hs:jend-h,:) = b1*v_pv(i0:j0+h,j0+hs-1:jend-h-1,:) &
+                                 + b2*v_pv(i0:i0+h,j0+hs:jend-h    ,:) &
+                                 + b3*v_pv(i0:i0+h,j0+hs+1:jend-h+1,:) &
+                                 + b4*v_pv(i0:i0+h,j0+hs+2:jend-h+2,:)
 
     ! east boundary
-    U_pc%ucontra%f(iend,j0:jend,:) = &
-      a4*U_pu%ucontra%f(iend-2,j0:jend,:) &
-    + a3*U_pu%ucontra%f(iend-1,j0:jend,:) &
-    + a2*U_pu%ucontra%f(iend,j0:jend,:) &
-    + a1*U_pu%ucontra%f(iend+1,j0:jend,:)
+    u_pc(iend,j0:jend,:) = a4*u_pu(iend-2,j0:jend,:) &
+                         + a3*u_pu(iend-1,j0:jend,:) &
+                         + a2*u_pu(iend,j0:jend,:) &
+                         + a1*u_pu(iend+1,j0:jend,:)
 
-    U_pc%ucontra%f(iend-hs:iend-1,j0:jend,:) = &
-      b4*U_pu%ucontra%f(iend-hs-1:iend-2,j0:jend,:) &
-    + b3*U_pu%ucontra%f(iend-hs+0:iend-1,j0:jend,:) &
-    + b2*U_pu%ucontra%f(iend-hs+1:iend+0,j0:jend,:) &
-    + b1*U_pu%ucontra%f(iend-hs+2:iend+1,j0:jend,:)
+    u_pc(iend-hs:iend-1,j0:jend,:) = b4*u_pu(iend-hs-1:iend-2,j0:jend,:) &
+                                   + b3*u_pu(iend-hs+0:iend-1,j0:jend,:) &
+                                   + b2*u_pu(iend-hs+1:iend+0,j0:jend,:) &
+                                   + b1*u_pu(iend-hs+2:iend+1,j0:jend,:)
 
-    U_pc%vcontra%f(iend-hs:iend,j0+hs:jend-h,:) = &
-      b1*U_pv%vcontra%f(iend-hs:iend,j0+hs-1:jend-h-1,:) &
-    + b2*U_pv%vcontra%f(iend-hs:iend,j0+hs:jend-h,:) &
-    + b3*U_pv%vcontra%f(iend-hs:iend,j0+hs+1:jend-h+1,:) &
-    + b4*U_pv%vcontra%f(iend-hs:iend,j0+hs+2:jend-h+2,:)
+    v_pc(iend-hs:iend,j0+hs:jend-h,:) = b1*v_pv(iend-hs:iend,j0+hs-1:jend-h-1,:) &
+                                      + b2*v_pv(iend-hs:iend,j0+hs:jend-h    ,:) &
+                                      + b3*v_pv(iend-hs:iend,j0+hs+1:jend-h+1,:) &
+                                      + b4*v_pv(iend-hs:iend,j0+hs+2:jend-h+2,:)
 
     ! south boundary
-    U_pc%vcontra%f(i0:iend,j0,:) = &
-      a1*U_pv%vcontra%f(i0:iend,j0,:) &
-    + a2*U_pv%vcontra%f(i0:iend,j0+1,:) &
-    + a3*U_pv%vcontra%f(i0:iend,j0+2,:) &
-    + a4*U_pv%vcontra%f(i0:iend,j0+3,:)
+    v_pc(i0:iend,j0,:) = a1*v_pv(i0:iend,j0  ,:) &
+                       + a2*v_pv(i0:iend,j0+1,:) &
+                       + a3*v_pv(i0:iend,j0+2,:) &
+                       + a4*v_pv(i0:iend,j0+3,:)
 
-    U_pc%vcontra%f(i0:iend,j0+1:j0+h,:) = &
-      b1*U_pv%vcontra%f(i0:iend,j0:j0-1+h,:) &
-    + b2*U_pv%vcontra%f(i0:iend,j0+1:j0+h,:) &
-    + b3*U_pv%vcontra%f(i0:iend,j0+2:j0+1+h,:) &
-    + b4*U_pv%vcontra%f(i0:iend,j0+3:j0+2+h,:)
+    v_pc(i0:iend,j0+1:j0+h,:) = b1*v_pv(i0:iend,j0:j0-1+h  ,:) &
+                              + b2*v_pv(i0:iend,j0+1:j0+h  ,:) &
+                              + b3*v_pv(i0:iend,j0+2:j0+1+h,:) &
+                              + b4*v_pv(i0:iend,j0+3:j0+2+h,:)
 
-    U_pc%ucontra%f(i0+hs:iend-h,j0:j0+h,:) = &
-      b1*U_pu%ucontra%f(i0+hs-1:iend-h-1,j0:j0+h,:) &
-    + b2*U_pu%ucontra%f(i0+hs:iend-h    ,j0:j0+h,:) &
-    + b3*U_pu%ucontra%f(i0+hs+1:iend-h+1,j0:j0+h,:) &
-    + b4*U_pu%ucontra%f(i0+hs+2:iend-h+2,j0:j0+h,:) 
+    u_pc(i0+hs:iend-h,j0:j0+h,:) = b1*u_pu(i0+hs-1:iend-h-1,j0:j0+h,:) &
+                                 + b2*u_pu(i0+hs:iend-h    ,j0:j0+h,:) &
+                                 + b3*u_pu(i0+hs+1:iend-h+1,j0:j0+h,:) &
+                                 + b4*u_pu(i0+hs+2:iend-h+2,j0:j0+h,:) 
 
     ! north boundary
-    U_pc%vcontra%f(i0:iend,jend,:) = &
-    a4*U_pv%vcontra%f(i0:iend,jend-2,:) + &
-    a3*U_pv%vcontra%f(i0:iend,jend-1,:) + &
-    a2*U_pv%vcontra%f(i0:iend,jend-0,:) + &
-    a1*U_pv%vcontra%f(i0:iend,jend+1,:)
+    v_pc(i0:iend,jend,:) = a4*v_pv(i0:iend,jend-2,:) &
+                         + a3*v_pv(i0:iend,jend-1,:) &
+                         + a2*v_pv(i0:iend,jend-0,:) &
+                         + a1*v_pv(i0:iend,jend+1,:)
 
-    U_pc%vcontra%f(i0:iend,jend-hs:jend-1,:) = &
-      b4*U_pv%vcontra%f(i0:iend,jend-hs-1:jend-2,:) &
-    + b3*U_pv%vcontra%f(i0:iend,jend-hs+0:jend-1,:) &
-    + b2*U_pv%vcontra%f(i0:iend,jend-hs+1:jend,:) &
-    + b1*U_pv%vcontra%f(i0:iend,jend-hs+2:jend+1,:)
+    v_pc(i0:iend,jend-hs:jend-1,:) = b4*v_pv(i0:iend,jend-hs-1:jend-2,:) &
+                                   + b3*v_pv(i0:iend,jend-hs+0:jend-1,:) &
+                                   + b2*v_pv(i0:iend,jend-hs+1:jend,:) &
+                                   + b1*v_pv(i0:iend,jend-hs+2:jend+1,:)
 
-    U_pc%ucontra%f(i0+hs:iend-h,jend-hs:jend,:) = & 
-      b1*U_pu%ucontra%f(i0+hs-1:iend-h-1,jend-hs:jend,:) &
-    + b2*U_pu%ucontra%f(i0+hs:iend-h    ,jend-hs:jend,:) &
-    + b3*U_pu%ucontra%f(i0+hs+1:iend-h+1,jend-hs:jend,:) &
-    + b4*U_pu%ucontra%f(i0+hs+2:iend-h+2,jend-hs:jend,:)
+    u_pc(i0+hs:iend-h,jend-hs:jend,:) = b1*u_pu(i0+hs-1:iend-h-1,jend-hs:jend,:) &
+                                      + b2*u_pu(i0+hs:iend-h    ,jend-hs:jend,:) &
+                                      + b3*u_pu(i0+hs+1:iend-h+1,jend-hs:jend,:) &
+                                      + b4*u_pu(i0+hs+2:iend-h+2,jend-hs:jend,:)
 
     ! Convert from contravariant to latlon
-    U_pc%u%f(i0:i0+h,j0:jend,:) = &
-    U_pc%ucontra%f(i0:i0+h,j0:jend,:)*mesh%contra2ll_pc(i0:i0+h,j0:jend,:)%M(1,1)  + &
-    U_pc%vcontra%f(i0:i0+h,j0:jend,:)*mesh%contra2ll_pc(i0:i0+h,j0:jend,:)%M(1,2) 
-    U_pc%v%f(i0:i0+h,j0:jend,:) = &
-    U_pc%ucontra%f(i0:i0+h,j0:jend,:)*mesh%contra2ll_pc(i0:i0+h,j0:jend,:)%M(2,1) + &
-    U_pc%vcontra%f(i0:i0+h,j0:jend,:)*mesh%contra2ll_pc(i0:i0+h,j0:jend,:)%M(2,2) 
+    ulon_pc(i0:i0+h,j0:jend,:) = &
+    u_pc(i0:i0+h,j0:jend,:)*A(i0:i0+h,j0:jend,:)%M(1,1)  + &
+    v_pc(i0:i0+h,j0:jend,:)*A(i0:i0+h,j0:jend,:)%M(1,2) 
+    vlat_pc(i0:i0+h,j0:jend,:) = &
+    u_pc(i0:i0+h,j0:jend,:)*A(i0:i0+h,j0:jend,:)%M(2,1) + &
+    v_pc(i0:i0+h,j0:jend,:)*A(i0:i0+h,j0:jend,:)%M(2,2) 
 
-    U_pc%u%f(i0:iend,j0:j0+h,:) = &
-    U_pc%ucontra%f(i0:iend,j0:j0+h,:)*mesh%contra2ll_pc(i0:iend,j0:j0+h,:)%M(1,1)  + &
-    U_pc%vcontra%f(i0:iend,j0:j0+h,:)*mesh%contra2ll_pc(i0:iend,j0:j0+h,:)%M(1,2) 
-    U_pc%v%f(i0:iend,j0:j0+h,:) = &
-    U_pc%ucontra%f(i0:iend,j0:j0+h,:)*mesh%contra2ll_pc(i0:iend,j0:j0+h,:)%M(2,1) + &
-    U_pc%vcontra%f(i0:iend,j0:j0+h,:)*mesh%contra2ll_pc(i0:iend,j0:j0+h,:)%M(2,2) 
+    ulon_pc(i0:iend,j0:j0+h,:) = &
+    u_pc(i0:iend,j0:j0+h,:)*A(i0:iend,j0:j0+h,:)%M(1,1)  + &
+    v_pc(i0:iend,j0:j0+h,:)*A(i0:iend,j0:j0+h,:)%M(1,2) 
+    vlat_pc(i0:iend,j0:j0+h,:) = &
+    u_pc(i0:iend,j0:j0+h,:)*A(i0:iend,j0:j0+h,:)%M(2,1) + &
+    v_pc(i0:iend,j0:j0+h,:)*A(i0:iend,j0:j0+h,:)%M(2,2) 
 
-    U_pc%u%f(iend-h:iend,j0:jend,:) = &
-    U_pc%ucontra%f(iend-h:iend,j0:jend,:)*mesh%contra2ll_pc(iend-h:iend,j0:jend,:)%M(1,1)+&
-    U_pc%vcontra%f(iend-h:iend,j0:jend,:)*mesh%contra2ll_pc(iend-h:iend,j0:jend,:)%M(1,2) 
-    U_pc%v%f(iend-h:iend,j0:jend,:) = &
-    U_pc%ucontra%f(iend-h:iend,j0:jend,:)*mesh%contra2ll_pc(iend-h:iend,j0:jend,:)%M(2,1)+&
-    U_pc%vcontra%f(iend-h:iend,j0:jend,:)*mesh%contra2ll_pc(iend-h:iend,j0:jend,:)%M(2,2) 
+    ulon_pc(iend-h:iend,j0:jend,:) = &
+    u_pc(iend-h:iend,j0:jend,:)*A(iend-h:iend,j0:jend,:)%M(1,1)+&
+    v_pc(iend-h:iend,j0:jend,:)*A(iend-h:iend,j0:jend,:)%M(1,2) 
+    vlat_pc(iend-h:iend,j0:jend,:) = &
+    u_pc(iend-h:iend,j0:jend,:)*A(iend-h:iend,j0:jend,:)%M(2,1)+&
+    v_pc(iend-h:iend,j0:jend,:)*A(iend-h:iend,j0:jend,:)%M(2,2) 
 
-    U_pc%u%f(i0:iend,jend-h:jend,:) = &
-    U_pc%ucontra%f(i0:iend,jend-h:jend,:)*mesh%contra2ll_pc(i0:iend,jend-h:jend,:)%M(1,1)+&
-    U_pc%vcontra%f(i0:iend,jend-h:jend,:)*mesh%contra2ll_pc(i0:iend,jend-h:jend,:)%M(1,2) 
-    U_pc%v%f(i0:iend,jend-h:jend,:) = &
-    U_pc%ucontra%f(i0:iend,jend-h:jend,:)*mesh%contra2ll_pc(i0:iend,jend-h:jend,:)%M(2,1)+&
-    U_pc%vcontra%f(i0:iend,jend-h:jend,:)*mesh%contra2ll_pc(i0:iend,jend-h:jend,:)%M(2,2) 
+    ulon_pc(i0:iend,jend-h:jend,:) = &
+    u_pc(i0:iend,jend-h:jend,:)*A(i0:iend,jend-h:jend,:)%M(1,1)+&
+    v_pc(i0:iend,jend-h:jend,:)*A(i0:iend,jend-h:jend,:)%M(1,2) 
+    vlat_pc(i0:iend,jend-h:jend,:) = &
+    u_pc(i0:iend,jend-h:jend,:)*A(i0:iend,jend-h:jend,:)%M(2,1)+&
+    v_pc(i0:iend,jend-h:jend,:)*A(i0:iend,jend-h:jend,:)%M(2,2) 
 
 
     !$OMP END PARALLEL WORKSHARE
 
     ! Interpolate latlon to the ghost cell centers
-    call dg_interp(U_pc%u, L)
-    call dg_interp(U_pc%v, L)
+    call dg_interp(ulon_pc, L)
+    call dg_interp(vlat_pc, L)
 
     ! Convert from latlon to contravariant
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
     !$OMP SHARED(h, hs) &
-    !$OMP SHARED(U_pc, U_pu, U_pv, mesh)
-    U_pc%ucontra%f(i0-hs:i0-1,n0:nend,:) = &
-    U_pc%u%f(i0-hs:i0-1,n0:nend,:)*mesh%ll2contra_pc(i0-hs:i0-1,n0:nend,:)%M(1,1) + &
-    U_pc%v%f(i0-hs:i0-1,n0:nend,:)*mesh%ll2contra_pc(i0-hs:i0-1,n0:nend,:)%M(1,2) 
-    U_pc%vcontra%f(i0-hs:i0-1,n0:nend,:) =&
-    U_pc%u%f(i0-hs:i0-1,n0:nend,:)*mesh%ll2contra_pc(i0-hs:i0-1,n0:nend,:)%M(2,1) + &
-    U_pc%v%f(i0-hs:i0-1,n0:nend,:)*mesh%ll2contra_pc(i0-hs:i0-1,n0:nend,:)%M(2,2) 
+    !$OMP SHARED(u_pc, v_pc, ulon_pc, vlat_pc, u_pu, v_pv, Ainv)
+    u_pc(i0-hs:i0-1,n0:nend,:) = &
+    ulon_pc(i0-hs:i0-1,n0:nend,:)*Ainv(i0-hs:i0-1,n0:nend,:)%M(1,1) + &
+    vlat_pc(i0-hs:i0-1,n0:nend,:)*Ainv(i0-hs:i0-1,n0:nend,:)%M(1,2) 
+    v_pc(i0-hs:i0-1,n0:nend,:) =&
+    ulon_pc(i0-hs:i0-1,n0:nend,:)*Ainv(i0-hs:i0-1,n0:nend,:)%M(2,1) + &
+    vlat_pc(i0-hs:i0-1,n0:nend,:)*Ainv(i0-hs:i0-1,n0:nend,:)%M(2,2) 
 
 
 
-    U_pc%ucontra%f(iend+1:iend+hs,n0:nend,:) = &
-    U_pc%u%f(iend+1:iend+hs,n0:nend,:)*mesh%ll2contra_pc(iend+1:iend+hs,n0:nend,:)%M(1,1) + &
-    U_pc%v%f(iend+1:iend+hs,n0:nend,:)*mesh%ll2contra_pc(iend+1:iend+hs,n0:nend,:)%M(1,2) 
-    U_pc%vcontra%f(iend+1:iend+hs,n0:nend,:) =&
-    U_pc%u%f(iend+1:iend+hs,n0:nend,:)*mesh%ll2contra_pc(iend+1:iend+hs,n0:nend,:)%M(2,1) + &
-    U_pc%v%f(iend+1:iend+hs,n0:nend,:)*mesh%ll2contra_pc(iend+1:iend+hs,n0:nend,:)%M(2,2) 
+    u_pc(iend+1:iend+hs,n0:nend,:) = &
+    ulon_pc(iend+1:iend+hs,n0:nend,:)*Ainv(iend+1:iend+hs,n0:nend,:)%M(1,1) + &
+    vlat_pc(iend+1:iend+hs,n0:nend,:)*Ainv(iend+1:iend+hs,n0:nend,:)%M(1,2) 
+    v_pc(iend+1:iend+hs,n0:nend,:) =&
+    ulon_pc(iend+1:iend+hs,n0:nend,:)*Ainv(iend+1:iend+hs,n0:nend,:)%M(2,1) + &
+    vlat_pc(iend+1:iend+hs,n0:nend,:)*Ainv(iend+1:iend+hs,n0:nend,:)%M(2,2) 
 
 
 
-    U_pc%ucontra%f(i0:iend,i0-hs:i0-1,:) = &
-    U_pc%u%f(i0:iend,i0-hs:i0-1,:)*mesh%ll2contra_pc(i0:iend,i0-hs:i0-1,:)%M(1,1) + &
-    U_pc%v%f(i0:iend,i0-hs:i0-1,:)*mesh%ll2contra_pc(i0:iend,i0-hs:i0-1,:)%M(1,2) 
-    U_pc%vcontra%f(i0:iend,i0-hs:i0-1,:) = &
-    U_pc%u%f(i0:iend,i0-hs:i0-1,:)*mesh%ll2contra_pc(i0:iend,i0-hs:i0-1,:)%M(2,1) + &
-    U_pc%v%f(i0:iend,i0-hs:i0-1,:)*mesh%ll2contra_pc(i0:iend,i0-hs:i0-1,:)%M(2,2) 
+    u_pc(i0:iend,i0-hs:i0-1,:) = &
+    ulon_pc(i0:iend,i0-hs:i0-1,:)*Ainv(i0:iend,i0-hs:i0-1,:)%M(1,1) + &
+    vlat_pc(i0:iend,i0-hs:i0-1,:)*Ainv(i0:iend,i0-hs:i0-1,:)%M(1,2) 
+    v_pc(i0:iend,i0-hs:i0-1,:) = &
+    ulon_pc(i0:iend,i0-hs:i0-1,:)*Ainv(i0:iend,i0-hs:i0-1,:)%M(2,1) + &
+    vlat_pc(i0:iend,i0-hs:i0-1,:)*Ainv(i0:iend,i0-hs:i0-1,:)%M(2,2) 
 
 
 
-    U_pc%ucontra%f(i0:iend,iend+1:iend+hs,:) = &
-    U_pc%u%f(i0:iend,iend+1:iend+hs,:)*mesh%ll2contra_pc(i0:iend,iend+1:iend+hs,:)%M(1,1) + &
-    U_pc%v%f(i0:iend,iend+1:iend+hs,:)*mesh%ll2contra_pc(i0:iend,iend+1:iend+hs,:)%M(1,2) 
-    U_pc%vcontra%f(i0:iend,iend+1:iend+hs,:) = &
-    U_pc%u%f(i0:iend,iend+1:iend+hs,:)*mesh%ll2contra_pc(i0:iend,iend+1:iend+hs,:)%M(2,1) + &
-    U_pc%v%f(i0:iend,iend+1:iend+hs,:)*mesh%ll2contra_pc(i0:iend,iend+1:iend+hs,:)%M(2,2) 
+    u_pc(i0:iend,iend+1:iend+hs,:) = &
+    ulon_pc(i0:iend,iend+1:iend+hs,:)*Ainv(i0:iend,iend+1:iend+hs,:)%M(1,1) + &
+    vlat_pc(i0:iend,iend+1:iend+hs,:)*Ainv(i0:iend,iend+1:iend+hs,:)%M(1,2) 
+    v_pc(i0:iend,iend+1:iend+hs,:) = &
+    ulon_pc(i0:iend,iend+1:iend+hs,:)*Ainv(i0:iend,iend+1:iend+hs,:)%M(2,1) + &
+    vlat_pc(i0:iend,iend+1:iend+hs,:)*Ainv(i0:iend,iend+1:iend+hs,:)%M(2,2) 
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -593,7 +584,8 @@ subroutine interp_C2Agrid(u_pu, v_pv, u_pc, v_pc, id)
     ! to the A grid (contra/covar/latlon),
     ! but not including its ghost cell values at centers
     !---------------------------------------------------
-    type(scalar_field), intent(inout) :: u_pu, v_pv, u_pc, v_pc
+    real(kind=8), allocatable, intent(inout) :: u_pu(:,:,:), v_pv(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: u_pc(:,:,:), v_pc(:,:,:)
     integer(i4), intent(in) :: id
     integer(i4):: i, j, p
     real(kind=8) :: a1, a2, a3, a4
@@ -604,10 +596,10 @@ subroutine interp_C2Agrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
-        u_pc%f(i0:iend,j0:jend,:) = &
-        (u_pu%f(i0:iend,j0:jend,:) + u_pu%f(i0+1:iend+1,j0:jend,:))*0.5d0
-        v_pc%f(i0:iend,j0:jend,:) = &
-        (v_pv%f(i0:iend,j0:jend,:) + v_pv%f(i0:iend,j0+1:jend+1,:))*0.5d0
+        u_pc(i0:iend,j0:jend,:) = &
+        (u_pu(i0:iend,j0:jend,:) + u_pu(i0+1:iend+1,j0:jend,:))*0.5d0
+        v_pc(i0:iend,j0:jend,:) = &
+        (v_pv(i0:iend,j0:jend,:) + v_pv(i0:iend,j0+1:jend+1,:))*0.5d0
         !$OMP END PARALLEL WORKSHARE
 
     elseif(id == 3) then
@@ -628,39 +620,39 @@ subroutine interp_C2Agrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP SHARED(b1, b2, b3, b4) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
         ! west boundary
-        u_pc%f(i0,j0:jend,:) = a1*u_pu%f(i0,j0:jend,:) &
-                             + a2*u_pu%f(i0+1,j0:jend,:) &
-                             + a3*u_pu%f(i0+2,j0:jend,:) &
-                             + a4*u_pu%f(i0+3,j0:jend,:)
+        u_pc(i0,j0:jend,:) = a1*u_pu(i0,j0:jend,:) &
+                           + a2*u_pu(i0+1,j0:jend,:) &
+                           + a3*u_pu(i0+2,j0:jend,:) &
+                           + a4*u_pu(i0+3,j0:jend,:)
 
         ! east boundary
-        u_pc%f(iend,j0:jend,:) = a4*u_pu%f(iend-2,j0:jend,:) &
-                               + a3*u_pu%f(iend-1,j0:jend,:) &
-                               + a2*u_pu%f(iend,j0:jend,:) &
-                               + a1*u_pu%f(iend+1,j0:jend,:)
+        u_pc(iend,j0:jend,:) = a4*u_pu(iend-2,j0:jend,:) &
+                             + a3*u_pu(iend-1,j0:jend,:) &
+                             + a2*u_pu(iend,j0:jend,:) &
+                             + a1*u_pu(iend+1,j0:jend,:)
 
         ! south boundary
-        v_pc%f(i0:iend,j0,:) = a1*v_pv%f(i0:iend,j0,:) &
-                             + a2*v_pv%f(i0:iend,j0+1,:) &
-                             + a3*v_pv%f(i0:iend,j0+2,:) &
-                             + a4*v_pv%f(i0:iend,j0+3,:)
+        v_pc(i0:iend,j0,:) = a1*v_pv(i0:iend,j0,:) &
+                           + a2*v_pv(i0:iend,j0+1,:) &
+                           + a3*v_pv(i0:iend,j0+2,:) &
+                           + a4*v_pv(i0:iend,j0+3,:)
 
         ! north boundary
-        v_pc%f(i0:iend,jend,:) = a4*v_pv%f(i0:iend,jend-2,:) &
-                               + a3*v_pv%f(i0:iend,jend-1,:) &
-                               + a2*v_pv%f(i0:iend,jend-0,:) &
-                               + a1*v_pv%f(i0:iend,jend+1,:)
+        v_pc(i0:iend,jend,:) = a4*v_pv(i0:iend,jend-2,:) &
+                             + a3*v_pv(i0:iend,jend-1,:) &
+                             + a2*v_pv(i0:iend,jend-0,:) &
+                             + a1*v_pv(i0:iend,jend+1,:)
 
         ! remaing cells
-        u_pc%f(i0+1:iend-1,j0:jend,:) = b1*u_pu%f(i0:iend-2,j0:jend,:) &
-                                      + b2*u_pu%f(i0+1:iend-1,j0:jend,:) &
-                                      + b3*u_pu%f(i0+2:iend  ,j0:jend,:) &
-                                      + b4*u_pu%f(i0+3:iend+1,j0:jend,:)
+        u_pc(i0+1:iend-1,j0:jend,:) = b1*u_pu(i0:iend-2,j0:jend,:) &
+                                    + b2*u_pu(i0+1:iend-1,j0:jend,:) &
+                                    + b3*u_pu(i0+2:iend  ,j0:jend,:) &
+                                    + b4*u_pu(i0+3:iend+1,j0:jend,:)
 
-        v_pc%f(i0:iend,j0+1:jend-1,:) = b1*v_pv%f(i0:iend,j0:jend-2,:) &
-                                      + b2*v_pv%f(i0:iend,j0+1:jend-1,:) &
-                                      + b3*v_pv%f(i0:iend,j0+2:jend  ,:) &
-                                      + b4*v_pv%f(i0:iend,j0+3:jend+1,:)
+        v_pc(i0:iend,j0+1:jend-1,:) = b1*v_pv(i0:iend,j0:jend-2,:) &
+                                    + b2*v_pv(i0:iend,j0+1:jend-1,:) &
+                                    + b3*v_pv(i0:iend,j0+2:jend  ,:) &
+                                    + b4*v_pv(i0:iend,j0+3:jend+1,:)
 
         !$OMP END PARALLEL WORKSHARE
     else
@@ -670,11 +662,13 @@ subroutine interp_C2Agrid(u_pu, v_pv, u_pc, v_pc, id)
 end subroutine interp_C2Agrid
 
 
-subroutine interp_A2Cduogrid(U_pu, U_pv, U_pc)
+subroutine interp_A2Cduogrid(u_pu, u_pv, v_pu, v_pv, u_pc, v_pc)
     !---------------------------------------------------
-    ! duogrid interpolation of vector field given at A grid (contravariant)
-    ! to the C grid (contravariant) ghost cells only
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
+    ! duogrid interpolation of vector field given at A grid (contravariant/covariant)
+    ! to the C grid (contravariant/covariant) ghost cells only
+    real(kind=8), allocatable, intent(inout) :: u_pu(:,:,:), v_pu(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: u_pv(:,:,:), v_pv(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: u_pc(:,:,:), v_pc(:,:,:)
     integer(i4):: i, j, p, h
     real(kind=8) :: c1, c2
     
@@ -685,83 +679,82 @@ subroutine interp_A2Cduogrid(U_pu, U_pv, U_pc)
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
     !$OMP SHARED(c1, c2) &
-    !$OMP SHARED(U_pc, U_pu, U_pv)
+    !$OMP SHARED(u_pu, u_pv, v_pu, v_pv, u_pc, v_pc)
     ! Let us interpolate the ghost cell edges - cubic interpolation
     ! Panel from south
-    U_pu%ucontra%f(i0:iend+1,n0:j0-1,:) = &
-    c1*(U_pc%ucontra%f(i0:iend+1  ,n0:j0-1,:) + U_pc%ucontra%f(i0-1:iend  ,n0:j0-1,:)) + &
-    c2*(U_pc%ucontra%f(i0+1:iend+2,n0:j0-1,:) + U_pc%ucontra%f(i0-2:iend-1,n0:j0-1,:))
+    u_pu(i0:iend+1,n0:j0-1,:) = &
+    c1*(u_pc(i0:iend+1  ,n0:j0-1,:) + u_pc(i0-1:iend  ,n0:j0-1,:)) + &
+    c2*(u_pc(i0+1:iend+2,n0:j0-1,:) + u_pc(i0-2:iend-1,n0:j0-1,:))
 
-    U_pu%vcontra%f(i0:iend+1,n0:j0-1,:) = &
-    c1*(U_pc%vcontra%f(i0:iend+1  ,n0:j0-1,:) + U_pc%vcontra%f(i0-1:iend  ,n0:j0-1,:)) + &
-    c2*(U_pc%vcontra%f(i0+1:iend+2,n0:j0-1,:) + U_pc%vcontra%f(i0-2:iend-1,n0:j0-1,:))
+    v_pu(i0:iend+1,n0:j0-1,:) = &
+    c1*(v_pc(i0:iend+1  ,n0:j0-1,:) + v_pc(i0-1:iend  ,n0:j0-1,:)) + &
+    c2*(v_pc(i0+1:iend+2,n0:j0-1,:) + v_pc(i0-2:iend-1,n0:j0-1,:))
 
     ! Panel from north
-    U_pu%ucontra%f(i0:iend+1, jend+1:nend,:) = &
-    c1*(U_pc%ucontra%f(i0:iend+1  ,jend+1:nend,:) + U_pc%ucontra%f(i0-1:iend  ,jend+1:nend,:)) + &
-    c2*(U_pc%ucontra%f(i0+1:iend+2,jend+1:nend,:) + U_pc%ucontra%f(i0-2:iend-1,jend+1:nend,:))
+    u_pu(i0:iend+1, jend+1:nend,:) = &
+    c1*(u_pc(i0:iend+1  ,jend+1:nend,:) + u_pc(i0-1:iend  ,jend+1:nend,:)) + &
+    c2*(u_pc(i0+1:iend+2,jend+1:nend,:) + u_pc(i0-2:iend-1,jend+1:nend,:))
 
-    U_pu%vcontra%f(i0:iend+1,jend+1:nend,:) = &
-    c1*(U_pc%vcontra%f(i0:iend+1  ,jend+1:nend,:) + U_pc%vcontra%f(i0-1:iend  ,jend+1:nend,:)) + &
-    c2*(U_pc%vcontra%f(i0+1:iend+2,jend+1:nend,:) + U_pc%vcontra%f(i0-2:iend-1,jend+1:nend,:))
+    v_pu(i0:iend+1,jend+1:nend,:) = &
+    c1*(v_pc(i0:iend+1  ,jend+1:nend,:) + v_pc(i0-1:iend  ,jend+1:nend,:)) + &
+    c2*(v_pc(i0+1:iend+2,jend+1:nend,:) + v_pc(i0-2:iend-1,jend+1:nend,:))
 
     ! Panel from west
-    U_pv%ucontra%f(n0:i0-1,j0:jend+1,:) = &
-    c1*(U_pc%ucontra%f(n0:i0-1,j0:jend+1,  :) + U_pc%ucontra%f(n0:i0-1,j0-1:jend,  :)) + &
-    c2*(U_pc%ucontra%f(n0:i0-1,j0+1:jend+2,:) + U_pc%ucontra%f(n0:i0-1,j0-2:jend-1,:))
+    u_pv(n0:i0-1,j0:jend+1,:) = &
+    c1*(u_pc(n0:i0-1,j0:jend+1,  :) + u_pc(n0:i0-1,j0-1:jend,  :)) + &
+    c2*(u_pc(n0:i0-1,j0+1:jend+2,:) + u_pc(n0:i0-1,j0-2:jend-1,:))
 
-    U_pv%vcontra%f(n0:i0-1,j0:jend+1,:) = &
-    c1*(U_pc%vcontra%f(n0:i0-1,j0:jend+1  ,:) + U_pc%vcontra%f(n0:i0-1,j0-1:jend  ,:)) + &
-    c2*(U_pc%vcontra%f(n0:i0-1,j0+1:jend+2,:) + U_pc%vcontra%f(n0:i0-1,j0-2:jend-1,:))
+    v_pv(n0:i0-1,j0:jend+1,:) = &
+    c1*(v_pc(n0:i0-1,j0:jend+1  ,:) + v_pc(n0:i0-1,j0-1:jend  ,:)) + &
+    c2*(v_pc(n0:i0-1,j0+1:jend+2,:) + v_pc(n0:i0-1,j0-2:jend-1,:))
 
     ! Panel from east 
-    U_pv%ucontra%f(iend+1:nend, j0:jend+1, :) = &
-    c1*(U_pc%ucontra%f(iend+1:nend,j0:jend+1  ,:) + U_pc%ucontra%f(iend+1:nend,j0-1:jend  ,:)) + &
-    c2*(U_pc%ucontra%f(iend+1:nend,j0+1:jend+2,:) + U_pc%ucontra%f(iend+1:nend,j0-2:jend-1,:))
+    u_pv(iend+1:nend, j0:jend+1, :) = &
+    c1*(u_pc(iend+1:nend,j0:jend+1  ,:) + u_pc(iend+1:nend,j0-1:jend  ,:)) + &
+    c2*(u_pc(iend+1:nend,j0+1:jend+2,:) + u_pc(iend+1:nend,j0-2:jend-1,:))
 
-    U_pv%vcontra%f(iend+1:nend, j0:jend+1, :) = &
-    c1*(U_pc%vcontra%f(iend+1:nend,j0:jend+1  ,:) + U_pc%vcontra%f(iend+1:nend,j0-1:jend  ,:)) + &
-    c2*(U_pc%vcontra%f(iend+1:nend,j0+1:jend+2,:) + U_pc%vcontra%f(iend+1:nend,j0-2:jend-1,:))
+    v_pv(iend+1:nend, j0:jend+1, :) = &
+    c1*(v_pc(iend+1:nend,j0:jend+1  ,:) + v_pc(iend+1:nend,j0-1:jend  ,:)) + &
+    c2*(v_pc(iend+1:nend,j0+1:jend+2,:) + v_pc(iend+1:nend,j0-2:jend-1,:))
 
 
     !-----------------------------------------------------------------------------------
     ! Interpolation needed for RK2 departure point scheme
     ! Panel from west
-    U_pu%ucontra%f(i0-1,n0:nend,:) = &
-    c1*(U_pc%ucontra%f(i0-2,n0:nend,:) + U_pc%ucontra%f(i0-1,n0:nend,:)) + &
-    c2*(U_pc%ucontra%f(i0,n0:nend,:) + U_pc%ucontra%f(i0-3,n0:nend,:))
+    u_pu(i0-1,n0:nend,:) = &
+    c1*(u_pc(i0-2,n0:nend,:) + u_pc(i0-1,n0:nend,:)) + &
+    c2*(u_pc(i0  ,n0:nend,:) + u_pc(i0-3,n0:nend,:))
 
-    U_pu%vcontra%f(i0-1,n0:nend,:) = &
-    c1*(U_pc%vcontra%f(i0-2,n0:nend,:) + U_pc%vcontra%f(i0-1,n0:nend,:)) + &
-    c2*(U_pc%vcontra%f(i0,n0:nend,:) + U_pc%vcontra%f(i0-3,n0:nend,:))
-
+    v_pu(i0-1,n0:nend,:) = &
+    c1*(v_pc(i0-2,n0:nend,:) + v_pc(i0-1,n0:nend,:)) + &
+    c2*(v_pc(i0  ,n0:nend,:) + v_pc(i0-3,n0:nend,:))
 
     ! Panel from east
-    U_pu%ucontra%f(iend+2,n0:nend,:) = &
-    c1*(U_pc%ucontra%f(iend+1,:,:) + U_pc%ucontra%f(iend+2,:,:)) + &
-    c2*(U_pc%ucontra%f(iend,:,:) + U_pc%ucontra%f(iend+3,:,:))
+    u_pu(iend+2,n0:nend,:) = &
+    c1*(u_pc(iend+1,:,:) + u_pc(iend+2,:,:)) + &
+    c2*(u_pc(iend  ,:,:) + u_pc(iend+3,:,:))
 
-    U_pu%vcontra%f(iend+2,:,:) = &
-    c1*(U_pc%vcontra%f(iend+1,:,:) + U_pc%vcontra%f(iend+2,:,:)) + &
-    c2*(U_pc%vcontra%f(iend,:,:) + U_pc%vcontra%f(iend+3,:,:))
+    v_pu(iend+2,:,:) = &
+    c1*(v_pc(iend+1,:,:) + v_pc(iend+2,:,:)) + &
+    c2*(v_pc(iend  ,:,:) + v_pc(iend+3,:,:))
  
     ! Panel from south
-    U_pv%ucontra%f(n0:nend,j0-1,:) = &
-    c1*(U_pc%ucontra%f(n0:nend,j0-2,:) + U_pc%ucontra%f(n0:nend,j0-1,:)) + &
-    c2*(U_pc%ucontra%f(n0:nend,j0,:) + U_pc%ucontra%f(n0:nend,j0-3,:))
+    u_pv(n0:nend,j0-1,:) = &
+    c1*(u_pc(n0:nend,j0-2,:) + u_pc(n0:nend,j0-1,:)) + &
+    c2*(u_pc(n0:nend,j0  ,:) + u_pc(n0:nend,j0-3,:))
 
-    U_pv%vcontra%f(n0:nend,j0-1,:) = &
-    c1*(U_pc%vcontra%f(n0:nend,j0-2,:) + U_pc%vcontra%f(n0:nend,j0-1,:)) + &
-    c2*(U_pc%vcontra%f(n0:nend,j0,:) + U_pc%vcontra%f(n0:nend,j0-3,:))
+    v_pv(n0:nend,j0-1,:) = &
+    c1*(v_pc(n0:nend,j0-2,:) + v_pc(n0:nend,j0-1,:)) + &
+    c2*(v_pc(n0:nend,j0  ,:) + v_pc(n0:nend,j0-3,:))
 
     ! Panel from east
-    U_pv%ucontra%f(:,jend+2,:) = &
-    c1*(U_pc%ucontra%f(:,jend+1,:) + U_pc%ucontra%f(:,jend+2,:)) + &
-    c2*(U_pc%ucontra%f(:,jend,:) + U_pc%ucontra%f(:,jend+3,:))
+    u_pv(:,jend+2,:) = &
+    c1*(u_pc(:,jend+1,:) + u_pc(:,jend+2,:)) + &
+    c2*(u_pc(:,jend  ,:) + u_pc(:,jend+3,:))
 
-    U_pv%vcontra%f(:,jend+2,:) = &
-    c1*(U_pc%vcontra%f(:,jend+1,:) + U_pc%vcontra%f(:,jend+2,:)) + &
-    c2*(U_pc%vcontra%f(:,jend,:) + U_pc%vcontra%f(:,jend+3,:))
+    v_pv(:,jend+2,:) = &
+    c1*(v_pc(:,jend+1,:) + v_pc(:,jend+2,:)) + &
+    c2*(v_pc(:,jend  ,:) + v_pc(:,jend+3,:))
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine interp_A2Cduogrid
@@ -771,7 +764,8 @@ subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
     !---------------------------------------------------
     ! interpolation of vector field (contra/covar/latlon) given at A grid 
     ! (including ghost cells) to the C grid (contra/covar/latlon) inner cells
-    type(scalar_field), intent(inout) :: u_pu, v_pv, u_pc, v_pc
+    real(kind=8), allocatable, intent(inout) :: u_pu(:,:,:), v_pv(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: u_pc(:,:,:), v_pc(:,:,:)
     integer(i4), intent(in) :: id
     integer(i4):: i, j, p, h
     real(kind=8) :: c1, c2
@@ -787,10 +781,10 @@ subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
-        u_pu%f(i0:iend+1,j0:jend,:) = &
-        (u_pc%f(i0-1:iend,j0:jend,:) + u_pc%f(i0:iend+1,j0:jend,:))*0.5d0
-        v_pv%f(i0:iend,j0:jend+1,:) = &
-        (v_pc%f(i0:iend,j0-1:jend,:) + v_pc%f(i0:iend,j0:jend+1,:))*0.5d0
+        u_pu(i0:iend+1,j0:jend,:) = &
+        (u_pc(i0-1:iend,j0:jend,:) + u_pc(i0:iend+1,j0:jend,:))*0.5d0
+        v_pv(i0:iend,j0:jend+1,:) = &
+        (v_pc(i0:iend,j0-1:jend,:) + v_pc(i0:iend,j0:jend+1,:))*0.5d0
         !$OMP END PARALLEL WORKSHARE
 
     elseif(id == 3) then
@@ -798,13 +792,13 @@ subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc, c1, c2)
-        u_pu%f(i0:iend+1,j0:jend,:) = &
-        c1*(u_pc%f(i0-1:iend  ,j0:jend,:) + u_pc%f(i0:iend+1  ,j0:jend,:)) + &
-        c2*(u_pc%f(i0-2:iend-1,j0:jend,:) + u_pc%f(i0+1:iend+2,j0:jend,:))
+        u_pu(i0:iend+1,j0:jend,:) = &
+        c1*(u_pc(i0-1:iend  ,j0:jend,:) + u_pc(i0:iend+1  ,j0:jend,:)) + &
+        c2*(u_pc(i0-2:iend-1,j0:jend,:) + u_pc(i0+1:iend+2,j0:jend,:))
 
-        v_pv%f(i0:iend,j0:jend+1,:) = &
-        c1*(v_pc%f(i0:iend,j0-1:jend  ,:) + v_pc%f(i0:iend,j0:jend+1  ,:)) + &
-        c2*(v_pc%f(i0:iend,j0-2:jend-1,:) + v_pc%f(i0:iend,j0+1:jend+2,:))
+        v_pv(i0:iend,j0:jend+1,:) = &
+        c1*(v_pc(i0:iend,j0-1:jend  ,:) + v_pc(i0:iend,j0:jend+1  ,:)) + &
+        c2*(v_pc(i0:iend,j0-2:jend-1,:) + v_pc(i0:iend,j0+1:jend+2,:))
         !$OMP END PARALLEL WORKSHARE
 
     else
@@ -816,11 +810,10 @@ end subroutine interp_A2Cgrid
 
 
 
-
 subroutine interp_D2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
     !---------------------------------------------------
     ! duogrid interpolation of vector field given at D grid (covariant)
-    ! to the A grid (contravariant) ghost cell values at centers
+    ! to the A grid (covariant) ghost cell values at centers
     !---------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
     type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
@@ -959,8 +952,8 @@ subroutine interp_D2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
     !$OMP END PARALLEL WORKSHARE
 
     ! Interpolate latlon to the ghost cell centers
-    call dg_interp(U_pc%u, L)
-    call dg_interp(U_pc%v, L)
+    call dg_interp(U_pc%u%f, L)
+    call dg_interp(U_pc%v%f, L)
 
     ! Convert from latlon to contravariant
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -1004,105 +997,6 @@ subroutine interp_D2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
 
 
 end subroutine interp_D2Aduogrid
-
-
-
-subroutine interp_A2Dduogrid(U_pu, U_pv, U_pc)
-    !---------------------------------------------------
-    ! duogrid interpolation of vector field given at A grid (covariant)
-    ! to the D grid (covariant) ghost cells only
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
-    integer(i4):: i, j, p, h
-    real(kind=8) :: c1, c2
-    
-    ! cubic interpolation coeffs
-    c1 =  9.d0/16.d0
-    c2 = -1.d0/16.d0
-
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
-    !$OMP SHARED(c1, c2) &
-    !$OMP SHARED(U_pc, U_pu, U_pv)
-    ! Let us interpolate the ghost cell edges - cubic interpolation
-    ! Panel from south
-    U_pu%vcovari%f(i0:iend+1,n0:j0-1,:) = &
-    c1*(U_pc%vcovari%f(i0:iend+1  ,n0:j0-1,:) + U_pc%vcovari%f(i0-1:iend  ,n0:j0-1,:)) + &
-    c2*(U_pc%vcovari%f(i0+1:iend+2,n0:j0-1,:) + U_pc%vcovari%f(i0-2:iend-1,n0:j0-1,:))
-
-    U_pu%ucovari%f(i0:iend+1,n0:j0-1,:) = &
-    c1*(U_pc%ucovari%f(i0:iend+1  ,n0:j0-1,:) + U_pc%ucovari%f(i0-1:iend  ,n0:j0-1,:)) + &
-    c2*(U_pc%ucovari%f(i0+1:iend+2,n0:j0-1,:) + U_pc%ucovari%f(i0-2:iend-1,n0:j0-1,:))
-
-    ! Panel from north
-    U_pu%vcovari%f(i0:iend+1, jend+1:nend,:) = &
-    c1*(U_pc%vcovari%f(i0:iend+1  ,jend+1:nend,:) + U_pc%vcovari%f(i0-1:iend  ,jend+1:nend,:)) + &
-    c2*(U_pc%vcovari%f(i0+1:iend+2,jend+1:nend,:) + U_pc%vcovari%f(i0-2:iend-1,jend+1:nend,:))
-
-    U_pu%ucovari%f(i0:iend+1,jend+1:nend,:) = &
-    c1*(U_pc%ucovari%f(i0:iend+1  ,jend+1:nend,:) + U_pc%ucovari%f(i0-1:iend  ,jend+1:nend,:)) + &
-    c2*(U_pc%ucovari%f(i0+1:iend+2,jend+1:nend,:) + U_pc%ucovari%f(i0-2:iend-1,jend+1:nend,:))
-
-    ! Panel from west
-    U_pv%vcovari%f(n0:i0-1,j0:jend+1,:) = &
-    c1*(U_pc%vcovari%f(n0:i0-1,j0:jend+1,  :) + U_pc%vcovari%f(n0:i0-1,j0-1:jend,  :)) + &
-    c2*(U_pc%vcovari%f(n0:i0-1,j0+1:jend+2,:) + U_pc%vcovari%f(n0:i0-1,j0-2:jend-1,:))
-
-    U_pv%ucovari%f(n0:i0-1,j0:jend+1,:) = &
-    c1*(U_pc%ucovari%f(n0:i0-1,j0:jend+1  ,:) + U_pc%ucovari%f(n0:i0-1,j0-1:jend  ,:)) + &
-    c2*(U_pc%ucovari%f(n0:i0-1,j0+1:jend+2,:) + U_pc%ucovari%f(n0:i0-1,j0-2:jend-1,:))
-
-    ! Panel from east 
-    U_pv%vcovari%f(iend+1:nend, j0:jend+1, :) = &
-    c1*(U_pc%vcovari%f(iend+1:nend,j0:jend+1  ,:) + U_pc%vcovari%f(iend+1:nend,j0-1:jend  ,:)) + &
-    c2*(U_pc%vcovari%f(iend+1:nend,j0+1:jend+2,:) + U_pc%vcovari%f(iend+1:nend,j0-2:jend-1,:))
-
-    U_pv%ucovari%f(iend+1:nend, j0:jend+1, :) = &
-    c1*(U_pc%ucovari%f(iend+1:nend,j0:jend+1  ,:) + U_pc%ucovari%f(iend+1:nend,j0-1:jend  ,:)) + &
-    c2*(U_pc%ucovari%f(iend+1:nend,j0+1:jend+2,:) + U_pc%ucovari%f(iend+1:nend,j0-2:jend-1,:))
-
-
-    !-----------------------------------------------------------------------------------
-    ! Interpolation needed for RK2 departure point scheme
-    ! Panel from west
-    U_pu%vcovari%f(i0-1,n0:nend,:) = &
-    c1*(U_pc%vcovari%f(i0-2,n0:nend,:) + U_pc%vcovari%f(i0-1,n0:nend,:)) + &
-    c2*(U_pc%vcovari%f(i0,n0:nend,:) + U_pc%vcovari%f(i0-3,n0:nend,:))
-
-    U_pu%ucovari%f(i0-1,n0:nend,:) = &
-    c1*(U_pc%ucovari%f(i0-2,n0:nend,:) + U_pc%ucovari%f(i0-1,n0:nend,:)) + &
-    c2*(U_pc%ucovari%f(i0,n0:nend,:) + U_pc%ucovari%f(i0-3,n0:nend,:))
-
-
-    ! Panel from east
-    U_pu%vcovari%f(iend+2,n0:nend,:) = &
-    c1*(U_pc%vcovari%f(iend+1,:,:) + U_pc%vcovari%f(iend+2,:,:)) + &
-    c2*(U_pc%vcovari%f(iend,:,:) + U_pc%vcovari%f(iend+3,:,:))
-
-    U_pu%ucovari%f(iend+2,:,:) = &
-    c1*(U_pc%ucovari%f(iend+1,:,:) + U_pc%ucovari%f(iend+2,:,:)) + &
-    c2*(U_pc%ucovari%f(iend,:,:) + U_pc%ucovari%f(iend+3,:,:))
- 
-    ! Panel from south
-    U_pv%vcovari%f(n0:nend,j0-1,:) = &
-    c1*(U_pc%vcovari%f(n0:nend,j0-2,:) + U_pc%vcovari%f(n0:nend,j0-1,:)) + &
-    c2*(U_pc%vcovari%f(n0:nend,j0,:) + U_pc%vcovari%f(n0:nend,j0-3,:))
-
-    U_pv%ucovari%f(n0:nend,j0-1,:) = &
-    c1*(U_pc%ucovari%f(n0:nend,j0-2,:) + U_pc%ucovari%f(n0:nend,j0-1,:)) + &
-    c2*(U_pc%ucovari%f(n0:nend,j0,:) + U_pc%ucovari%f(n0:nend,j0-3,:))
-
-    ! Panel from east
-    U_pv%vcovari%f(:,jend+2,:) = &
-    c1*(U_pc%vcovari%f(:,jend+1,:) + U_pc%vcovari%f(:,jend+2,:)) + &
-    c2*(U_pc%vcovari%f(:,jend,:) + U_pc%vcovari%f(:,jend+3,:))
-
-    U_pv%ucovari%f(:,jend+2,:) = &
-    c1*(U_pc%ucovari%f(:,jend+1,:) + U_pc%ucovari%f(:,jend+2,:)) + &
-    c2*(U_pc%ucovari%f(:,jend,:) + U_pc%ucovari%f(:,jend+3,:))
-    !$OMP END PARALLEL WORKSHARE
-
-end subroutine interp_A2Dduogrid
-
 
 
 subroutine compute_lagrange_cs(L, mesh)
@@ -1252,7 +1146,7 @@ subroutine gethalodata_PL07(Qx, Qy)
     ! Fill the center ghost cell values of Qx and Qy that are needed
     ! for reconstruction using the PL07 approach
     !--------------------------------------------------
-    type(scalar_field), intent(inout) :: Qx, Qy
+    real(kind=8), allocatable, intent(inout) :: Qx(:,:,:), Qy(:,:,:)
     integer(i4) :: p, east, north, south, west
 
 
@@ -1267,16 +1161,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 4
  
     ! Data of panel 1 from east
-    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 2
+    Qx(iend+1:nend,n0:nend,p) = Qx(i0:i0+nghost-1, n0:nend, east) ! Panel 2
 
     ! Data of panel 1 from  west
-    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 4
+    Qx(n0:i0-1,n0:nend,p) = Qx(iend-nghost+1:iend, n0:nend, west) ! Panel 4
 
     ! Data of panel 1 from north
-    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(n0:nend, j0:j0+nghost-1, north) ! Panel 5
+    Qy(n0:nend,jend+1:nend,p) = Qy(n0:nend, j0:j0+nghost-1, north) ! Panel 5
 
     ! Data of panel 1 from south
-    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(n0:nend, jend-nghost+1:jend, south) ! Panel 6
+    Qy(n0:nend,n0:j0-1,p) = Qy(n0:nend, jend-nghost+1:jend, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
     ! --------------------- Panel 2 ----------------------------
@@ -1290,16 +1184,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 1
 
     ! Data of panel 2 from east
-    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 3
+    Qx(iend+1:nend,n0:nend,p) = Qx(i0:i0+nghost-1, n0:nend, east) ! Panel 3
 
     ! Data of panel 2 from west
-    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 1
+    Qx(n0:i0-1,n0:nend,p) = Qx(iend-nghost+1:iend, n0:nend, west) ! Panel 1
 
     ! Data of panel 2 from north
-    Qy%f(n0:nend,jend+1:nend,p) = transpose(Qx%f(jend:jend-nghost+1:-1, n0:nend, north)) ! Panel 5
+    Qy(n0:nend,jend+1:nend,p) = transpose(Qx(jend:jend-nghost+1:-1, n0:nend, north)) ! Panel 5
 
     ! Data of panel 2 from south
-    Qy%f(n0:nend,n0:j0-1,p) = transpose(Qx%f(jend-nghost+1:jend, nend:n0:-1,south)) ! Panel 6
+    Qy(n0:nend,n0:j0-1,p) = transpose(Qx(jend-nghost+1:jend, nend:n0:-1,south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -1315,16 +1209,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 2
 
     ! Data of panel 3 from east
-    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 4
+    Qx(iend+1:nend,n0:nend,p) = Qx(i0:i0+nghost-1, n0:nend, east) ! Panel 4
 
     ! Data of panel 3 from west
-    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 2
+    Qx(n0:i0-1,n0:nend,p) = Qx(iend-nghost+1:iend, n0:nend, west) ! Panel 2
 
     ! Data of panel 3 from north
-    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
+    Qy(n0:nend,jend+1:nend,p) = Qy(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 5
 
     ! Data of panel 3 from south
-    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
+    Qy(n0:nend,n0:j0-1,p) = Qy(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -1340,16 +1234,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 3
 
     ! Data of panel 4 from east
-    Qx%f(iend+1:nend,n0:nend,p) = Qx%f(i0:i0+nghost-1, n0:nend, east) ! Panel 1
+    Qx(iend+1:nend,n0:nend,p) = Qx(i0:i0+nghost-1, n0:nend, east) ! Panel 1
 
     ! Data of panel 4 from west
-    Qx%f(n0:i0-1,n0:nend,p) = Qx%f(iend-nghost+1:iend, n0:nend, west) ! Panel 3
+    Qx(n0:i0-1,n0:nend,p) = Qx(iend-nghost+1:iend, n0:nend, west) ! Panel 3
 
     ! Data of panel 4 from north
-    Qy%f(n0:nend,jend+1:nend,p) = transpose(Qx%f(i0:i0+nghost-1, nend:n0:-1, north)) ! Panel 5
+    Qy(n0:nend,jend+1:nend,p) = transpose(Qx(i0:i0+nghost-1, nend:n0:-1, north)) ! Panel 5
 
     ! Data of panel 4 from south
-    Qy%f(n0:nend,n0:j0-1,p) = transpose(Qx%f(i0+nghost-1:i0:-1, n0:nend, south)) ! Panel 6
+    Qy(n0:nend,n0:j0-1,p) = transpose(Qx(i0+nghost-1:i0:-1, n0:nend, south)) ! Panel 6
     !$OMP END PARALLEL WORKSHARE
 
 
@@ -1365,16 +1259,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 4
 
     ! Data of panel 5 from east
-    Qx%f(iend+1:nend,n0:nend,p) = transpose(Qy%f(n0:nend, jend:jend-nghost+1:-1, east)) ! Panel 2
+    Qx(iend+1:nend,n0:nend,p) = transpose(Qy(n0:nend, jend:jend-nghost+1:-1, east)) ! Panel 2
 
     ! Data of panel 5 from west
-    Qx%f(n0:i0-1,n0:nend,p) = transpose(Qy%f(nend:n0:-1,jend-nghost+1:jend, west)) ! Panel 4
+    Qx(n0:i0-1,n0:nend,p) = transpose(Qy(nend:n0:-1,jend-nghost+1:jend, west)) ! Panel 4
 
     ! Data of panel 5 from north
-    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
+    Qy(n0:nend,jend+1:nend,p) = Qy(nend:n0:-1, jend:jend-nghost+1:-1, north) ! Panel 3
 
     ! Data of panel 5 from south
-    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(n0:nend, jend-nghost+1:jend, south) ! Panel 1
+    Qy(n0:nend,n0:j0-1,p) = Qy(n0:nend, jend-nghost+1:jend, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
     ! --------------------- Panel 6 ----------------------------
@@ -1388,16 +1282,16 @@ subroutine gethalodata_PL07(Qx, Qy)
     west  = 4
 
     ! Data of panel 6 from east
-    Qx%f(iend+1:nend,n0:nend,p) = transpose(Qy%f(nend:n0:-1, j0:j0+nghost-1, east)) ! Panel 2
+    Qx(iend+1:nend,n0:nend,p) = transpose(Qy(nend:n0:-1, j0:j0+nghost-1, east)) ! Panel 2
 
     ! Data of panel 6 from west
-    Qx%f(n0:i0-1,n0:nend,p) = transpose(Qy%f(n0:nend,j0+nghost-1:j0:-1, west)) ! Panel 4
+    Qx(n0:i0-1,n0:nend,p) = transpose(Qy(n0:nend,j0+nghost-1:j0:-1, west)) ! Panel 4
 
     ! Data of panel 6 from north
-    Qy%f(n0:nend,jend+1:nend,p) = Qy%f(n0:nend, j0:j0+nghost-1, north) ! Panel 3
+    Qy(n0:nend,jend+1:nend,p) = Qy(n0:nend, j0:j0+nghost-1, north) ! Panel 3
 
     ! Data of panel 6 from south
-    Qy%f(n0:nend,n0:j0-1,p) = Qy%f(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
+    Qy(n0:nend,n0:j0-1,p) = Qy(nend:n0:-1, j0+nghost-1:j0:-1, south) ! Panel 1
     !$OMP END PARALLEL WORKSHARE
 
 

@@ -134,7 +134,7 @@ subroutine ppm_fluxes_PL07(Qx, Qy, px, py, V_pu_av, V_pv_av, cx_pu, cy_pv, mesh)
         select case(px%recon)
             case('ppm', 'hyppm')
                 ! Reconstructs the values of Qx and Qy using a piecewise parabolic polynomial
-                call gethalodata_PL07(Qx, Qy)
+                call gethalodata_PL07(Qx%f, Qy%f)
                 call ppm_reconstruction_x(Qx, px)
                 call ppm_reconstruction_y(Qy, py)
                 call edges_extrapolation(Qx, Qy, px, py)

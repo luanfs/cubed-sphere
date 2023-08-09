@@ -42,7 +42,6 @@ use duogrid_interpolation, only: &
     compute_lagrange_cs, &
     interp_D2Aduogrid, &
     interp_C2Agrid, &
-    interp_A2Dduogrid, &
     interp_A2Cgrid
 
 
@@ -418,13 +417,13 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     call interp_D2Aduogrid(V_pu, V_pv, V_pc, L_pc, mesh)
 
     ! then we interpolate from D grid to the A grid inner cells
-    call interp_C2Agrid(V_pu%vcovari, V_pv%ucovari, V_pc%vcovari, V_pc%ucovari,  swm_simul%id_d2a)
+    call interp_C2Agrid(V_pu%vcovari%f, V_pv%ucovari%f, V_pc%vcovari%f, V_pc%ucovari%f,  swm_simul%id_d2a)
 
     ! now we fill the ghost cell D grid
-    call interp_A2Dduogrid(V_pu, V_pv, V_pc)
+    !call interp_A2Dduogrid(V_pu, V_pv, V_pc)
 
     ! then we interpolate from A grid to the D grid inner cells
-    call interp_A2Cgrid(V_pu%ucovari, V_pv%vcovari, V_pc%ucovari, V_pc%vcovari, swm_simul%id_d2a)
+    call interp_A2Cgrid(V_pu%ucovari%f, V_pv%vcovari%f, V_pc%ucovari%f, V_pc%vcovari%f, swm_simul%id_d2a)
 
 
 
