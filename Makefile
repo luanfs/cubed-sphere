@@ -30,6 +30,7 @@ bin/input.obj \
 bin/cubed_sphere.obj \
 bin/departure_point.obj \
 bin/advection_ic.obj \
+bin/swm_timestep.obj \
 bin/swm_ic.obj \
 bin/advection_timestep.obj \
 bin/simulpack.obj \
@@ -148,6 +149,11 @@ bin/swm_vars.obj: src/swm_vars.f90
 bin/advection_ic.obj: src/advection_ic.f90
 	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
 	mv advection_ic.mod bin/.
+
+#Shallow water timestep
+bin/swm_timestep.obj: src/swm_timestep.f90
+	$(F90) $(FFLAG) -c  $^ -o $@ $(IMOD)
+	mv swm_timestep.mod bin/.
 
 #shallow water ic
 bin/swm_ic.obj: src/swm_ic.f90
