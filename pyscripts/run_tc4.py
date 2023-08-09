@@ -1,8 +1,6 @@
 #-----------------------------------------------------------------------
-# Python script to run the discrete divergence test case
-# for all reconstruction method.
 # This script analyses the convergence with respect to the
-# grid size.
+# grid size for the advection model
 # Luan Santos - 2022
 #-----------------------------------------------------------------------
 
@@ -22,7 +20,7 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128,) # Values of N
+N = (16, 32, 64, ) # Values of N
 reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
@@ -49,11 +47,11 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '2'
+    ic = '3'
     replace_line(pardir+'advection.par', ic, 3)
 
     # Define velocity
-    vf = '1'
+    vf = '3'
     replace_line(pardir+'advection.par', vf, 5)
 
     # interpolation degree
