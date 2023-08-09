@@ -731,12 +731,12 @@ subroutine interp_A2Cduogrid(u_pu, u_pv, v_pu, v_pv, u_pc, v_pc)
 
     ! Panel from east
     u_pu(iend+2,n0:nend,:) = &
-    c1*(u_pc(iend+1,:,:) + u_pc(iend+2,:,:)) + &
-    c2*(u_pc(iend  ,:,:) + u_pc(iend+3,:,:))
+    c1*(u_pc(iend+1,n0:nend,:) + u_pc(iend+2,n0:nend,:)) + &
+    c2*(u_pc(iend  ,n0:nend,:) + u_pc(iend+3,n0:nend,:))
 
     v_pu(iend+2,:,:) = &
-    c1*(v_pc(iend+1,:,:) + v_pc(iend+2,:,:)) + &
-    c2*(v_pc(iend  ,:,:) + v_pc(iend+3,:,:))
+    c1*(v_pc(iend+1,n0:nend,:) + v_pc(iend+2,n0:nend,:)) + &
+    c2*(v_pc(iend  ,n0:nend,:) + v_pc(iend+3,n0:nend,:))
  
     ! Panel from south
     u_pv(n0:nend,j0-1,:) = &
@@ -748,13 +748,13 @@ subroutine interp_A2Cduogrid(u_pu, u_pv, v_pu, v_pv, u_pc, v_pc)
     c2*(v_pc(n0:nend,j0  ,:) + v_pc(n0:nend,j0-3,:))
 
     ! Panel from east
-    u_pv(:,jend+2,:) = &
-    c1*(u_pc(:,jend+1,:) + u_pc(:,jend+2,:)) + &
-    c2*(u_pc(:,jend  ,:) + u_pc(:,jend+3,:))
+    u_pv(n0:nend,jend+2,:) = &
+    c1*(u_pc(n0:nend,jend+1,:) + u_pc(n0:nend,jend+2,:)) + &
+    c2*(u_pc(n0:nend,jend  ,:) + u_pc(n0:nend,jend+3,:))
 
-    v_pv(:,jend+2,:) = &
-    c1*(v_pc(:,jend+1,:) + v_pc(:,jend+2,:)) + &
-    c2*(v_pc(:,jend  ,:) + v_pc(:,jend+3,:))
+    v_pv(n0:nend,jend+2,:) = &
+    c1*(v_pc(n0:nend,jend+1,:) + v_pc(n0:nend,jend+2,:)) + &
+    c2*(v_pc(n0:nend,jend  ,:) + v_pc(n0:nend,jend+3,:))
     !$OMP END PARALLEL WORKSHARE
 
 end subroutine interp_A2Cduogrid

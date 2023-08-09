@@ -490,6 +490,9 @@ subroutine getswmparameters(swm_simul)
     read(fileunit,*)  swm_simul%et
     read(fileunit,*)  buffer
     read(fileunit,*)  swm_simul%id
+    read(fileunit,*)  buffer
+    read(fileunit,*)  swm_simul%avd
+
 
     close(fileunit)
     return

@@ -1,6 +1,6 @@
 #Shallow water test case parameters 
 #Initial condition field 
-2
+1
 #Time step
 0.00625
 #Number of plots
@@ -19,6 +19,8 @@ gpr
 duogrid
 #Ghost cells interpolation degree
 3
+#Grid averages degree (1 or 3)
+1
 #-----------Description of parameters -------------------------------------
 #Possible initial conditions	
 #  case(1) - constant flow
@@ -49,4 +51,6 @@ duogrid
 #Possible cube edges treatment (used in reconstruction)
 #  case(duogrid) - extends the gridlines to adjacent panels
 #  case(pl07)    - uses the extrapolation from Putman and Lin 2007
-
+#Grid averages degree (1 or 3)
+#  case(1) - Linear interpolation
+#  case(3) - Cubic centered interporlation

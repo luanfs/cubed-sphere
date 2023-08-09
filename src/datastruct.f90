@@ -309,7 +309,7 @@ type simulation
     integer(i4) :: id
 
     ! Degree of interpolation from D grid to A grid (1 or 3)
-    integer(i4) :: id_d2a
+    integer(i4) :: avd
 
     ! Logical for exact solution
     logical :: exactsolution
@@ -322,6 +322,9 @@ type simulation
 
     ! Degree of interpolation at ghost cells
     character(len=16) :: id_name
+
+    ! Degree of grid averaging
+    character(len=16) :: avd_name
 
     ! One dimensional flux scheme
     character(len=16) :: recon1d

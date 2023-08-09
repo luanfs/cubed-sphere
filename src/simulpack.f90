@@ -71,6 +71,12 @@ use advection_timestep, only: &
     adv_timestep, &
     adv_update
 
+
+! Shallow water timestep
+use swm_timestep, only: &
+    sw_timestep, &
+    sw_timestep_Cgrid
+
 ! Diagnostics 
 use diagnostics, only: &
     mass_computation
@@ -161,7 +167,7 @@ subroutine interpolation_test(mesh)
 
     ! Initialize the variables (allocation, initial condition,...)
     call init_adv_vars(mesh)
-    advsimul%id_d2a = 3
+    advsimul%avd = 3
     !advsimul%name = "div_"//trim(advsimul%name)
 
     !-----------------------------------------------------------------------------
@@ -180,14 +186,14 @@ subroutine interpolation_test(mesh)
     L_pc, mesh%contra2ll_pc, mesh%ll2contra_pc)
 
     ! then we interpolate from C grid to the A grid inner cells
-    call interp_C2Agrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f,  advsimul%id_d2a)
+    call interp_C2Agrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f,  advsimul%avd)
 
     ! now we fill the ghost cell C grid
     call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, &
     wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f)
  
     ! then we interpolate from A grid to the C grid inner cells
-    call interp_A2Cgrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f, advsimul%id_d2a)
+    call interp_A2Cgrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f, advsimul%avd)
 
     error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
@@ -195,21 +201,21 @@ subroutine interpolation_test(mesh)
 
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a D grid
-    ! first we interpolate to the A grid (including A grid ghost cells)
+    ! first we interpolate to the A grid ghost cells)
     !call interp_D2Aduogrid(wind_pu%vcovari%f, wind_pv%ucovari%f, &
     !wind_pc%v%f, wind_pc%u%f, wind_pc%vcovari%f, wind_pc%ucovari%f, &
     !L_pc, mesh%covari2ll_pc, mesh%ll2covari_pc)
     call interp_D2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
-    ! then we interpolate from D grid to the A grid inner cells
-    call interp_C2Agrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f,  advsimul%id_d2a)
+    ! then we interpolate from d grid to the a grid inner cells
+    call interp_c2agrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f,  advsimul%avd)
 
     ! now we fill the ghost cell D grid
     call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pu%vcovari%f, wind_pv%ucovari%f, &
     wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
  
-    ! then we interpolate from A grid to the D grid inner cells
-    call interp_A2Cgrid(wind_pu%ucovari%f, wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f, advsimul%id_d2a)
+    ! then we interpolate from A grid to the D grid inner cell
+    call interp_A2Cgrid(wind_pu%ucovari%f, wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f, advsimul%avd)
 
     error_ucovari = maxval(abs(wind_pu%ucovari%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucovari_old%f(i0-1:iend+2,n0:nend,:)))
     error_vcovari = maxval(abs(wind_pv%vcovari%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcovari_old%f(n0:nend,j0-1:jend+2,:)))
@@ -366,23 +372,26 @@ subroutine swm_test(mesh)
     ! Initialize the variables (allocation, initial condition,...)
     call init_swm_vars(mesh)
 
+    ! Initialize velocity at ghost cells
+    call sw_timestep_Cgrid(mesh)
+    !print*, maxval(abs(wind_pc%ucovari%f(:,:,:)-wind_pc%ucovari_old%f(:,:,:)))
+    !print*, maxval(abs(wind_pc%vcovari%f(:,:,:)-wind_pc%vcovari_old%f(:,:,:)))
+    !print*, maxval(abs(wind_pc%ucontra%f(:,:,:)-wind_pc%ucontra_old%f(:,:,:)))
+    !print*, maxval(abs(wind_pc%vcontra%f(:,:,:)-wind_pc%vcontra_old%f(:,:,:)))
+    !print*, maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,:,:)-wind_pu%ucontra_old%f(i0-1:iend+2,:,:)))
+    !print*, maxval(abs(wind_pv%vcontra%f(:,j0-1:jend+2,:)-wind_pv%vcontra_old%f(:,j0-1:jend+2,:)))
+
+    ! CFL number
+    swm_simul%cfl = maxval(abs(wind_pu%ucontra%f))
+    swm_simul%cfl = max(swm_simul%cfl, maxval(abs(wind_pv%vcontra%f)))
+    swm_simul%cfl = swm_simul%cfl*swm_simul%dt/mesh%dx
+ 
     ! print parameters
     call print_swmparameters(swm_simul)
 
-    stop
     ! Initial output
     call output_swm(mesh)
 
-    !-----------------------------------------------------------------------------
-    ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
-    ! first we interpolate from C grid to the A grid ghost cells
-    call interp_C2Aduogrid(wind_pu%ucontra%f, wind_pv%vcontra%f,&
-    wind_pc%u%f, wind_pc%v%f,wind_pc%ucontra%f, wind_pc%vcontra%f,&
-    L_pc, mesh%contra2ll_pc, mesh%ll2contra_pc)
-
-    ! now we fill the ghost cell C grid
-    call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, &
-    wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f)
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
 
@@ -394,15 +403,10 @@ subroutine swm_test(mesh)
         swm_simul%n = n
 
         ! Update the solution
-        call swm_timestep(mesh)
+        call sw_timestep(mesh)
 
         ! Output
         call output_swm(mesh)
-
-        ! Update the velocity field for the next time step - only for variable velocity
-        if(swm_simul%vf>=2)then
-            call swm_update(wind_pu, wind_pv, mesh, swm_simul%vf, swm_simul%t)
-        end if
     end do
 
     ! Write errors in a file

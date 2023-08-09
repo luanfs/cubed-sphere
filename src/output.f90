@@ -593,48 +593,23 @@ subroutine output_swm(mesh)
         ! Compute diagnostics
         call swm_diagnostics(swm_simul, mesh, H)
 
-        if(swm_simul%n==swm_simul%nsteps)then
-            swm_simul%exactsolution = .true.
-        end if
-
         ! Screen output
         print*
         print*, "Step = ", swm_simul%n, " of ", swm_simul%nsteps
  
         ! Compute exact solution and errors
-        if (swm_simul%exactsolution .or. swm_simul%n==swm_simul%nsteps) then
-            ! this is the only case where we need to update the exact solution
-            if(swm_simul%ic==2)then
-                !$OMP PARALLEL DO &
-                !$OMP DEFAULT(NONE) & 
-                !$OMP SHARED(H_exact, H, H_error, mesh, swm_simul) & 
-                !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
-                !$OMP PRIVATE(i, j, p, lat, lon) &
-                !$OMP SCHEDULE(static) 
-                do p = 1, nbfaces
-                    do i = i0, iend
-                        do j = j0, jend
-                            lat  = mesh%pc(i,j,p)%lat
-                            lon  = mesh%pc(i,j,p)%lon
-                            H_exact%f(i,j,p) = qexact_adv(lat, lon, swm_simul%ic, swm_simul%t)
-                            H_error%f(i,j,p) = H_exact%f(i,j,p) - H%f(i,j,p)
-                        end do
-                    end do
-                end do
-                !$OMP END PARALLEL DO
-            end if
-
+        if (swm_simul%exactsolution .and. swm_simul%n==swm_simul%nsteps) then
             call compute_errors_field(H, H_exact, H_error, &
             swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
 
-            print '(a22, 3e16.8)','linf, l1, l2 errors:', &
+            print '(a22, 3e16.8)','(linf, l1, l2) H errors:', &
             swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
 
-        else if(.not. swm_simul%exactsolution)then
+        else 
             call compute_norms_field(H,&
             swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
 
-            print '(a22, 3e16.8)','linf, l1, l2 Q norms:', &
+            print '(a22, 3e16.8)','(linf, l1, l2) H norms:', &
             swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
 
         end if
@@ -649,30 +624,11 @@ subroutine output_swm(mesh)
         ! Plot scalar fields
         write(an,'(i8)') swm_simul%plotcounter
 
-        H%name = "adv_"//trim(swm_simul%name)//"_H_t"//trim(adjustl(an))
+        H%name = "swm_"//trim(swm_simul%name)//"_H_t"//trim(adjustl(an))
         call plot_scalarfield(H, mesh)
 
         if(swm_simul%exactsolution .and. swm_simul%n>0)then
-            if(swm_simul%ic==2)then
-                !$OMP PARALLEL DO &
-                !$OMP DEFAULT(NONE) & 
-                !$OMP SHARED(Q_exact, Q, Q_error, mesh, swm_simul) & 
-                !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
-                !$OMP PRIVATE(i, j, p, lat, lon) &
-                !$OMP SCHEDULE(static) 
-                do p = 1, nbfaces
-                    do i = i0, iend
-                        do j = j0, jend
-                            lat  = mesh%pc(i,j,p)%lat
-                            lon  = mesh%pc(i,j,p)%lon
-                            !Q_exact%f(i,j,p) = qexact_adv(lat, lon, swm_simul%ic, swm_simul%t)
-                            !Q_error%f(i,j,p) = Q_exact%f(i,j,p) - Q%f(i,j,p)
-                        end do
-                    end do
-                end do
-                !$OMP END PARALLEL DO
-            end if
-            !Q_error%name = "swm_"//trim(swm_simul%name)//"_Q_error_t"//trim(adjustl(an))
+            H_error%name = "swm_"//trim(swm_simul%name)//"_H_error_t"//trim(adjustl(an))
             call plot_scalarfield(H_error, mesh)
         end if
         swm_simul%plotcounter = swm_simul%plotcounter + 1

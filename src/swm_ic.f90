@@ -41,9 +41,12 @@ use diagnostics, only: &
 use duogrid_interpolation, only: &
     compute_lagrange_cs, &
     interp_D2Aduogrid, &
+    interp_A2Cduogrid, &
     interp_C2Agrid, &
     interp_A2Cgrid
 
+use swm_timestep, only: &
+    sw_timestep_Cgrid
 
 implicit none
 
@@ -55,9 +58,8 @@ function h0_swm(lat, lon, ic)
     ! problem on the sphere
     ! 
     ! Possible initial conditions (ic)
-    ! 1 - constant field
-    ! 2 - one gaussian hill
-    ! 3 - two gaussian hills
+    ! 1 - one gaussian hill
+    ! 2 - steady state from Will et al 1992 paper 
     !--------------------------------------------------
     integer(i4), intent(in) :: ic
     real(kind=8), intent(in) :: lat, lon
@@ -75,10 +77,7 @@ function h0_swm(lat, lon, ic)
     integer(i4):: m, n
 
     select case(ic)
-        case(1) ! constant scalar field
-            h0_swm = 1.d0
-
-        case(2) ! one Gaussian hill
+        case(1) ! one Gaussian hill
             call sph2cart(lon, lat, x, y, z)
             ! Gaussian center
             lon0 = pi*0.25d0
@@ -87,36 +86,14 @@ function h0_swm(lat, lon, ic)
             b0 = 10.d0
             h0_swm = dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
    
-        case(3) ! two Gaussian hills
-            call sph2cart(lon, lat, x, y, z)
-            ! Gaussian hill centers
-            lon0 = -pi/6.d0
-            lat0 = 0.d0
-            lon1 = pi/6.d0
-            lat1 = 0.d0
-            call sph2cart(lon0, lat0, x0, y0, z0)
-            call sph2cart(lon1, lat1, x1, y1, z1)
-            b0 = 5.0
-            h0_swm = dexp(-b0*((x-x1)**2+ (y-y1)**2 + (z-z1)**2)) + &
-                     dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
-
-        case(4) ! steady state from will92
-            alpha = -45.d0*deg2rad ! Rotation angle
-            u0 = 2.d0*pi/5.d0     ! Wind speed
-            f = (-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))
-            h0_swm = 1.0 - f*f
-
-        case(5) ! Trigonometric field
-            m = 1
-            n = 1
-            h0_swm = (-dcos(lon) * dsin(m * lon) * m * dcos(n * lat) ** 4 / dcos(lat) - &
-            dsin(lon) * dcos(m * lon) * m ** 2 * dcos(n * lat) ** 4 / dcos(lat) + &
-            12.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 2 * dsin(n *lat) ** 2 * n ** 2 * dcos(lat) - &
-            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 4 * n ** 2 * dcos(lat) + &
-            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 3 * dsin(n * lat) * n * dsin(lat)) / dcos(lat)
+        case(2) ! steady state from will92
+            !alpha = -45.d0*deg2rad ! Rotation angle
+            !u0 = 2.d0*pi/5.d0     ! Wind speed
+            !f = (-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))
+            !h0_swm = 1.0 - f*f
 
         case default
-            print*, "ERROR on q0_swm: invalid initial condition."
+            print*, "ERROR on h0_swm: invalid initial condition."
             stop
     end select
     return
@@ -147,30 +124,12 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
     integer(i4) :: n, m
 
     select case(vf)
-        case(1)! rotated zonal wind
+        case(1,2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  2.d0*pi/5.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
 
-        case(2) ! Non divergent field 4 from Nair and Lauritzen 2010
-            T = 5.d0 ! Period
-            k = 2.d0
-            lonp = lon-2.d0*pi*time/T
-            ulon = k*(dsin((lonp+pi))**2)*(dsin(2.*lat))*(dcos(pi*time/T))+2.*pi*dcos(lat)/T
-            vlat = k*(dsin(2*(lonp+pi)))*(dcos(lat))*(dcos(pi*time/T))
-
-        case(3)! Divergent field 3 from Nair and Lauritzen 2010
-            T = 5.d0 ! Period
-            k = 1.d0
-            ulon = -k*(dsin((lon+pi)/2.d0)**2)*(dsin(2.d0*lat))*(dcos(lat)**2)*(dcos(pi*time/T))
-            vlat = (k/2.d0)*(dsin((lon+pi)))*(dcos(lat)**3)*(dcos(pi*time/T))
-
-        case(4) ! trigonometric field
-            m = 1
-            n = 1
-            ulon = m*(dsin(lon)*dsin(m*lon)*dcos(n*lat)**3)!/np.cos(lat)
-            vlat = 4*n*(dcos(n*lat)**3)*dsin(n*lat)*dcos(m*lon)*dsin(lon)
         case default
             print*, "ERROR on velocity_swm: invalid vector field"
             stop
@@ -224,7 +183,7 @@ subroutine init_swm_vars(mesh)
 
     ! Compute lagrange polynomials
     call compute_lagrange_cs(L_pc, mesh)
-    swm_simul%id_d2a = 3
+    !swm_simul%avd = 3
 
     ! Time step over 2
     swm_simul%dto2 = swm_simul%dt*0.5d0
@@ -261,11 +220,9 @@ subroutine init_swm_vars(mesh)
     end if
 
     ! Define wheter exact solution at all time steps is available or not
-    if(swm_simul%ic == 1 .and. swm_simul%vf <= 2)then
+    if(swm_simul%ic <= 2)then
         swm_simul%exactsolution = .true.
-    else if(swm_simul%ic .ne. 3 .and. swm_simul%vf == 1)then
-        swm_simul%exactsolution = .true.
-     else
+    else
         swm_simul%exactsolution = .false.
     end if
 
@@ -276,9 +233,13 @@ subroutine init_swm_vars(mesh)
     write (swm_simul%id_name, *) swm_simul%id
     swm_simul%id_name = adjustl(swm_simul%id_name)
 
+    write (swm_simul%avd_name, *) swm_simul%avd
+    swm_simul%avd_name = adjustl(swm_simul%avd_name)
+
     swm_simul%name = "ic"//trim(swm_simul%ic_name)//"_"//trim(swm_simul%opsplit) &
     //"_"//trim(swm_simul%recon1d)//"_mt"//trim(swm_simul%mt)//"_"//trim(swm_simul%dp) &
-    //"_mf"//trim(swm_simul%mf)//"_et"//trim(swm_simul%et)//"_id"//trim(swm_simul%id_name)
+    //"_mf"//trim(swm_simul%mf)//"_et"//trim(swm_simul%et)//"_id"//&
+    trim(swm_simul%id_name)//"_av"//trim(swm_simul%avd_name)
 
     ! basename
     !swm_simul%name = trim(swm_simul%name)
@@ -286,8 +247,8 @@ subroutine init_swm_vars(mesh)
     ! Name scalar fields
     div_ugH_error%name = "swm_"//trim(swm_simul%name)//"_div_error"
     div_ugH%name = "swm_"//trim(swm_simul%name)//"_div"
-    H%name = "swm_"//trim(swm_simul%name)//"_Q"
-    H_error%name = "swm_"//trim(swm_simul%name)//"_Q_error"
+    H%name = "swm_"//trim(swm_simul%name)//"_H"
+    H_error%name = "swm_"//trim(swm_simul%name)//"_H_error"
 
 end subroutine init_swm_vars
 
@@ -328,6 +289,8 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
             do j = n0, nend
                 lat  = mesh%pc(i,j,p)%lat
                 lon  = mesh%pc(i,j,p)%lon
+
+                ! Fluid depth
                 H%f(i,j,p) = h0_swm(lat, lon, swm_simul%ic)
 
                 ! Compute velocity
@@ -411,52 +374,6 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
     V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
 
-    !-----------------------------------------------------------------------------
-    ! Duogrid interpolation of the vector field on a D grid
-    ! first we interpolate to the A grid (including A grid ghost cells)
-    call interp_D2Aduogrid(V_pu, V_pv, V_pc, L_pc, mesh)
-
-    ! then we interpolate from D grid to the A grid inner cells
-    call interp_C2Agrid(V_pu%vcovari%f, V_pv%ucovari%f, V_pc%vcovari%f, V_pc%ucovari%f,  swm_simul%id_d2a)
-
-    ! now we fill the ghost cell D grid
-    !call interp_A2Dduogrid(V_pu, V_pv, V_pc)
-
-    ! then we interpolate from A grid to the D grid inner cells
-    call interp_A2Cgrid(V_pu%ucovari%f, V_pv%vcovari%f, V_pc%ucovari%f, V_pc%vcovari%f, swm_simul%id_d2a)
-
-
-
-    ! Convert from covariant to contravariant
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(n0, nend) &
-    !$OMP SHARED(V_pc, V_pu, V_pv, mesh)
-    V_pu%ucontra%f(n0:nend+1,n0:nend,:) = &
-    V_pu%ucovari%f(n0:nend+1,n0:nend,:)*mesh%covari2contra_pu(n0:nend+1,n0:nend,:)%M(1,1)+&
-    V_pu%vcovari%f(n0:nend+1,n0:nend,:)*mesh%covari2contra_pu(n0:nend+1,n0:nend,:)%M(1,2) 
-
-    V_pv%vcontra%f(n0:nend,n0:nend+1,:) =&
-    V_pv%ucovari%f(n0:nend,n0:nend+1,:)*mesh%covari2contra_pv(n0:nend,n0:nend+1,:)%M(2,1)+&
-    V_pv%vcovari%f(n0:nend,n0:nend+1,:)*mesh%covari2contra_pv(n0:nend,n0:nend+1,:)%M(2,2) 
-    !$OMP END PARALLEL WORKSHARE
-
-    print*, maxval(abs(V_pc%ucovari%f(:,:,:)-V_pc%ucovari_old%f(:,:,:)))
-    print*, maxval(abs(V_pc%vcovari%f(:,:,:)-V_pc%vcovari_old%f(:,:,:)))
-
-    print*, maxval(abs(V_pu%ucovari%f(i0-1:iend+2,:,:)-V_pu%ucovari_old%f(i0-1:iend+2,:,:)))
-    print*, maxval(abs(V_pu%vcovari%f(i0-1:iend+2,:,:)-V_pu%vcovari_old%f(i0-1:iend+2,:,:)))
-
-    print*, maxval(abs(V_pv%ucovari%f(:,j0-1:jend+2,:)-V_pv%ucovari_old%f(:,j0-1:jend+2,:)))
-    print*, maxval(abs(V_pv%vcovari%f(:,j0-1:jend+2,:)-V_pv%vcovari_old%f(:,j0-1:jend+2,:)))
-    print*, maxval(abs(V_pu%ucontra%f(i0-1:iend+2,:,:)-V_pu%ucontra_old%f(i0-1:iend+2,:,:)))
-    print*, maxval(abs(V_pv%vcontra%f(:,j0-1:jend+2,:)-V_pv%vcontra_old%f(:,j0-1:jend+2,:)))
-
-
-
-    ! CFL number
-    swm_simul%cfl = maxval(abs(V_pu%ucontra%f))
-    swm_simul%cfl = max(swm_simul%cfl, maxval(abs(V_pv%vcontra%f)))
-    swm_simul%cfl = swm_simul%cfl*swm_simul%dt/mesh%dx
     !print*,error
     !stop
 end subroutine compute_ic_swm
@@ -481,56 +398,12 @@ subroutine div_swm(div, lat, lon, vf)
     select case(vf)
         case(1, 2)
             div = 0.d0
-        case(3)
-            print*, 'error on div_swm: div is not implemented for this vector field: ', vf
-            stop
-        case(4)
-            m = 1
-            n = 1
-            div = -(-dcos(lon) * dsin(m * lon) * m * dcos(n * lat) ** 4 / dcos(lat) - &
-            dsin(lon) * dcos(m * lon) * m ** 2 * dcos(n * lat) ** 4 / dcos(lat) + &
-            12.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 2 * dsin(n *lat) ** 2 * n ** 2 * dcos(lat) - &
-            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 4 * n ** 2 * dcos(lat) + &
-            4.0 * dsin(lon) * dcos(m * lon) * dcos(n * lat) ** 3 * dsin(n * lat) * n * dsin(lat)) / dcos(lat)
         case default
             print*, "ERROR on div_swm: invalid vector field"
             stop
-      end select
+    end select
     return
 end subroutine div_swm
 
- 
-subroutine swm_compute_exact_div(div, mesh, swm_simul)
-    !--------------------------------------------------
-    ! Compute the exact divergence at cell centers
-    !--------------------------------------------------
-    type(cubedsphere), intent(in) :: mesh
-    type(simulation), intent(in) :: swm_simul
-    type(scalar_field), intent(inout) :: div
-
-    ! aux
-    integer(i4) :: i0, iend, j0, jend, nt
-    integer(i4) :: i, j, p
-
-    !aux
-    real(kind=8) :: lat, lon
-
-    ! interior grid indexes
-    i0 = mesh%i0
-    j0 = mesh%j0
-    iend = mesh%iend
-    jend = mesh%jend
-
-    ! Scalar field at pc
-    do p = 1, nbfaces
-        do i = i0, iend
-            do j = j0, jend
-                lat  = mesh%pc(i,j,p)%lat
-                lon  = mesh%pc(i,j,p)%lon
-                call div_swm(div%f(i,j,p), lat, lon, swm_simul%vf)
-            end do
-        end do
-    end do
-end subroutine swm_compute_exact_div
 
 end module swm_ic
