@@ -1,6 +1,6 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-256
+64
 !Kind of mesh use: equiangular
 equiangular
 !Loadable grid? 0-No; 1-Yes
@@ -8,7 +8,7 @@ equiangular
 !Show ongoing process details on screen? 0-No; 1-Yes
 0
 !Test case to be done
-3
+5
 !If mesh read from file give filename (Extensions: .xyz)
 file.xyz
 
@@ -21,3 +21,4 @@ file.xyz
 !  case(2) ! Interpolation at ghost cell errors (see interpolation.par and run_tc2.py)
 !  case(3) ! Divergence error testing (see advection.par and run_tc3.py)
 !  case(4) ! Advection on the sphere (see advection.par and run_tc4.py)
+!  case(5) ! Shallow water on the sphere (see swm.par and run_tc5.py)
