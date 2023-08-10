@@ -150,14 +150,16 @@ subroutine meshbuild(mesh)
             return
         end select
 
-        ! Generate the grid properties
-        call cubedsphere_properties(mesh)
-
         ! Create lat/lon grid
         call latlon_grid(mesh)
 
         ! Store the grid
         call meshstore(mesh, header)
+
+        ! Generate the grid properties (metric tensor, conversion matrices...)
+        call cubedsphere_properties(mesh)
+
+
     end if
 
     ! Deallocate tg vectors and local coordinates
@@ -415,30 +417,33 @@ subroutine cubedsphere_properties(mesh)
 
     ! multiply the vectors by the earth radius
 
-    if (simulcase==6) then
-        mesh%tgx_pc(:,:,:)%v(1) = erad*mesh%tgx_pc(:,:,:)%v(1) 
-        mesh%tgx_pc(:,:,:)%v(2) = erad*mesh%tgx_pc(:,:,:)%v(2) 
-        mesh%tgx_pc(:,:,:)%v(3) = erad*mesh%tgx_pc(:,:,:)%v(3) 
+    if (simulcase==5) then
+        mesh%radius = erad
+        mesh%tgx_pc(:,:,:)%v(1) = mesh%radius*mesh%tgx_pc(:,:,:)%v(1) 
+        mesh%tgx_pc(:,:,:)%v(2) = mesh%radius*mesh%tgx_pc(:,:,:)%v(2) 
+        mesh%tgx_pc(:,:,:)%v(3) = mesh%radius*mesh%tgx_pc(:,:,:)%v(3) 
 
-        mesh%tgy_pc(:,:,:)%v(1) = erad*mesh%tgy_pc(:,:,:)%v(1) 
-        mesh%tgy_pc(:,:,:)%v(2) = erad*mesh%tgy_pc(:,:,:)%v(2) 
-        mesh%tgy_pc(:,:,:)%v(3) = erad*mesh%tgy_pc(:,:,:)%v(3) 
+        mesh%tgy_pc(:,:,:)%v(1) = mesh%radius*mesh%tgy_pc(:,:,:)%v(1) 
+        mesh%tgy_pc(:,:,:)%v(2) = mesh%radius*mesh%tgy_pc(:,:,:)%v(2) 
+        mesh%tgy_pc(:,:,:)%v(3) = mesh%radius*mesh%tgy_pc(:,:,:)%v(3) 
 
-        mesh%tgx_pu(:,:,:)%v(1) = erad*mesh%tgx_pu(:,:,:)%v(1) 
-        mesh%tgx_pu(:,:,:)%v(2) = erad*mesh%tgx_pu(:,:,:)%v(2) 
-        mesh%tgx_pu(:,:,:)%v(3) = erad*mesh%tgx_pu(:,:,:)%v(3) 
+        mesh%tgx_pu(:,:,:)%v(1) = mesh%radius*mesh%tgx_pu(:,:,:)%v(1) 
+        mesh%tgx_pu(:,:,:)%v(2) = mesh%radius*mesh%tgx_pu(:,:,:)%v(2) 
+        mesh%tgx_pu(:,:,:)%v(3) = mesh%radius*mesh%tgx_pu(:,:,:)%v(3) 
 
-        mesh%tgy_pu(:,:,:)%v(1) = erad*mesh%tgy_pu(:,:,:)%v(1) 
-        mesh%tgy_pu(:,:,:)%v(2) = erad*mesh%tgy_pu(:,:,:)%v(2) 
-        mesh%tgy_pu(:,:,:)%v(3) = erad*mesh%tgy_pu(:,:,:)%v(3) 
+        mesh%tgy_pu(:,:,:)%v(1) = mesh%radius*mesh%tgy_pu(:,:,:)%v(1) 
+        mesh%tgy_pu(:,:,:)%v(2) = mesh%radius*mesh%tgy_pu(:,:,:)%v(2) 
+        mesh%tgy_pu(:,:,:)%v(3) = mesh%radius*mesh%tgy_pu(:,:,:)%v(3) 
 
-        mesh%tgx_pv(:,:,:)%v(1) = erad*mesh%tgx_pv(:,:,:)%v(1) 
-        mesh%tgx_pv(:,:,:)%v(2) = erad*mesh%tgx_pv(:,:,:)%v(2) 
-        mesh%tgx_pv(:,:,:)%v(3) = erad*mesh%tgx_pv(:,:,:)%v(3) 
+        mesh%tgx_pv(:,:,:)%v(1) = mesh%radius*mesh%tgx_pv(:,:,:)%v(1) 
+        mesh%tgx_pv(:,:,:)%v(2) = mesh%radius*mesh%tgx_pv(:,:,:)%v(2) 
+        mesh%tgx_pv(:,:,:)%v(3) = mesh%radius*mesh%tgx_pv(:,:,:)%v(3) 
 
-        mesh%tgy_pv(:,:,:)%v(1) = erad*mesh%tgy_pv(:,:,:)%v(1) 
-        mesh%tgy_pv(:,:,:)%v(2) = erad*mesh%tgy_pv(:,:,:)%v(2) 
-        mesh%tgy_pv(:,:,:)%v(3) = erad*mesh%tgy_pv(:,:,:)%v(3) 
+        mesh%tgy_pv(:,:,:)%v(1) = mesh%radius*mesh%tgy_pv(:,:,:)%v(1) 
+        mesh%tgy_pv(:,:,:)%v(2) = mesh%radius*mesh%tgy_pv(:,:,:)%v(2) 
+        mesh%tgy_pv(:,:,:)%v(3) = mesh%radius*mesh%tgy_pv(:,:,:)%v(3) 
+    else
+        mesh%radius = 1.d0
     end if
 
     ! Compute metric tensor

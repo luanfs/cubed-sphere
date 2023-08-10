@@ -172,6 +172,9 @@ type cubedsphere
     ! Latlon grid size (for plotting)
     real(kind=8):: dlon, dlat
 
+    ! Sphere radius
+    real(kind=8):: radius
+ 
     ! Latlon grid points nearest neighbours indexes
     integer(i4), allocatable:: ix_ll(:,:), jy_ll(:,:), panels_ll(:,:)
 
