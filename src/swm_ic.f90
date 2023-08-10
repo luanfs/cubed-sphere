@@ -13,7 +13,9 @@ use constants, only: &
     nbfaces, &
     i0, iend, &
     j0, jend, &
-    n0, nend
+    n0, nend, &
+    grav, gravi, &
+    omega
 
 ! Spherical geometry
 use sphgeo, only: &
@@ -78,7 +80,7 @@ function h0_swm(lat, lon, ic)
     real(kind=8) :: lat0, lon0 ! latlon coordinates of center point
     real(kind=8) :: lat1, lon1 ! latlon coordinates of center point
     real(kind=8) :: b0 ! Gaussian width
-    real(kind=8) :: u0, f
+    real(kind=8) :: u0, h0
     integer(i4):: m, n
 
     select case(ic)
@@ -90,12 +92,13 @@ function h0_swm(lat, lon, ic)
             call sph2cart(lon0, lat0, x0, y0, z0)
             b0 = 10.d0
             h0_swm = dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
-   
+
         case(2) ! steady state from will92
-            !alpha = -45.d0*deg2rad ! Rotation angle
-            !u0 = 2.d0*pi/5.d0     ! Wind speed
-            !f = (-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))
-            !h0_swm = 1.0 - f*f
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            h0 = 2.94d0*10000.d0*gravi
+            h0_swm = h0 - gravi*(erad*omega*u0 + u0*u0*0.5d0) &
+            *(-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))**2
 
         case default
             print*, "ERROR on h0_swm: invalid initial condition."
@@ -132,7 +135,6 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
         case(1,2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
-            u0    =  2.d0*pi/12.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
 
@@ -195,10 +197,13 @@ subroutine init_swm_vars(mesh)
     swm_simul%dto2 = swm_simul%dt*0.5d0
 
     ! Final time step converted to seconds
-    !swm_simul%tf = swm_simul%tf*day2sec
+    swm_simul%tf = swm_simul%tf*day2sec
 
     ! Number of time steps
     swm_simul%nsteps = int(swm_simul%tf/swm_simul%dt)
+
+    ! adjust time step
+    swm_simul%dt = swm_simul%Tf/swm_simul%nsteps
     swm_simul%nplot = swm_simul%nsteps/(swm_simul%nplot-1)
     swm_simul%plotcounter = 0
 

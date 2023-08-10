@@ -628,11 +628,14 @@ subroutine output_swm(mesh)
         call plot_scalarfield(H, mesh)
 
         if(swm_simul%exactsolution .and. swm_simul%n>0)then
-            H_error%name = "swm_"//trim(swm_simul%name)//"_H_error_t"//trim(adjustl(an))
-            call plot_scalarfield(H_error, mesh)
+            if(swm_simul%ic==2 .or. swm_simul%n==swm_simul%nsteps)then
+                call compute_errors_field(H, H_exact, H_error, &
+                swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+                H_error%name = "swm_"//trim(swm_simul%name)//"_H_error_t"//trim(adjustl(an))
+                call plot_scalarfield(H_error, mesh)
+            end if
         end if
         swm_simul%plotcounter = swm_simul%plotcounter + 1
- 
     end if
 end subroutine output_swm
 

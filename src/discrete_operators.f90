@@ -9,7 +9,8 @@ use constants, only: &
   nbfaces, &
   i0, iend, &
   j0, jend, &
-  n0, nend
+  n0, nend, &
+  erad
 
 !Data structures
 use datastruct, only: &
@@ -223,33 +224,61 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
 
         ! Compute next splitting input
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(Qx, Qy, px, py)
-        Qx%f = px%Q%f+0.5d0*px%df
-        Qy%f = py%Q%f+0.5d0*py%df
-        !$OMP END PARALLEL WORKSHARE
+        !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !!$OMP SHARED(Qx, Qy, px, py)
+       !!$OMP END PARALLEL WORKSHARE
+
+        !print*
+        !print*, minval(mesh%mt_pc), maxval(mesh%mt_pc)
+        !print*, minval(Q%f), maxval(Q%f)
+        !print*
+        !print*, minval(px%Q%f), maxval(px%Q%f)
+        !print*, minval(py%Q%f), maxval(py%Q%f)
+        !print*
+        !print*, minval(px%f_upw), maxval(px%f_upw)
+        !print*, minval(py%f_upw), maxval(py%f_upw)
+        !print*
+        !print*, minval(px%df), maxval(px%df)
+        !print*, minval(py%df), maxval(py%df)
 
         ! Metric tensor scheme
         select case (advsimul%mt)
         case ('mt0')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(Qx, Qy, mesh)
+            !$OMP SHARED(Qx, Qy, px, py, mesh)
+            Qx%f = px%Q%f + 0.5d0*px%df!/mesh%mt_pc
+            Qy%f = py%Q%f + 0.5d0*py%df!/mesh%mt_pc
             Qx%f = Qx%f/mesh%mt_pc
             Qy%f = Qy%f/mesh%mt_pc
             !$OMP END PARALLEL WORKSHARE
         case ('pl07')
             ! Nothing to do here
+            Qx%f = px%Q%f + 0.5d0*px%df/mesh%mt_pc
+            Qy%f = py%Q%f + 0.5d0*py%df/mesh%mt_pc
             !Qx%f = Qx%f
             !Qy%f = Qy%f
 
         case default
-            print*, 'ERROR in divergence: invalid metric tensor forumalion,  ', advsimul%mt
+            print*, 'ERROR in divergence: invalid metric tensor formulation,  ', advsimul%mt
             stop
         end select
+        !print*
+        !print*, minval(Qx%f), maxval(Qx%f)
+        !print*, minval(Qy%f), maxval(Qy%f)
+
 
         ! Compute fluxes
         call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
         call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
+
+        !print*
+        !print*, minval(px%f_upw), maxval(px%f_upw)
+        !print*, minval(py%f_upw), maxval(py%f_upw)
+        !print*
+        !print*, minval(px%df), maxval(px%df)
+        !print*, minval(py%df), maxval(py%df)
+
+
 
         ! Applies mass fixer (average at cube interfaces)
         if (advsimul%mf=='af') then
