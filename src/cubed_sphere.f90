@@ -159,7 +159,6 @@ subroutine meshbuild(mesh)
         ! Generate the grid properties (metric tensor, conversion matrices...)
         call cubedsphere_properties(mesh)
 
-
     end if
 
     ! Deallocate tg vectors and local coordinates
@@ -169,10 +168,9 @@ subroutine meshbuild(mesh)
     mesh%minarea  = minval(mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
     mesh%maxarea  = maxval(mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
     mesh%meanarea = sum(mesh%mt_pc(i0:iend,j0:jend,:))/mesh%nbcells*mesh%dx*mesh%dy
-
-    mesh%mindist  = minval(mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx
-    mesh%maxdist  = maxval(mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx
-    mesh%meandist = sum(mesh%mt_pc(i0:iend,j0:jend,:))/mesh%nbcells*mesh%dx
+    mesh%mindist  = dsqrt(minval(mesh%mt_pc(i0:iend,j0:jend,:)))*mesh%dx
+    mesh%maxdist  = dsqrt(maxval(mesh%mt_pc(i0:iend,j0:jend,:)))*mesh%dx
+    mesh%meandist = sum(dsqrt(mesh%mt_pc(i0:iend,j0:jend,:)))/mesh%nbcells*mesh%dx
 
     ! Print grid features on screen
     call printmesh(mesh)

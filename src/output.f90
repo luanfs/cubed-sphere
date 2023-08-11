@@ -20,6 +20,7 @@ use constants, only: &
    pio2, &
    rad2deg, &
    showonscreen, &
+   simulcase, &
    nbfaces, &
    erad, &
    n0, nend, &
@@ -113,10 +114,17 @@ subroutine printmesh(mesh)
     print '(a,i8)',        " N                           : ", mesh%n
     print '(a,i8)',        " Number of cells (6*N*N)     : ", mesh%nbcells
     print '(a,l8)',        " Loadable    ?                 " , mesh%loadable
-    print '(a33, 3e16.8)', " Min Max Mean distances (km) : ",  &
-    mesh%mindist*erad/1e3, mesh%maxdist*erad/1e3, mesh%meandist*erad/1e3
-    print '(a33, 3e16.8)', " Min Max Mean areas (km^2)     : ",  &
-    mesh%minarea*erad**2/1e6, mesh%maxarea*erad**2/1e6, mesh%meanarea*erad**2/1e6
+    if(simulcase==5)then
+        print '(a33, 3e16.8)', " Min Max Mean distances (km) : ",  &
+        mesh%mindist/1e3, mesh%maxdist/1e3, mesh%meandist/1e3
+        print '(a33, 3e16.8)', " Min Max Mean areas (km^2)     : ",  &
+        mesh%minarea/1e6, mesh%maxarea/1e6, mesh%meanarea/1e6
+    else
+        print '(a33, 3e16.8)', " Min Max Mean distances (km) : ",  &
+        mesh%mindist*erad/1e3, mesh%maxdist*erad/1e3, mesh%meandist*erad/1e3
+        print '(a33, 3e16.8)', " Min Max Mean areas (km^2)     : ",  &
+        mesh%minarea*erad**2/1e6, mesh%maxarea*erad**2/1e6, mesh%meanarea*erad**2/1e6
+    end if
     print*
     print*
 return
