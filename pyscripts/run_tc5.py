@@ -28,6 +28,15 @@ dpmethods    = ( 'rk1' , 'rk2' , 'rk2') # departure point formulation
 mfixers      = ( 'gpr'  , 'af'  , 'gpr') # mass fixers 
 edgetreat    = ('duogrid', 'duogrid', 'duogrid') # edge treatments
 
+
+#reconmethods = ('hyppm', 'hyppm') # reconstruction methods
+#splitmethods = ('avlt', 'avlt' ) # splitting
+#mtmethods    = ('mt0' , 'mt0') # metric tensor formulation
+#dpmethods    = ('rk2' , 'rk2') # departure point formulation
+#mfixers      = ('af'  , 'gpr') # mass fixers 
+#edgetreat    = ('duogrid', 'duogrid') # edge treatments
+
+
 # Program to be run
 program = "./main"
 run = True # Run the simulation?
@@ -51,7 +60,7 @@ def main():
     replace_line(pardir+'swm.par', ic, 3)
 
     # final integration time (days)
-    tf = '12'
+    tf = '5'
     replace_line(pardir+'swm.par', tf, 5)
 
     # interpolation degree
@@ -73,14 +82,17 @@ def main():
 
     # Initial time step
     if ic=='1' or ic=='2':
-        dt[0] = '0.05'
+        #dt[0] = 3000
+        dt[0] = 0.025 #3000
     else:
         print('Error - invalid ic')
         exit()
 
     # min/max in plot
-    if ic=='1' or ic=='2':
+    if ic=='1':
        qmin, qmax = -0.2, 1.2
+    elif ic=='2':
+       qmin, qmax = 800.0, 3400.0
     else:
         print('Error - invalid ic')
         exit()
@@ -195,15 +207,15 @@ def main():
                     data = np.transpose(data)
                     dabs_max = np.amax(abs(data))
                     dmin, dmax = -dabs_max, dabs_max
- 
+
                     time = str("{:.2e}".format(timeplots[t]))
                     title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
                     '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
                     ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
                     plot_scalar_field(data, lats, lons, \
-                                 colormap, map_projection, fname, title, dmin, dmax)
+                            colormap, map_projection, fname, title, dmin, dmax)
 
-     
+         
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
@@ -231,14 +243,14 @@ def main():
             et = edgetreat[k]
             fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
 
-        title = 'Advection error, ic = '+str(ic)+', norm='+norm_title[e]
-        filename = graphdir+'cs_adv_ic'+str(ic)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
+        title = 'SWM error, ic = '+str(ic)+', norm='+norm_title[e]
+        filename = graphdir+'cs_swm_ic'+str(ic)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
 
         plot_errors_loglog(N, errors, fname, filename, title, emin, emax)
 
         # Plot the convergence rate
         title = 'Convergence rate, ic = '+str(ic)+', norm='+norm_title[e]
-        filename = graphdir+'cs_adv_ic'+str(ic)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
+        filename = graphdir+'cs_swm_ic'+str(ic)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
         plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
         e = e+1
 

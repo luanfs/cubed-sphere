@@ -20,13 +20,14 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, ) # Values of N
+N = (16, 32, 64, 128) # Values of N
 reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
 dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
 mfixers      = ('none' ,  'gpr'  , 'af'  , 'gpr') # mass fixers 
 edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
+
 
 # Program to be run
 program = "./main"
