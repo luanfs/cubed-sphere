@@ -415,34 +415,34 @@ subroutine cubedsphere_properties(mesh)
 
     ! multiply the vectors by the earth radius
 
-    if (simulcase==5) then
-        mesh%radius = erad
-        mesh%tgx_pc(:,:,:)%v(1) = mesh%radius*mesh%tgx_pc(:,:,:)%v(1) 
-        mesh%tgx_pc(:,:,:)%v(2) = mesh%radius*mesh%tgx_pc(:,:,:)%v(2) 
-        mesh%tgx_pc(:,:,:)%v(3) = mesh%radius*mesh%tgx_pc(:,:,:)%v(3) 
+    !if (simulcase==5) then
+    !    mesh%radius = erad
+    !    mesh%tgx_pc(:,:,:)%v(1) = mesh%radius*mesh%tgx_pc(:,:,:)%v(1) 
+    !    mesh%tgx_pc(:,:,:)%v(2) = mesh%radius*mesh%tgx_pc(:,:,:)%v(2) 
+    !    mesh%tgx_pc(:,:,:)%v(3) = mesh%radius*mesh%tgx_pc(:,:,:)%v(3) 
 
-        mesh%tgy_pc(:,:,:)%v(1) = mesh%radius*mesh%tgy_pc(:,:,:)%v(1) 
-        mesh%tgy_pc(:,:,:)%v(2) = mesh%radius*mesh%tgy_pc(:,:,:)%v(2) 
-        mesh%tgy_pc(:,:,:)%v(3) = mesh%radius*mesh%tgy_pc(:,:,:)%v(3) 
+    !    mesh%tgy_pc(:,:,:)%v(1) = mesh%radius*mesh%tgy_pc(:,:,:)%v(1) 
+    !    mesh%tgy_pc(:,:,:)%v(2) = mesh%radius*mesh%tgy_pc(:,:,:)%v(2) 
+    !    mesh%tgy_pc(:,:,:)%v(3) = mesh%radius*mesh%tgy_pc(:,:,:)%v(3) 
 
-        mesh%tgx_pu(:,:,:)%v(1) = mesh%radius*mesh%tgx_pu(:,:,:)%v(1) 
-        mesh%tgx_pu(:,:,:)%v(2) = mesh%radius*mesh%tgx_pu(:,:,:)%v(2) 
-        mesh%tgx_pu(:,:,:)%v(3) = mesh%radius*mesh%tgx_pu(:,:,:)%v(3) 
+    !    mesh%tgx_pu(:,:,:)%v(1) = mesh%radius*mesh%tgx_pu(:,:,:)%v(1) 
+    !    mesh%tgx_pu(:,:,:)%v(2) = mesh%radius*mesh%tgx_pu(:,:,:)%v(2) 
+    !    mesh%tgx_pu(:,:,:)%v(3) = mesh%radius*mesh%tgx_pu(:,:,:)%v(3) 
 
-        mesh%tgy_pu(:,:,:)%v(1) = mesh%radius*mesh%tgy_pu(:,:,:)%v(1) 
-        mesh%tgy_pu(:,:,:)%v(2) = mesh%radius*mesh%tgy_pu(:,:,:)%v(2) 
-        mesh%tgy_pu(:,:,:)%v(3) = mesh%radius*mesh%tgy_pu(:,:,:)%v(3) 
+    !    mesh%tgy_pu(:,:,:)%v(1) = mesh%radius*mesh%tgy_pu(:,:,:)%v(1) 
+    !    mesh%tgy_pu(:,:,:)%v(2) = mesh%radius*mesh%tgy_pu(:,:,:)%v(2) 
+    !    mesh%tgy_pu(:,:,:)%v(3) = mesh%radius*mesh%tgy_pu(:,:,:)%v(3) 
 
-        mesh%tgx_pv(:,:,:)%v(1) = mesh%radius*mesh%tgx_pv(:,:,:)%v(1) 
-        mesh%tgx_pv(:,:,:)%v(2) = mesh%radius*mesh%tgx_pv(:,:,:)%v(2) 
-        mesh%tgx_pv(:,:,:)%v(3) = mesh%radius*mesh%tgx_pv(:,:,:)%v(3) 
+    !    mesh%tgx_pv(:,:,:)%v(1) = mesh%radius*mesh%tgx_pv(:,:,:)%v(1) 
+    !    mesh%tgx_pv(:,:,:)%v(2) = mesh%radius*mesh%tgx_pv(:,:,:)%v(2) 
+    !    mesh%tgx_pv(:,:,:)%v(3) = mesh%radius*mesh%tgx_pv(:,:,:)%v(3) 
 
-        mesh%tgy_pv(:,:,:)%v(1) = mesh%radius*mesh%tgy_pv(:,:,:)%v(1) 
-        mesh%tgy_pv(:,:,:)%v(2) = mesh%radius*mesh%tgy_pv(:,:,:)%v(2) 
-        mesh%tgy_pv(:,:,:)%v(3) = mesh%radius*mesh%tgy_pv(:,:,:)%v(3) 
-    else
-        mesh%radius = 1.d0
-    end if
+    !    mesh%tgy_pv(:,:,:)%v(1) = mesh%radius*mesh%tgy_pv(:,:,:)%v(1) 
+    !    mesh%tgy_pv(:,:,:)%v(2) = mesh%radius*mesh%tgy_pv(:,:,:)%v(2) 
+    !    mesh%tgy_pv(:,:,:)%v(3) = mesh%radius*mesh%tgy_pv(:,:,:)%v(3) 
+    !else
+    !    mesh%radius = 1.d0
+    !end if
 
     ! Compute metric tensor
     call compute_metric_tensor(mesh)

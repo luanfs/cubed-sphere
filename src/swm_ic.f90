@@ -99,7 +99,7 @@ function h0_swm(lat, lon, ic)
             h0 = 2.94d0*10000.d0*gravi
             h0_swm = h0 - gravi*(erad*omega*u0 + u0*u0*0.5d0) &
             *(-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))**2
-
+            !h0_swm = 1.d0
         case default
             print*, "ERROR on h0_swm: invalid initial condition."
             stop
@@ -134,7 +134,8 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
     select case(vf)
         case(1,2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
-            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            !u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            u0    =  2.d0*pi/5.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
 
@@ -197,7 +198,7 @@ subroutine init_swm_vars(mesh)
     swm_simul%dto2 = swm_simul%dt*0.5d0
 
     ! Final time step converted to seconds
-    swm_simul%tf = swm_simul%tf*day2sec
+    !swm_simul%tf = swm_simul%tf*day2sec
 
     ! Number of time steps
     swm_simul%nsteps = int(swm_simul%tf/swm_simul%dt)
@@ -213,8 +214,8 @@ subroutine init_swm_vars(mesh)
 
     ! Compute initial mass
     swm_simul%mass0 = mass_computation(H, mesh)
-
     ! var used in pr mass fixer
+
     if(swm_simul%mf == 'gpr')then
         swm_simul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
     else if(swm_simul%mf == 'lpr')then

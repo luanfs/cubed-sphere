@@ -224,23 +224,6 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
 
         ! Compute next splitting input
-        !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !!$OMP SHARED(Qx, Qy, px, py)
-       !!$OMP END PARALLEL WORKSHARE
-
-        !print*
-        !print*, minval(mesh%mt_pc), maxval(mesh%mt_pc)
-        !print*, minval(Q%f), maxval(Q%f)
-        !print*
-        !print*, minval(px%Q%f), maxval(px%Q%f)
-        !print*, minval(py%Q%f), maxval(py%Q%f)
-        !print*
-        !print*, minval(px%f_upw), maxval(px%f_upw)
-        !print*, minval(py%f_upw), maxval(py%f_upw)
-        !print*
-        !print*, minval(px%df), maxval(px%df)
-        !print*, minval(py%df), maxval(py%df)
-
         ! Metric tensor scheme
         select case (advsimul%mt)
         case ('mt0')
@@ -252,9 +235,11 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
             Qy%f = Qy%f/mesh%mt_pc
             !$OMP END PARALLEL WORKSHARE
         case ('pl07')
-            ! Nothing to do here
-            Qx%f = px%Q%f + 0.5d0*px%df/mesh%mt_pc
-            Qy%f = py%Q%f + 0.5d0*py%df/mesh%mt_pc
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(Qx, Qy, px, py, mesh)
+            Qx%f = px%Q%f + 0.5d0*px%df!/mesh%mt_pc
+            Qy%f = py%Q%f + 0.5d0*py%df!/mesh%mt_pc
+            !$OMP END PARALLEL WORKSHARE
             !Qx%f = Qx%f
             !Qy%f = Qy%f
 
@@ -262,23 +247,10 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
             print*, 'ERROR in divergence: invalid metric tensor formulation,  ', advsimul%mt
             stop
         end select
-        !print*
-        !print*, minval(Qx%f), maxval(Qx%f)
-        !print*, minval(Qy%f), maxval(Qy%f)
-
 
         ! Compute fluxes
         call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
         call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
-
-        !print*
-        !print*, minval(px%f_upw), maxval(px%f_upw)
-        !print*, minval(py%f_upw), maxval(py%f_upw)
-        !print*
-        !print*, minval(px%df), maxval(px%df)
-        !print*, minval(py%df), maxval(py%df)
-
-
 
         ! Applies mass fixer (average at cube interfaces)
         if (advsimul%mf=='af') then
@@ -335,7 +307,6 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         call ppm_fluxes_PL07(Qy, Qx, px, py, wind_pu%ucontra_time_av, &
         wind_pv%vcontra_time_av, cx_pu, cy_pv, mesh)
 
-        !print*,maxval(abs(Qy%f(iend+1:iend+4,j0:jend,1:3)-Qy%f(i0:i0+3,j0:jend,2:4)))
         call F_operator(Qy, wind_pu, cx_pu, px, mesh, advsimul%dt)
         call G_operator(Qx, wind_pv, cy_pv, py, mesh, advsimul%dt)
 
