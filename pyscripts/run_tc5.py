@@ -56,11 +56,11 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '1'
+    ic = '2'
     replace_line(pardir+'swm.par', ic, 3)
 
     # final integration time (days)
-    tf = '5'
+    tf = '12'
     replace_line(pardir+'swm.par', tf, 5)
 
     # interpolation degree
@@ -82,15 +82,15 @@ def main():
 
     # Initial time step
     if ic=='1' or ic=='2':
-        #dt[0] = 3000
-        dt[0] = 0.025 #3000
+        dt[0] = 8000
+        #dt[0] = 0.025 #3000
     else:
         print('Error - invalid ic')
         exit()
 
     # min/max in plot
     if ic=='1':
-       qmin, qmax = -0.2, 1.2
+       qmin, qmax = 400, 1200
     elif ic=='2':
        qmin, qmax = 800.0, 3400.0
     else:

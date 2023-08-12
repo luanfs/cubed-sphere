@@ -1,10 +1,10 @@
 #Shallow water test case parameters 
 #Initial condition field 
-1
+2
 #Final integration time (seconds)
-5
+12
 #Time step (seconds)
-0.00625
+2000.0
 #Number of plots
 2
 #1D reconstruction (ppm or hyppm)

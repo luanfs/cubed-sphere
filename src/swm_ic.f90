@@ -91,7 +91,8 @@ function h0_swm(lat, lon, ic)
             lat0 = pi/6.d0
             call sph2cart(lon0, lat0, x0, y0, z0)
             b0 = 10.d0
-            h0_swm = dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2))
+            h0 = 1000.d0
+            h0_swm = h0*0.5d0*(1.d0 + dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2)))
 
         case(2) ! steady state from will92
             alpha = -45.d0*deg2rad ! Rotation angle
@@ -99,7 +100,7 @@ function h0_swm(lat, lon, ic)
             h0 = 2.94d0*10000.d0*gravi
             h0_swm = h0 - gravi*(erad*omega*u0 + u0*u0*0.5d0) &
             *(-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))**2
-            !h0_swm = 1.d0
+
         case default
             print*, "ERROR on h0_swm: invalid initial condition."
             stop
@@ -134,11 +135,13 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
     select case(vf)
         case(1,2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
-            !u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
-            u0    =  2.d0*pi/5.d0 ! Wind speed
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            !u0    =  2.d0*pi/5.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
-
+            ! divide by earth radius to map the winds to unit sphere
+            ulon = ulon/erad
+            vlat = vlat/erad
         case default
             print*, "ERROR on velocity_swm: invalid vector field"
             stop
@@ -198,7 +201,7 @@ subroutine init_swm_vars(mesh)
     swm_simul%dto2 = swm_simul%dt*0.5d0
 
     ! Final time step converted to seconds
-    !swm_simul%tf = swm_simul%tf*day2sec
+    swm_simul%tf = swm_simul%tf*day2sec
 
     ! Number of time steps
     swm_simul%nsteps = int(swm_simul%tf/swm_simul%dt)
