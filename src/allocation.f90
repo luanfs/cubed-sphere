@@ -595,6 +595,7 @@ subroutine allocate_swm_vars(mesh)
     call vector_field_allocation(wind_pv, mesh, 3)
     call scalar_field_allocation(cx_pu, mesh, 2)
     call scalar_field_allocation(cy_pv, mesh, 3)
+    call scalar_field_allocation(fcoriolis_pc, mesh, 0)
     call scalar_field_allocation(div_ugH, mesh, 0)
     call scalar_field_allocation(rel_vort, mesh, 0)
     call scalar_field_allocation(abs_vort, mesh, 0)
@@ -617,6 +618,8 @@ subroutine allocate_swm_vars(mesh)
         call scalar_field_allocation(div_ugH_error, mesh, 0)
         call scalar_field_allocation(rel_vort_exact, mesh, 0)
         call scalar_field_allocation(rel_vort_error, mesh, 0)
+        call scalar_field_allocation(abs_vort_exact, mesh, 0)
+        call scalar_field_allocation(abs_vort_error, mesh, 0)
     end if
 
 end subroutine allocate_swm_vars

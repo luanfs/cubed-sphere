@@ -80,21 +80,35 @@ subroutine sw_timestep_Dgrid(mesh)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(H, swm_simul, div_ugH)
-    ! Update the solution
+    ! Update the fluid depth
     H%f = H%f - swm_simul%dt*div_ugH%f
     !$OMP END PARALLEL WORKSHARE
 
-    ! interpolate scalar field
+    ! interpolate depth to ghost cells
     if(swm_simul%et=='duogrid') then
-        ! Interpolate depth to ghost cells
         call dg_interp(H%f, L_pc)
     end if
 
-    ! compute relative vorticity using the winds from D grid
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(rel_vort, wind_pu, wind_pv, swm_simul, mesh, i0, iend, j0, jend)
+    ! compute relative vorticity using the winds from D grid !formula 19 from LR1997
     rel_vort%f(i0:iend,j0:jend,:) = &
     (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
     (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
     rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
+    !$OMP END PARALLEL WORKSHARE
+
+    ! interpolate relative vorticity to ghost cells
+    if(swm_simul%et=='duogrid') then
+        call dg_interp(rel_vort%f, L_pc)
+    end if
+
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(abs_vort, rel_vort, fcoriolis_pc, swm_simul, i0, iend, j0, jend)
+    ! absolute vorticity
+    abs_vort%f(:,:,:) = rel_vort%f(:,:,:) + fcoriolis_pc%f(:,:,:)
+    !$OMP END PARALLEL WORKSHARE
+
 
 end subroutine sw_timestep_Dgrid
 

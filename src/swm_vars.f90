@@ -25,16 +25,18 @@ type(scalar_field) :: H       ! average values of the fluid depth
 type(scalar_field) :: H_exact ! exact fluid depth
 type(scalar_field) :: H_error ! fluid depth error
 
+! Coriolis force at pc
+type(scalar_field) :: fcoriolis_pc
 
 ! Relative vorticity
 type(scalar_field) :: rel_vort
 type(scalar_field) :: rel_vort_exact
 type(scalar_field) :: rel_vort_error
 
-
 ! Absolute vorticity
 type(scalar_field) :: abs_vort
-
+type(scalar_field) :: abs_vort_exact
+type(scalar_field) :: abs_vort_error
 
 ! Vector field
 type(vector_field) :: wind_pu, wind_pv, wind_pc

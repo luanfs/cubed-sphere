@@ -107,13 +107,16 @@ def main():
     error_l2   = np.zeros((len(N),len(reconmethods)))
 
     if ic=='2':
-        error_linf_rv = np.zeros((len(N),len(reconmethods)))
-        error_l1_rv   = np.zeros((len(N),len(reconmethods)))
-        error_l2_rv   = np.zeros((len(N),len(reconmethods)))
         error_linf_div = np.zeros((len(N),len(reconmethods)))
         error_l1_div   = np.zeros((len(N),len(reconmethods)))
         error_l2_div   = np.zeros((len(N),len(reconmethods)))
-
+        error_linf_rv = np.zeros((len(N),len(reconmethods)))
+        error_l1_rv   = np.zeros((len(N),len(reconmethods)))
+        error_l2_rv   = np.zeros((len(N),len(reconmethods)))
+        error_linf_av = np.zeros((len(N),len(reconmethods)))
+        error_l1_av   = np.zeros((len(N),len(reconmethods)))
+        error_l2_av   = np.zeros((len(N),len(reconmethods)))
+ 
 
     # Lat/lon aux vars
     lats = np.linspace(-90.0, 90.0, Nlat+1)
@@ -183,12 +186,15 @@ def main():
             massvar = str("{:.2e}".format(massvar))
 
             if ic=='2':
-                error_linf_rv[k,i] = errors[5]
-                error_l1_rv[k,i]   = errors[6]
-                error_l2_rv[k,i]   = errors[7]
-                error_linf_div[k,i] = errors[8]
-                error_l1_div[k,i]   = errors[9]
-                error_l2_div[k,i]   = errors[10]
+                error_linf_div[k,i] = errors[5]
+                error_l1_div[k,i]   = errors[6]
+                error_l2_div[k,i]   = errors[7]
+                error_linf_rv[k,i] = errors[8]
+                error_l1_rv[k,i]   = errors[9]
+                error_l2_rv[k,i]   = errors[10]
+                error_linf_av[k,i] = errors[11]
+                error_l1_av[k,i]   = errors[12]
+                error_l2_av[k,i]   = errors[13]
  
             k = k+1
 
@@ -236,8 +242,8 @@ def main():
                 if ic=='2':
                     # plot the error
                     colormap = 'seismic'
-                    fields = ['rel_vort', 'div']
-                    names = ['Relative vorticity', 'Divergence',]
+                    fields = ['div', 'rel_vort', 'abs_vort']
+                    names = ['Divergence', 'Relative vorticity', 'Absolute vorticity',]
 
                     for fd in range(0,len(fields)):
                         fname = swm_name+'_'+fields[fd]+'_error_t'+str(t)+'_'+grid_name
@@ -299,11 +305,13 @@ def main():
     # consistency error
     if ic=='2':
         # plot the error
-        fields = ['rel_vort', 'div']
-        names = ['Relative vorticity', 'Divergence',]
-        error_list_rv  = [error_linf_rv , error_l1_rv , error_l2_rv]
+        fields = ['div', 'rel_vort', 'abs_vort',]
+        names = ['Divergence', 'Relative vorticity', 'Absolute vorticity', ]
         error_list_div = [error_linf_div, error_l1_div, error_l2_div]
-        error_lists = [error_list_rv, error_list_div]
+        error_list_rv  = [error_linf_rv , error_l1_rv , error_l2_rv]
+        error_list_av  = [error_linf_av , error_l1_av , error_l2_av]
+        error_lists = [error_list_div, error_list_rv, error_list_av]
+
         for fd in range(0,len(fields)):
             error_list = error_lists[fd]
             norm_list  = ['linf','l1','l2']

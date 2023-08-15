@@ -457,13 +457,15 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%l2_error_h
     write(iunit, *) swm_simul%cfl
     write(iunit, *) swm_simul%mass_variation
-    write(iunit, *) swm_simul%linf_error_rv
-    write(iunit, *) swm_simul%l1_error_rv
-    write(iunit, *) swm_simul%l2_error_rv
     write(iunit, *) swm_simul%linf_error_div
     write(iunit, *) swm_simul%l1_error_div
     write(iunit, *) swm_simul%l2_error_div
-
+    write(iunit, *) swm_simul%linf_error_rv
+    write(iunit, *) swm_simul%l1_error_rv
+    write(iunit, *) swm_simul%l2_error_rv
+    write(iunit, *) swm_simul%linf_error_av
+    write(iunit, *) swm_simul%l1_error_av
+    write(iunit, *) swm_simul%l2_error_av
     close(iunit)
 end subroutine write_final_errors_swm
 
@@ -636,6 +638,8 @@ subroutine output_swm(mesh)
             swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
             print '(a33, 3e16.8)','(linf, l1, l2) rel vort  errors:', &
             swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
+            print '(a33, 3e16.8)','(linf, l1, l2) abs vort  errors:', &
+            swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
             print*
         end if
 
@@ -679,6 +683,13 @@ subroutine output_swm(mesh)
         swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv, mesh)
         rel_vort_error%name = "swm_"//trim(swm_simul%name)//"_rel_vort_error_t"//trim(adjustl(an))
         call plot_scalarfield(rel_vort_error, mesh)
+
+        ! absolute vorticity
+        call compute_errors_field(abs_vort, abs_vort_exact, abs_vort_error, &
+        swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
+        abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
+        call plot_scalarfield(abs_vort_error, mesh)
+
     end if
 
 end subroutine output_swm

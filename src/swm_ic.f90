@@ -182,7 +182,8 @@ subroutine init_swm_vars(mesh)
 end subroutine init_swm_vars
 
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
-    use swm_vars, only: div_ugH_exact, rel_vort_exact
+    use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
+    abs_vort_exact
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -222,6 +223,9 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
 
                 ! Fluid depth
                 H%f(i,j,p) = h0_swm(lat, lon, swm_simul%ic)
+
+                ! Coriolis force
+                fcoriolis_pc%f(i,j,p) = fcoriolis(lat, lon, swm_simul%ic)
 
                 ! Compute velocity
                 call velocity_swm(ulon, vlat, lat, lon, 0.d0, swm_simul%ic)
@@ -318,6 +322,8 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                     ! relative vorticity
                     call rel_vort_swm(rel_vort_exact%f(i,j,p), lat, lon, swm_simul%ic)
 
+                    ! absolute vorticity
+                    abs_vort_exact%f(i,j,p) = rel_vort_exact%f(i,j,p) + fcoriolis_pc%f(i,j,p)
                 end do
             end do
         end do
@@ -460,6 +466,31 @@ subroutine rel_vort_swm(rel_vort, lat, lon, vf)
     end select
     return
 end subroutine rel_vort_swm
+
+function fcoriolis(lat, lon, ic)
+    !--------------------------------------------------
+    ! Compute the Coriolis term
+    !--------------------------------------------------
+    integer(i4), intent(in) :: ic
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8) :: fcoriolis
+
+    ! aux vars
+    real(kind=8) :: alpha ! rotation angle
+
+    select case(ic)
+        case(1,2)
+            alpha = -45.d0*deg2rad ! Rotation angle
+            fcoriolis = 2.d0*omega*(-dcos(lat)*dcos(lon)*dsin(alpha) + dsin(lat)*dcos(alpha))
+
+        case(3)
+                fcoriolis  =  2.d0*omega*dsin(lat)
+        case default
+            print*, "ERROR on fcoriolis: invalid initial condition."
+            stop
+    end select
+    return
+end function fcoriolis
 
 
 end module swm_ic
