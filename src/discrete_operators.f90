@@ -194,7 +194,7 @@ end subroutine inner_g_operator
 
 
 subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, advsimul, mesh, L_pc)
+                      px, py, Qx, Qy, advsimul, mesh, L_pc, dginterp)
     !---------------------------------------------------
     !
     ! Computes the divergence of u*q using the
@@ -213,11 +213,13 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(scalar_field), intent(inout) :: Qx ! variable to advect in x direction
     type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
     type(lagrange_poly_cs), intent(inout) :: L_pc ! lagrange polynomial
-
+    logical, intent(in) :: dginterp ! logical var to indicate if duogrid interpolation is needed
 
     if(advsimul%et=='duogrid') then
         ! Interpolate scalar field to ghost cells
-        call dg_interp(Q%f, L_pc)
+        if (dginterp) then
+            call dg_interp(Q%f, L_pc)
+        end if
 
         ! Dimension splitting operators
         call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)

@@ -395,6 +395,10 @@ subroutine swm_test(mesh)
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
 
+    ! interpolate height field to ghost cells
+    call dg_interp(H%f, L_pc)
+
+
     ! Temporal loop
     swm_simul%t = 0.d0
     do n = 1, swm_simul%nsteps

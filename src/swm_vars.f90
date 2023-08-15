@@ -45,6 +45,9 @@ type(scalar_field) :: Qy
 type(ppm_parabola) :: px ! ppm in x direction
 type(ppm_parabola) :: py ! ppm in y direction
 
+! logical var for duogrid interpolation
+logical :: dginterp
+
 contains 
 
 end module swm_vars

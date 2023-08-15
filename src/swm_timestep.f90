@@ -37,8 +37,8 @@ use duogrid_interpolation, only: &
     interp_D2Aduogrid, &
     interp_A2Cduogrid, &
     interp_C2Agrid, &
-    interp_A2Cgrid
-
+    interp_A2Cgrid, &
+    dg_interp
 
 ! Model variables
 use swm_vars
@@ -74,14 +74,22 @@ subroutine sw_timestep_Dgrid(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
     ! Discrete divergence
+    dginterp = .false. 
     call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
+                      px, py, Qx, Qy, swm_simul, mesh, L_pc, dginterp)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(H, swm_simul, div_ugH)
     ! Update the solution
     H%f = H%f - swm_simul%dt*div_ugH%f
     !$OMP END PARALLEL WORKSHARE
+
+    ! interpolate scalar field
+    if(swm_simul%et=='duogrid') then
+        ! Interpolate depth to ghost cells
+        call dg_interp(H%f, L_pc)
+    end if
+
 end subroutine sw_timestep_Dgrid
 
 
