@@ -1,7 +1,7 @@
 #Shallow water test case parameters 
 #Initial condition field 
 2
-#Final integration time (seconds)
+#Final integration time (days)
 12
 #Time step (seconds)
 2000.0
