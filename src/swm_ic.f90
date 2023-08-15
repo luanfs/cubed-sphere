@@ -59,95 +59,6 @@ implicit none
 
 contains 
 
-function h0_swm(lat, lon, ic)
-    !--------------------------------------------------
-    ! Compute the initial condition of the swm
-    ! problem on the sphere
-    ! 
-    ! Possible initial conditions (ic)
-    ! 1 - one gaussian hill
-    ! 2 - steady state from Will et al 1992 paper 
-    !--------------------------------------------------
-    integer(i4), intent(in) :: ic
-    real(kind=8), intent(in) :: lat, lon
-    real(kind=8) :: h0_swm
-
-    ! aux vars
-    real(kind=8) :: alpha ! rotation angle
-    real(kind=8) :: x, y, z ! r3 coordinates
-    real(kind=8) :: x0, y0, z0 ! r3 coordinates of center point
-    real(kind=8) :: x1, y1, z1 ! r3 coordinates of center point
-    real(kind=8) :: lat0, lon0 ! latlon coordinates of center point
-    real(kind=8) :: lat1, lon1 ! latlon coordinates of center point
-    real(kind=8) :: b0 ! Gaussian width
-    real(kind=8) :: u0, h0
-    integer(i4):: m, n
-
-    select case(ic)
-        case(1) ! one Gaussian hill
-            call sph2cart(lon, lat, x, y, z)
-            ! Gaussian center
-            lon0 = pi*0.25d0
-            lat0 = pi/6.d0
-            call sph2cart(lon0, lat0, x0, y0, z0)
-            b0 = 10.d0
-            h0 = 1000.d0
-            h0_swm = h0*0.5d0*(1.d0 + dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2)))
-
-        case(2) ! steady state from will92
-            alpha = -45.d0*deg2rad ! Rotation angle
-            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
-            h0 = 2.94d0*10000.d0*gravi
-            h0_swm = h0 - gravi*(erad*omega*u0 + u0*u0*0.5d0) &
-            *(-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))**2
-
-        case default
-            print*, "ERROR on h0_swm: invalid initial condition."
-            stop
-    end select
-    return
-end function h0_swm
-
-
-
-subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
-    !--------------------------------------------------
-    ! Compute the velocity field of the shallow water
-    ! problem on the sphere
-    ! 
-    ! Possible velocity fields (vf)
-
-    ! 2 - rotated zonal wind
-    ! 3 - non divergent
-    ! 4 - non divergent
-    ! 5 - divergent
-    ! 6 - trinometric field
-    !--------------------------------------------------
-    integer(i4), intent(in) :: vf
-    real(kind=8), intent(in) :: lat, lon, time
-    real(kind=8), intent(inout) :: ulon, vlat
-
-    ! aux vars
-    real(kind=8) :: alpha ! rotation angle
-    real(kind=8) :: u0, T, k, lonp
-    integer(i4) :: n, m
-
-    select case(vf)
-        case(1,2) ! rotated zonal wind
-            alpha = -45.d0*deg2rad ! Rotation angle
-            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
-            !u0    =  2.d0*pi/5.d0 ! Wind speed
-            ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
-            vlat  = -u0*dsin(lon)*dsin(alpha)
-            ! divide by earth radius to map the winds to unit sphere
-            ulon = ulon/erad
-            vlat = vlat/erad
-        case default
-            print*, "ERROR on velocity_swm: invalid vector field"
-            stop
-    end select
-    return
-end subroutine velocity_swm
 
 subroutine init_swm_vars(mesh)
     use swm_vars
@@ -262,12 +173,16 @@ subroutine init_swm_vars(mesh)
     ! Name scalar fields
     div_ugH_error%name = "swm_"//trim(swm_simul%name)//"_div_error"
     div_ugH%name = "swm_"//trim(swm_simul%name)//"_div"
+    rel_vort_error%name = "swm_"//trim(swm_simul%name)//"_rel_vort_error"
+    rel_vort%name = "swm_"//trim(swm_simul%name)//"_rel_vort"
+ 
     H%name = "swm_"//trim(swm_simul%name)//"_H"
     H_error%name = "swm_"//trim(swm_simul%name)//"_H_error"
 
 end subroutine init_swm_vars
 
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
+    use swm_vars, only: div_ugH_exact, rel_vort_exact
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -389,21 +304,122 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
     V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
 
-    !print*,error
-    !stop
+    ! vars to check consistency
+    if (swm_simul%ic==2)then
+        do p = 1, nbfaces
+            do i = n0, nend
+                do j = n0, nend
+                    lat  = mesh%pc(i,j,p)%lat
+                    lon  = mesh%pc(i,j,p)%lon
+
+                    ! divergence
+                    call div_swm(div_ugh_exact%f(i,j,p), lat, lon, swm_simul%ic)
+
+                    ! relative vorticity
+                    call rel_vort_swm(rel_vort_exact%f(i,j,p), lat, lon, swm_simul%ic)
+
+                end do
+            end do
+        end do
+    end if
+   !stop
 end subroutine compute_ic_swm
+
+
+function h0_swm(lat, lon, ic)
+    !--------------------------------------------------
+    ! Compute the initial condition of the swm
+    ! problem on the sphere
+    ! 
+    ! Possible initial conditions (ic)
+    ! 1 - one gaussian hill
+    ! 2 - steady state from Will et al 1992 paper 
+    !--------------------------------------------------
+    integer(i4), intent(in) :: ic
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8) :: h0_swm
+
+    ! aux vars
+    real(kind=8) :: alpha ! rotation angle
+    real(kind=8) :: x, y, z ! r3 coordinates
+    real(kind=8) :: x0, y0, z0 ! r3 coordinates of center point
+    real(kind=8) :: x1, y1, z1 ! r3 coordinates of center point
+    real(kind=8) :: lat0, lon0 ! latlon coordinates of center point
+    real(kind=8) :: lat1, lon1 ! latlon coordinates of center point
+    real(kind=8) :: b0 ! Gaussian width
+    real(kind=8) :: u0, h0
+    integer(i4):: m, n
+
+    select case(ic)
+        case(1) ! one Gaussian hill
+            call sph2cart(lon, lat, x, y, z)
+            ! Gaussian center
+            lon0 = pi*0.25d0
+            lat0 = pi/6.d0
+            call sph2cart(lon0, lat0, x0, y0, z0)
+            b0 = 10.d0
+            h0 = 1000.d0
+            h0_swm = h0*0.5d0*(1.d0 + dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2)))
+
+        case(2) ! steady state from will92
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            h0 = 2.94d0*10000.d0*gravi
+            h0_swm = h0 - gravi*(erad*omega*u0 + u0*u0*0.5d0) &
+            *(-dcos(lon)*dcos(lat)*dsin(alpha) + dsin(lat)*dcos(alpha))**2
+
+        case default
+            print*, "ERROR on h0_swm: invalid initial condition."
+            stop
+    end select
+    return
+end function h0_swm
+
+
+
+subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
+    !--------------------------------------------------
+    ! Compute the velocity field of the shallow water
+    ! problem on the sphere
+    ! 
+    ! Possible velocity fields (vf)
+
+    ! 2 - rotated zonal wind
+    ! 3 - non divergent
+    ! 4 - non divergent
+    ! 5 - divergent
+    ! 6 - trinometric field
+    !--------------------------------------------------
+    integer(i4), intent(in) :: vf
+    real(kind=8), intent(in) :: lat, lon, time
+    real(kind=8), intent(inout) :: ulon, vlat
+
+    ! aux vars
+    real(kind=8) :: alpha ! rotation angle
+    real(kind=8) :: u0, T, k, lonp
+    integer(i4) :: n, m
+
+    select case(vf)
+        case(1,2) ! rotated zonal wind
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            !u0    =  2.d0*pi/5.d0 ! Wind speed
+            ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
+            vlat  = -u0*dsin(lon)*dsin(alpha)
+            ! divide by earth radius to map the winds to unit sphere
+            ulon = ulon/erad
+            vlat = vlat/erad
+        case default
+            print*, "ERROR on velocity_swm: invalid vector field"
+            stop
+    end select
+    return
+end subroutine velocity_swm
 
 subroutine div_swm(div, lat, lon, vf)
     !--------------------------------------------------
     ! Compute the exact divergence of the velocity fields
     ! 
-    ! Possible velocity fields (vf)
-    ! 1 - zonal wind
-    ! 2 - rotated zonal wind
-    ! 3 - non divergent
-    ! 4 - non divergent
-    ! 5 - divergent
-    ! 6 - trigometric field
     !--------------------------------------------------
     integer(i4), intent(in) :: vf
     real(kind=8), intent(in) :: lat, lon
@@ -419,6 +435,31 @@ subroutine div_swm(div, lat, lon, vf)
     end select
     return
 end subroutine div_swm
+
+
+subroutine rel_vort_swm(rel_vort, lat, lon, vf)
+    !--------------------------------------------------
+    ! Compute the exact relative vorcity of the velocity fields
+    ! 
+    !--------------------------------------------------
+    integer(i4), intent(in) :: vf
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8), intent(out) :: rel_vort
+    integer(i4) :: m, n
+    real(kind=8) :: u0, alpha
+
+    select case(vf)
+        case(1, 2)
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+            rel_vort = 2.d0*u0*(-dcos(lat)*dcos(lon)*dsin(alpha) + dsin(lat)*dcos(alpha))
+            rel_vort = rel_vort/erad
+        case default
+            print*, "ERROR on rel_vort_swm: invalid vector field"
+            stop
+    end select
+    return
+end subroutine rel_vort_swm
 
 
 end module swm_ic

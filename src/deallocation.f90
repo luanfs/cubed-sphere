@@ -149,9 +149,7 @@ subroutine swm_deallocation()
 
     deallocate(H%f)
     deallocate(H_exact%f)
-    deallocate(div_ugH%f)
-    deallocate(div_ugH_exact%f)
-    deallocate(div_ugH_error%f)
+    deallocate(div_ugH%f, rel_vort%f, abs_vort%f)
     deallocate(Qx%f, Qy%f)
 
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
@@ -161,6 +159,12 @@ subroutine swm_deallocation()
     deallocate(L_pc%p_nodes, L_pc%f_nodes, L_pc%k0, L_pc%kend) 
     deallocate(L_pc%halodata_east, L_pc%halodata_west, L_pc%halodata_north, L_pc%halodata_south) 
 
+    if(swm_simul%ic==2)then
+        deallocate(div_ugH_exact%f)
+        deallocate(div_ugH_error%f)
+        deallocate(rel_vort_exact%f)
+        deallocate(rel_vort_error%f)
+    end if
 
     deallocate(wind_pu%u%f)
     deallocate(wind_pu%v%f)

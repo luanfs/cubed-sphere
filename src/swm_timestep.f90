@@ -90,6 +90,12 @@ subroutine sw_timestep_Dgrid(mesh)
         call dg_interp(H%f, L_pc)
     end if
 
+    ! compute relative vorticity using the winds from D grid
+    rel_vort%f(i0:iend,j0:jend,:) = &
+    (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
+    (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
+    rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
+
 end subroutine sw_timestep_Dgrid
 
 

@@ -423,13 +423,14 @@ subroutine write_final_errors_adv(advsimul, mesh, filename)
     call getunit(iunit)
 
     open(iunit,file=filename, status='replace')
-    write(iunit, *) advsimul%linf_error
-    write(iunit, *) advsimul%l1_error
-    write(iunit, *) advsimul%l2_error
+    write(iunit, *) advsimul%linf_error_h
+    write(iunit, *) advsimul%l1_error_h
+    write(iunit, *) advsimul%l2_error_h
     write(iunit, *) advsimul%cfl
     write(iunit, *) advsimul%mass_variation
     close(iunit)
 end subroutine write_final_errors_adv
+
 
 subroutine write_final_errors_swm(swm_simul, mesh, filename) 
     !----------------------------------------------------------
@@ -451,11 +452,18 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     call getunit(iunit)
 
     open(iunit,file=filename, status='replace')
-    write(iunit, *) swm_simul%linf_error
-    write(iunit, *) swm_simul%l1_error
-    write(iunit, *) swm_simul%l2_error
+    write(iunit, *) swm_simul%linf_error_h
+    write(iunit, *) swm_simul%l1_error_h
+    write(iunit, *) swm_simul%l2_error_h
     write(iunit, *) swm_simul%cfl
     write(iunit, *) swm_simul%mass_variation
+    write(iunit, *) swm_simul%linf_error_rv
+    write(iunit, *) swm_simul%l1_error_rv
+    write(iunit, *) swm_simul%l2_error_rv
+    write(iunit, *) swm_simul%linf_error_div
+    write(iunit, *) swm_simul%l1_error_div
+    write(iunit, *) swm_simul%l2_error_div
+
     close(iunit)
 end subroutine write_final_errors_swm
 
@@ -531,17 +539,17 @@ subroutine output_adv(mesh)
             end if
 
             call compute_errors_field(Q, Q_exact, Q_error, &
-            advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
+            advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h, mesh)
 
             print '(a22, 3e16.8)','linf, l1, l2 errors:', &
-            advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
+            advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h
 
         else if(.not. advsimul%exactsolution)then
             call compute_norms_field(Q,&
-            advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
+            advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h, mesh)
 
             print '(a22, 3e16.8)','linf, l1, l2 Q norms:', &
-            advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
+            advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h
 
         end if
 
@@ -608,21 +616,30 @@ subroutine output_swm(mesh)
         ! Compute exact solution and errors
         if (swm_simul%exactsolution .and. swm_simul%n==swm_simul%nsteps) then
             call compute_errors_field(H, H_exact, H_error, &
-            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+            swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
-            print '(a22, 3e16.8)','(linf, l1, l2) H errors:', &
-            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
+            print '(a22, 3e16.8)','(linf, l1, l2) H errors        :', &
+            swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
 
         else 
             call compute_norms_field(H,&
-            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+            swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
             print '(a22, 3e16.8)','(linf, l1, l2) H norms:', &
-            swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error
-
+            swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
         end if
 
         print '(a22, 1e16.8)','mass change:', swm_simul%mass_variation
+        if (swm_simul%ic == 2 .and. swm_simul%n==swm_simul%nsteps) then
+            print*
+            print '(a33, 3e16.8)','(linf, l1, l2) divergnce errors:', &
+            swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
+            print '(a33, 3e16.8)','(linf, l1, l2) rel vort  errors:', &
+            swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
+            print*
+        end if
+
+
     end if
 
 
@@ -638,13 +655,32 @@ subroutine output_swm(mesh)
         if(swm_simul%exactsolution .and. swm_simul%n>0)then
             if(swm_simul%ic==2 .or. swm_simul%n==swm_simul%nsteps)then
                 call compute_errors_field(H, H_exact, H_error, &
-                swm_simul%linf_error, swm_simul%l1_error, swm_simul%l2_error, mesh)
+                swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
                 H_error%name = "swm_"//trim(swm_simul%name)//"_H_error_t"//trim(adjustl(an))
                 call plot_scalarfield(H_error, mesh)
             end if
         end if
         swm_simul%plotcounter = swm_simul%plotcounter + 1
     end if
+
+    ! consistency error
+    if(swm_simul%ic==2 .and. swm_simul%n==1)then
+        ! Plot scalar fields
+        write(an,'(i8)') swm_simul%plotcounter-1
+        
+        ! divergence
+        call compute_errors_field(div_ugH, div_ugH_exact, div_ugH_error, &
+        swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div, mesh)
+        div_ugH_error%name = "swm_"//trim(swm_simul%name)//"_div_error_t"//trim(adjustl(an))
+        call plot_scalarfield(div_ugH_error, mesh)
+
+        ! relative vorticity
+        call compute_errors_field(rel_vort, rel_vort_exact, rel_vort_error, &
+        swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv, mesh)
+        rel_vort_error%name = "swm_"//trim(swm_simul%name)//"_rel_vort_error_t"//trim(adjustl(an))
+        call plot_scalarfield(rel_vort_error, mesh)
+    end if
+
 end subroutine output_swm
 
 
@@ -700,7 +736,6 @@ subroutine compute_errors_field(Q, Q_ref, Q_error, linf, l1, l2, mesh)
     linf = error_norm_max_rel(Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
     l1   = error_norm_1_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
     l2   = error_norm_2_rel  (Q%f(x0:xend,y0:yend,:), Q_ref%f(x0:xend,y0:yend,:)) 
-
 
 end subroutine compute_errors_field
 

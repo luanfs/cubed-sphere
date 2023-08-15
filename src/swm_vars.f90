@@ -20,10 +20,21 @@ type(simulation) :: swm_simul
 ! Lagrange polynomials at ghost cell centers
 type(lagrange_poly_cs) :: L_pc 
 
-! Scalar fields
+! Scalar fields for depth
 type(scalar_field) :: H       ! average values of the fluid depth
 type(scalar_field) :: H_exact ! exact fluid depth
 type(scalar_field) :: H_error ! fluid depth error
+
+
+! Relative vorticity
+type(scalar_field) :: rel_vort
+type(scalar_field) :: rel_vort_exact
+type(scalar_field) :: rel_vort_error
+
+
+! Absolute vorticity
+type(scalar_field) :: abs_vort
+
 
 ! Vector field
 type(vector_field) :: wind_pu, wind_pv, wind_pc

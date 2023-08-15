@@ -264,7 +264,7 @@ subroutine div_test(mesh)
 
     ! Compute the errors
     call compute_errors_field(div_ugq, div_ugq_exact, div_ugq_error, &
-      advsimul%linf_error, advsimul%l1_error, advsimul%l2_error, mesh)
+      advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h, mesh)
 
     ! Plot scalar fields
     call plot_scalarfield(div_ugq, mesh)
@@ -274,7 +274,7 @@ subroutine div_test(mesh)
 
     ! Print errors on screen
     print*
-    print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error, advsimul%l1_error, advsimul%l2_error
+    print '(a22, 3e16.8)','linf, l1, l2 errors:', advsimul%linf_error_h, advsimul%l1_error_h, advsimul%l2_error_h
     print '(a22, 1e16.8)','div mass:', advsimul%mass_variation
 
     ! Write errors in a file
