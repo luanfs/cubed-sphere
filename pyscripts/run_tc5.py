@@ -106,6 +106,15 @@ def main():
     error_l1   = np.zeros((len(N),len(reconmethods)))
     error_l2   = np.zeros((len(N),len(reconmethods)))
 
+    if ic=='2':
+        error_linf_rv = np.zeros((len(N),len(reconmethods)))
+        error_l1_rv   = np.zeros((len(N),len(reconmethods)))
+        error_l2_rv   = np.zeros((len(N),len(reconmethods)))
+        error_linf_div = np.zeros((len(N),len(reconmethods)))
+        error_l1_div   = np.zeros((len(N),len(reconmethods)))
+        error_l2_div   = np.zeros((len(N),len(reconmethods)))
+
+
     # Lat/lon aux vars
     lats = np.linspace(-90.0, 90.0, Nlat+1)
     lons = np.linspace(-180.0, 180.0, Nlon+1)
@@ -172,6 +181,15 @@ def main():
             massvar = errors[4]
             cfl = str("{:.2e}".format(cfl))
             massvar = str("{:.2e}".format(massvar))
+
+            if ic=='2':
+                error_linf_rv[k,i] = errors[5]
+                error_l1_rv[k,i]   = errors[6]
+                error_l2_rv[k,i]   = errors[7]
+                error_linf_div[k,i] = errors[8]
+                error_l1_div[k,i]   = errors[9]
+                error_l2_div[k,i]   = errors[10]
+ 
             k = k+1
 
             #--------------------------------------------------------
@@ -215,7 +233,31 @@ def main():
                     plot_scalar_field(data, lats, lons, \
                             colormap, map_projection, fname, title, dmin, dmax)
 
-         
+                if ic=='2':
+                    # plot the error
+                    colormap = 'seismic'
+                    fields = ['rel_vort', 'div']
+                    names = ['Relative vorticity', 'Divergence',]
+
+                    for fd in range(0,len(fields)):
+                        fname = swm_name+'_'+fields[fd]+'_error_t'+str(t)+'_'+grid_name
+                        if os.path.exists(datadir+fname+'.dat'): # The file exists
+                            f = open(datadir+fname+'.dat', 'rb')
+                            data = np.fromfile(f, dtype=np.float64)
+                            data = np.reshape(data, (Nlat+1, Nlon+1))
+                            data = np.transpose(data)
+                            dabs_max = np.amax(abs(data))
+                            dmin, dmax = -dabs_max, dabs_max
+
+                            time = str("{:.2e}".format(timeplots[t]))
+                            title = names[fd]+\
+                            ' error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
+                            '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
+                            ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
+                            plot_scalar_field(data, lats, lons, \
+                                    colormap, map_projection, fname, title, dmin, dmax)
+
+
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
@@ -253,6 +295,51 @@ def main():
         filename = graphdir+'cs_swm_ic'+str(ic)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
         plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
         e = e+1
+
+    # consistency error
+    if ic=='2':
+        # plot the error
+        fields = ['rel_vort', 'div']
+        names = ['Relative vorticity', 'Divergence',]
+        error_list_rv  = [error_linf_rv , error_l1_rv , error_l2_rv]
+        error_list_div = [error_linf_div, error_l1_div, error_l2_div]
+        error_lists = [error_list_rv, error_list_div]
+        for fd in range(0,len(fields)):
+            error_list = error_lists[fd]
+            norm_list  = ['linf','l1','l2']
+            norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
+
+            e = 0
+            for error in error_list:
+                emin, emax = np.amin(error[:]), np.amax(error[:])
+
+                # convergence rate min/max
+                n = len(error)
+                CR = np.abs(np.log(error[1:n])-np.log(error[0:n-1]))/np.log(2.0)
+                CRmin, CRmax = np.amin(CR), np.amax(CR)
+                errors = []
+                fname = []
+                for k in range(0, len(reconmethods)):
+                    errors.append(error[:,k])
+                    opsplit = splitmethods[k]
+                    recon = reconmethods[k]
+                    mt = mtmethods[k]
+                    dp = dpmethods[k]
+                    mf = mfixers[k]
+                    et = edgetreat[k]
+                    fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
+
+                title = names[fd]+' error, ic = '+str(ic)+', norm='+norm_title[e]
+                filename = graphdir+'cs_swm_'+fields[fd]+'_ic'+str(ic)+'_norm'+norm_list[e]+'_parabola_errors.pdf'
+
+                plot_errors_loglog(N, errors, fname, filename, title, emin, emax)
+
+                # Plot the convergence rate
+                title = names[fd]+' - convergence rate, ic = '+str(ic)+', norm='+norm_title[e]
+                filename = graphdir+'cs_swm_'+fields[fd]+'_ic'+str(ic)+'_norm'+norm_list[e]+'_convergence_rate.pdf'
+                plot_convergence_rate(N, errors, fname, filename, title, CRmin, CRmax)
+                e = e+1
+
 
 if __name__ == '__main__':
     main()
