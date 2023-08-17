@@ -231,20 +231,17 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         case ('mt0')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(Qx, Qy, px, py, mesh)
-            Qx%f = px%Q%f + 0.5d0*px%df!/mesh%mt_pc
-            Qy%f = py%Q%f + 0.5d0*py%df!/mesh%mt_pc
+            Qx%f = px%Q%f + 0.5d0*px%df
+            Qy%f = py%Q%f + 0.5d0*py%df
             Qx%f = Qx%f/mesh%mt_pc
             Qy%f = Qy%f/mesh%mt_pc
             !$OMP END PARALLEL WORKSHARE
         case ('pl07')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(Qx, Qy, px, py, mesh)
-            Qx%f = px%Q%f + 0.5d0*px%df!/mesh%mt_pc
-            Qy%f = py%Q%f + 0.5d0*py%df!/mesh%mt_pc
+            Qx%f = px%Q%f + 0.5d0*px%df
+            Qy%f = py%Q%f + 0.5d0*py%df
             !$OMP END PARALLEL WORKSHARE
-            !Qx%f = Qx%f
-            !Qy%f = Qy%f
-
         case default
             print*, 'ERROR in divergence: invalid metric tensor formulation,  ', advsimul%mt
             stop
@@ -304,7 +301,6 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
             stop
         end select
 
-
         ! Compute fluxes
         call ppm_fluxes_PL07(Qy, Qx, px, py, wind_pu%ucontra_time_av, &
         wind_pv%vcontra_time_av, cx_pu, cy_pv, mesh)
@@ -322,6 +318,107 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         stop
     end if
 end subroutine divergence
+
+
+subroutine vorticity_fluxes(div_abs_vort,abs_vort_flux_pu, abs_vort_flux_pv, &
+                      rel_vort, abs_vort, fcoriolis_pc,&
+                      wind_pu, wind_pv, cx_pu, cy_pv, &
+                      px, py, Qx, Qy, swmsimul, mesh, L_pc)
+    !---------------------------------------------------
+    ! Computes the absolute vorticity fluxes at pu and pv
+    ! dimension splliting method
+    !---------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    type(simulation), intent(inout) :: swmsimul
+    type(scalar_field), intent(inout) :: abs_vort_flux_pu
+    type(scalar_field), intent(inout) :: abs_vort_flux_pv
+    type(scalar_field), intent(inout) :: rel_vort
+    type(scalar_field), intent(inout) :: abs_vort
+    type(scalar_field), intent(inout) :: div_abs_vort
+    type(scalar_field), intent(inout) :: fcoriolis_pc
+    type(vector_field), intent(inout) :: wind_pu
+    type(vector_field), intent(inout) :: wind_pv
+    type(scalar_field), intent(inout) :: cx_pu
+    type(scalar_field), intent(inout) :: cy_pv
+    type(ppm_parabola), intent(inout) :: px ! ppm in x direction
+    type(ppm_parabola), intent(inout) :: py ! ppm in y direction
+    type(scalar_field), intent(inout) :: Qx ! variable to advect in x direction
+    type(scalar_field), intent(inout) :: Qy ! variable to advect in y direction
+    type(lagrange_poly_cs), intent(inout) :: L_pc ! lagrange polynomial
+
+    if(swmsimul%et=='duogrid') then
+        !----------------------------------------------------------------------------------
+        ! compute relative vorticity using the winds from D grid !formula 19 from LR1997
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(rel_vort, wind_pu, wind_pv, mesh, i0, iend, j0, jend)
+        rel_vort%f(i0:iend,j0:jend,:) = &
+        (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
+        (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
+        rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
+        !$OMP END PARALLEL WORKSHARE
+        !----------------------------------------------------------------------------------
+
+        ! interpolate relative vorticity to ghost cells
+        call dg_interp(rel_vort%f, L_pc)
+
+        !----------------------------------------------------------------------------------
+        ! absolute vorticity
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(abs_vort, rel_vort, fcoriolis_pc, i0, iend, j0, jend)
+        abs_vort%f(:,:,:) = rel_vort%f(:,:,:) + fcoriolis_pc%f(:,:,:)
+        !$OMP END PARALLEL WORKSHARE
+        !----------------------------------------------------------------------------------
+
+        ! Interpolate scalar field to ghost cells
+        ! Dimension splitting operators
+        call inner_f_operator(abs_vort, wind_pu, cx_pu, px, mesh, swmsimul%dt, swmsimul%opsplit)
+        call inner_g_operator(abs_vort, wind_pv, cy_pv, py, mesh, swmsimul%dt, swmsimul%opsplit)
+
+        ! Compute next splitting input
+        ! Metric tensor scheme
+        select case (swmsimul%mt)
+        case ('mt0')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(Qx, Qy, px, py, mesh)
+            Qx%f = px%Q%f + 0.5d0*px%df
+            Qy%f = py%Q%f + 0.5d0*py%df
+            Qx%f = Qx%f/mesh%mt_pc
+            Qy%f = Qy%f/mesh%mt_pc
+            !$OMP END PARALLEL WORKSHARE
+        case ('pl07')
+            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+            !$OMP SHARED(Qx, Qy, px, py, mesh)
+            Qx%f = px%Q%f + 0.5d0*px%df
+            Qy%f = py%Q%f + 0.5d0*py%df
+            !$OMP END PARALLEL WORKSHARE
+        case default
+            print*, 'ERROR in vorticity_fluxes: invalid metric tensor formulation,  ', swmsimul%mt
+            stop
+        end select
+
+        ! Compute fluxes
+        call F_operator(Qy, wind_pu, cx_pu, px, mesh, swmsimul%dt)
+        call G_operator(Qx, wind_pv, cy_pv, py, mesh, swmsimul%dt)
+
+        ! Compute the divergence
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(div_abs_vort, px, py, swmsimul, mesh)
+        div_abs_vort%f = -(px%df + py%df)/swmsimul%dt/mesh%mt_pc
+        !$OMP END PARALLEL WORKSHARE
+
+        abs_vort_flux_pu%f = -px%f_upw
+        !abs_vort_flux_pu%f = abs_vort_flux_pu%f/swmsimul%dt
+        !abs_vort_flux_pu%f = abs_vort_flux_pu%f/mesh%mt_pc
+
+        abs_vort_flux_pv%f = -py%f_upw
+        !abs_vort_flux_pv%f = abs_vort_flux_pv%f/swmsimul%dt
+        !abs_vort_flux_pv%f = abs_vort_flux_pv%f/mesh%mt_pc
+
+    else
+        print*, 'ERROR in vorticity_fluxes: invalid edge treatment ', swmsimul%et
+        stop
+    end if
+end subroutine vorticity_fluxes
 
 
 subroutine cfl_x(mesh, ucontra_pu, cx_pu, dt)

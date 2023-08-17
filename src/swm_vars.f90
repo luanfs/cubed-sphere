@@ -37,6 +37,17 @@ type(scalar_field) :: rel_vort_error
 type(scalar_field) :: abs_vort
 type(scalar_field) :: abs_vort_exact
 type(scalar_field) :: abs_vort_error
+type(scalar_field) :: div_abs_vort
+
+
+! Absolute vorticity fluxes
+type(scalar_field) :: abs_vort_flux_pu
+type(scalar_field) :: abs_vort_flux_pv
+type(scalar_field) :: abs_vort_flux_exact_pu
+type(scalar_field) :: abs_vort_flux_exact_pv
+type(scalar_field) :: abs_vort_flux_error_pu
+type(scalar_field) :: abs_vort_flux_error_pv
+
 
 ! Vector field
 type(vector_field) :: wind_pu, wind_pv, wind_pc

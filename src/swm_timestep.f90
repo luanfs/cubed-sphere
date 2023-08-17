@@ -30,6 +30,7 @@ use datastruct, only: &
 ! Discrete operators 
 use discrete_operators, only: &
     divergence, &
+    vorticity_fluxes, &
     cfl_x, cfl_y
 
 ! duo grid interpolation
@@ -89,24 +90,71 @@ subroutine sw_timestep_Dgrid(mesh)
         call dg_interp(H%f, L_pc)
     end if
 
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(rel_vort, wind_pu, wind_pv, swm_simul, mesh, i0, iend, j0, jend)
-    ! compute relative vorticity using the winds from D grid !formula 19 from LR1997
-    rel_vort%f(i0:iend,j0:jend,:) = &
-    (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
-    (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
-    rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
-    !$OMP END PARALLEL WORKSHARE
+    ! compute the vorticity fluxes
+    if(swm_simul%n==-1)then
+        !----------------------------------------------------------------------------------
+        ! compute relative vorticity using the winds from D grid !formula 19 from LR1997
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(rel_vort, wind_pu, wind_pv, mesh, i0, iend, j0, jend)
+        rel_vort%f(i0:iend,j0:jend,:) = &
+        (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
+        (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
+        rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
+        !$OMP END PARALLEL WORKSHARE
+        !----------------------------------------------------------------------------------
 
-    ! interpolate relative vorticity to ghost cells
-    if(swm_simul%et=='duogrid') then
+        ! interpolate relative vorticity to ghost cells
         call dg_interp(rel_vort%f, L_pc)
+
+        !----------------------------------------------------------------------------------
+        ! absolute vorticity
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(abs_vort, rel_vort, fcoriolis_pc, i0, iend, j0, jend)
+        abs_vort%f(:,:,:) = rel_vort%f(:,:,:) + fcoriolis_pc%f(:,:,:)
+        !$OMP END PARALLEL WORKSHARE
+        !----------------------------------------------------------------------------------
+
     end if
 
+    call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
+                          rel_vort, abs_vort, fcoriolis_pc,&
+                          wind_pu, wind_pv, cx_pu, cy_pv, &
+                          px, py, Qx, Qy, swm_simul, mesh, L_pc)
+
+    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
+
+    !div_abs_vort%f(i0:iend,j0:jend,:) = &
+    !((abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)  - &
+    !  abs_vort_flux_pu%f(i0:iend    ,j0:jend,:)) +  &
+    !( abs_vort_flux_pv%f(i0:iend,j0+1:jend+1,:) - &
+    !  abs_vort_flux_pv%f(i0:iend,j0:jend,:) ))/mesh%mt_pc(i0:iend,j0:jend,:)/mesh%dx
+    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
+
+    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:) - &
+    !                   abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))/maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:)))
+    !print*
+    !div_abs_vort%f(i0:iend,j0:jend,:) = &
+    !((abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)  - &
+    !  abs_vort_flux_exact_pu%f(i0:iend    ,j0:jend,:)) +  &
+    !( abs_vort_flux_exact_pv%f(i0:iend,j0+1:jend+1,:) - &
+    !  abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:) ))/mesh%mt_pc(i0:iend,j0:jend,:)/mesh%dx
+
+    !print*, maxval(abs( &
+    !abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:) - &
+    !abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:) ))/maxval(abs(abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)))
+
+    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)))
+    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
+    !stop
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(abs_vort, rel_vort, fcoriolis_pc, swm_simul, i0, iend, j0, jend)
-    ! absolute vorticity
-    abs_vort%f(:,:,:) = rel_vort%f(:,:,:) + fcoriolis_pc%f(:,:,:)
+    !$OMP SHARED(abs_vort, swm_simul, div_abs_vort)
+    ! Update the absolute vorticity
+    !abs_vort%f = abs_vort%f - swm_simul%dt*div_abs_vort%f
+    !abs_vort%f = div_abs_vort%f
     !$OMP END PARALLEL WORKSHARE
 
 

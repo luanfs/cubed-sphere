@@ -398,7 +398,6 @@ subroutine swm_test(mesh)
     ! interpolate height field to ghost cells
     call dg_interp(H%f, L_pc)
 
-
     ! Temporal loop
     swm_simul%t = 0.d0
     do n = 1, swm_simul%nsteps

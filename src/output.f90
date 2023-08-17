@@ -617,32 +617,39 @@ subroutine output_swm(mesh)
  
         ! Compute exact solution and errors
         if (swm_simul%exactsolution .and. swm_simul%n==swm_simul%nsteps) then
+            ! fluid depth
             call compute_errors_field(H, H_exact, H_error, &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
-            print '(a22, 3e16.8)','(linf, l1, l2) H errors        :', &
+            print '(a33, 3e16.8)','(linf, l1, l2) H errors :', &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
 
+            ! absolute vorticity
+            !call compute_errors_field(abs_vort, abs_vort_exact, abs_vort_error, &
+            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
+
+            !print '(a33, 3e16.8)','(linf, l1, l2) av errors:', &
+            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
+
+
         else 
+            ! fluid depth
             call compute_norms_field(H,&
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
-            print '(a22, 3e16.8)','(linf, l1, l2) H norms:', &
+            print '(a33, 3e16.8)','(linf, l1, l2) H norms :', &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
-        end if
 
+            ! absolute vorticity
+            !call compute_norms_field(abs_vort, &
+            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
+
+            !print '(a33, 3e16.8)','(linf, l1, l2) av norms:', &
+            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
+
+
+        end if
         print '(a22, 1e16.8)','mass change:', swm_simul%mass_variation
-        if (swm_simul%ic == 2 .and. swm_simul%n==swm_simul%nsteps) then
-            print*
-            print '(a33, 3e16.8)','(linf, l1, l2) divergnce errors:', &
-            swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
-            print '(a33, 3e16.8)','(linf, l1, l2) rel vort  errors:', &
-            swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
-            print '(a33, 3e16.8)','(linf, l1, l2) abs vort  errors:', &
-            swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
-            print*
-        end if
-
 
     end if
 
@@ -653,25 +660,38 @@ subroutine output_swm(mesh)
         ! Plot scalar fields
         write(an,'(i8)') swm_simul%plotcounter
 
+        ! fluid depth
         H%name = "swm_"//trim(swm_simul%name)//"_H_t"//trim(adjustl(an))
         call plot_scalarfield(H, mesh)
 
+        ! absolute vorticity
+        abs_vort%name = "swm_"//trim(swm_simul%name)//"_abs_vort_t"//trim(adjustl(an))
+        call plot_scalarfield(abs_vort, mesh)
+
         if(swm_simul%exactsolution .and. swm_simul%n>0)then
             if(swm_simul%ic==2 .or. swm_simul%n==swm_simul%nsteps)then
+                ! fluid depth
                 call compute_errors_field(H, H_exact, H_error, &
                 swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
                 H_error%name = "swm_"//trim(swm_simul%name)//"_H_error_t"//trim(adjustl(an))
                 call plot_scalarfield(H_error, mesh)
+
+                ! absolute vorticity
+                !call compute_errors_field(abs_vort, abs_vort_exact, abs_vort_error, &
+                !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
+                !abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
+                !call plot_scalarfield(abs_vort_error, mesh)
+ 
             end if
         end if
         swm_simul%plotcounter = swm_simul%plotcounter + 1
     end if
 
     ! consistency error
-    if(swm_simul%ic==2 .and. swm_simul%n==1)then
+    if(swm_simul%ic==0 .and. swm_simul%n==1)then
         ! Plot scalar fields
         write(an,'(i8)') swm_simul%plotcounter-1
-        
+
         ! divergence
         call compute_errors_field(div_ugH, div_ugH_exact, div_ugH_error, &
         swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div, mesh)
@@ -690,6 +710,23 @@ subroutine output_swm(mesh)
         abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
         call plot_scalarfield(abs_vort_error, mesh)
 
+        ! absolute vorticity fluxes
+        call compute_errors_field(abs_vort_flux_pu, abs_vort_flux_exact_pu, abs_vort_flux_error_pu, &
+        swm_simul%linf_error_av_pu, swm_simul%l1_error_av_pu, swm_simul%l2_error_av_pu, mesh)
+        !abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
+        !call plot_scalarfield(abs_vort_error, mesh)
+
+
+        print*
+        print '(a34, 3e16.8)','(linf, l1, l2) divergence  errors:', &
+        swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
+        print '(a34, 3e16.8)','(linf, l1, l2) rel vort   errors:', &
+        swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
+        print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
+        swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
+        print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
+        swm_simul%linf_error_av_pu, swm_simul%l1_error_av_pu, swm_simul%l2_error_av_pu
+ 
     end if
 
 end subroutine output_swm

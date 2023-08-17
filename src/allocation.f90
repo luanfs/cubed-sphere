@@ -599,6 +599,9 @@ subroutine allocate_swm_vars(mesh)
     call scalar_field_allocation(div_ugH, mesh, 0)
     call scalar_field_allocation(rel_vort, mesh, 0)
     call scalar_field_allocation(abs_vort, mesh, 0)
+    call scalar_field_allocation(abs_vort_flux_pu, mesh, 2)
+    call scalar_field_allocation(abs_vort_flux_pv, mesh, 3)
+    call scalar_field_allocation(div_abs_vort, mesh, 0)
 
     ! Operator splitting variables
     call scalar_field_allocation(Qx, mesh, 0)
@@ -612,14 +615,18 @@ subroutine allocate_swm_vars(mesh)
     call lagrange_poly_allocation(L_pc, mesh)
 
     !---------------------------------------------------
-    ! extra vars when the error is available (ic=2)
-    if (swm_simul%ic==2) then
+    ! extra vars when the error is available
+    if (swm_simul%ic==0) then
         call scalar_field_allocation(div_ugH_exact, mesh, 0)
         call scalar_field_allocation(div_ugH_error, mesh, 0)
         call scalar_field_allocation(rel_vort_exact, mesh, 0)
         call scalar_field_allocation(rel_vort_error, mesh, 0)
         call scalar_field_allocation(abs_vort_exact, mesh, 0)
         call scalar_field_allocation(abs_vort_error, mesh, 0)
+        call scalar_field_allocation(abs_vort_flux_exact_pu, mesh, 2)
+        call scalar_field_allocation(abs_vort_flux_error_pu, mesh, 2)
+        call scalar_field_allocation(abs_vort_flux_exact_pv, mesh, 3)
+        call scalar_field_allocation(abs_vort_flux_error_pv, mesh, 3)
     end if
 
 end subroutine allocate_swm_vars

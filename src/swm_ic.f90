@@ -122,14 +122,18 @@ subroutine init_swm_vars(mesh)
     swm_simul%nplot = swm_simul%nsteps/(swm_simul%nplot-1)
     swm_simul%plotcounter = 0
 
+    if (swm_simul%ic == 0) then
+        swm_simul%nsteps = 1
+    end if
+
     ! Compute the initial conditions
     call compute_ic_swm(H_exact, wind_pu, wind_pv, wind_pc, mesh, swm_simul, L_pc)
     H%f(i0:iend,j0:jend,:) = H_exact%f(i0:iend,j0:jend,:)
 
     ! Compute initial mass
     swm_simul%mass0 = mass_computation(H, mesh)
-    ! var used in pr mass fixer
 
+    ! var used in pr mass fixer
     if(swm_simul%mf == 'gpr')then
         swm_simul%a2 = sum(mesh%mt_pc(i0:iend,j0:jend,:)*mesh%mt_pc(i0:iend,j0:jend,:))*mesh%dx*mesh%dy
     else if(swm_simul%mf == 'lpr')then
@@ -178,12 +182,11 @@ subroutine init_swm_vars(mesh)
  
     H%name = "swm_"//trim(swm_simul%name)//"_H"
     H_error%name = "swm_"//trim(swm_simul%name)//"_H_error"
-
 end subroutine init_swm_vars
 
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
-    abs_vort_exact
+    abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -208,7 +211,8 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     !aux
     real(kind=8) :: lat, lon
     real(kind=8) :: ulon, vlat, ucontra, vcontra, ucovari, vcovari
-    
+    real(kind=8) :: rv_pu, rv_pv, av_pu, av_pv, f_pu, f_pv
+
     !debug - check if wind conversion is correct
     real(kind=8) :: ull, vll, error1, error
     error = 0.d0
@@ -309,7 +313,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
 
     ! vars to check consistency
-    if (swm_simul%ic==2)then
+    if (swm_simul%ic==0)then
         do p = 1, nbfaces
             do i = n0, nend
                 do j = n0, nend
@@ -324,6 +328,55 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
 
                     ! absolute vorticity
                     abs_vort_exact%f(i,j,p) = rel_vort_exact%f(i,j,p) + fcoriolis_pc%f(i,j,p)
+                end do
+            end do
+        end do
+        !abs_vort%f(i0:iend,j0:jend,:) = abs_vort_exact%f(i0:iend,j0:jend,:)
+
+        ! Fields at pu
+        do p = 1, nbfaces
+            do i = n0, nend+1
+                do j = n0, nend
+                    lat  = mesh%pu(i,j,p)%lat
+                    lon  = mesh%pu(i,j,p)%lon
+
+                    ! relative vorticity at pu
+                    call rel_vort_swm(rv_pu, lat, lon, swm_simul%ic)
+
+                    ! coriolis at pu
+                    f_pu =  fcoriolis(lat, lon, swm_simul%ic)
+
+                    ! absolute vorticity at pu
+                    av_pu = rv_pu + f_pu 
+
+                    ! absolute vorticity flux at pu
+                    abs_vort_flux_exact_pu%f(i,j,p) = av_pu*V_pu%ucontra_old%f(i,j,p)
+                    abs_vort_flux_exact_pu%f(i,j,p) = abs_vort_flux_exact_pu%f(i,j,p)*mesh%mt_pu(i,j,p)
+
+                end do
+            end do
+        end do
+
+        ! Fields at pv
+        do p = 1, nbfaces
+            do i = n0, nend
+                do j = n0, nend+1
+                    lat  = mesh%pv(i,j,p)%lat
+                    lon  = mesh%pv(i,j,p)%lon
+
+                    ! relative vorticity at pv
+                    call rel_vort_swm(rv_pv, lat, lon, swm_simul%ic)
+
+                    ! coriolis at pv
+                    f_pv =  fcoriolis(lat, lon, swm_simul%ic)
+
+                    ! absolute vorticity at pv
+                    av_pv = rv_pv + f_pv
+
+                    ! absolute vorticity flux at pv
+                    abs_vort_flux_exact_pv%f(i,j,p) = av_pv*V_pv%vcontra_old%f(i,j,p)
+                    abs_vort_flux_exact_pv%f(i,j,p) = abs_vort_flux_exact_pv%f(i,j,p)*mesh%mt_pv(i,j,p)
+
                 end do
             end do
         end do
@@ -367,7 +420,7 @@ function h0_swm(lat, lon, ic)
             h0 = 1000.d0
             h0_swm = h0*0.5d0*(1.d0 + dexp(-b0*((x-x0)**2+ (y-y0)**2 + (z-z0)**2)))
 
-        case(2) ! steady state from will92
+        case(0, 2) ! steady state from will92
             alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
             h0 = 2.94d0*10000.d0*gravi
@@ -406,10 +459,9 @@ subroutine velocity_swm(ulon, vlat, lat, lon, time, vf)
     integer(i4) :: n, m
 
     select case(vf)
-        case(1,2) ! rotated zonal wind
+        case(0, 1, 2) ! rotated zonal wind
             alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
-            !u0    =  2.d0*pi/5.d0 ! Wind speed
             ulon  =  u0*(dcos(lat)*dcos(alpha) + dsin(lat)*dcos(lon)*dsin(alpha))
             vlat  = -u0*dsin(lon)*dsin(alpha)
             ! divide by earth radius to map the winds to unit sphere
@@ -433,7 +485,7 @@ subroutine div_swm(div, lat, lon, vf)
     integer(i4) :: m, n
 
     select case(vf)
-        case(1, 2)
+        case(0, 1, 2)
             div = 0.d0
         case default
             print*, "ERROR on div_swm: invalid vector field"
@@ -455,7 +507,7 @@ subroutine rel_vort_swm(rel_vort, lat, lon, vf)
     real(kind=8) :: u0, alpha
 
     select case(vf)
-        case(1, 2)
+        case(0, 1, 2)
             alpha = -45.d0*deg2rad ! Rotation angle
             u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
             rel_vort = 2.d0*u0*(-dcos(lat)*dcos(lon)*dsin(alpha) + dsin(lat)*dcos(alpha))
@@ -479,12 +531,12 @@ function fcoriolis(lat, lon, ic)
     real(kind=8) :: alpha ! rotation angle
 
     select case(ic)
-        case(1,2)
+        case(0, 1, 2)
             alpha = -45.d0*deg2rad ! Rotation angle
             fcoriolis = 2.d0*omega*(-dcos(lat)*dcos(lon)*dsin(alpha) + dsin(lat)*dcos(alpha))
 
         case(3)
-                fcoriolis  =  2.d0*omega*dsin(lat)
+            fcoriolis  =  2.d0*omega*dsin(lat)
         case default
             print*, "ERROR on fcoriolis: invalid initial condition."
             stop

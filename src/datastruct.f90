@@ -285,10 +285,12 @@ end type vector_field
 !---------------------------------------------------------
 type simulation
     ! variables for errors 
-    real(kind=8):: linf_error_h  , l1_error_h  , l2_error_h
-    real(kind=8):: linf_error_rv , l1_error_rv , l2_error_rv
-    real(kind=8):: linf_error_av , l1_error_av , l2_error_av
-    real(kind=8):: linf_error_div, l1_error_div, l2_error_div
+    real(kind=8):: linf_error_h    , l1_error_h    , l2_error_h
+    real(kind=8):: linf_error_div  , l1_error_div  , l2_error_div
+    real(kind=8):: linf_error_rv   , l1_error_rv   , l2_error_rv
+    real(kind=8):: linf_error_av   , l1_error_av   , l2_error_av
+    real(kind=8):: linf_error_av_pu, l1_error_av_pu, l2_error_av_pu
+    real(kind=8):: linf_error_av_pv, l1_error_av_pv, l2_error_av_pv
 
     ! variables for mass
     real(kind=8):: mass, mass0, mass_variation
