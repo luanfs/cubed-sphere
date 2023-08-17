@@ -184,9 +184,12 @@ subroutine init_swm_vars(mesh)
     H_error%name = "swm_"//trim(swm_simul%name)//"_H_error"
 end subroutine init_swm_vars
 
+
+
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
-    abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort
+    abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort, &
+    H_po_exact, H_pu_exact, H_pv_exact
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -314,6 +317,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
 
     ! vars to check consistency
     if (swm_simul%ic==0)then
+        ! pc fields
         do p = 1, nbfaces
             do i = n0, nend
                 do j = n0, nend
@@ -333,12 +337,28 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
         end do
         !abs_vort%f(i0:iend,j0:jend,:) = abs_vort_exact%f(i0:iend,j0:jend,:)
 
+        ! po fields
+        do p = 1, nbfaces
+            do i = n0, nend+1
+                do j = n0, nend+1
+                    lat  = mesh%po(i,j,p)%lat
+                    lon  = mesh%po(i,j,p)%lon
+
+                    ! depth
+                    H_po_exact%f(i,j,p) = h0_swm(lat, lon, swm_simul%ic)
+                end do
+            end do
+        end do
+ 
         ! Fields at pu
         do p = 1, nbfaces
             do i = n0, nend+1
                 do j = n0, nend
                     lat  = mesh%pu(i,j,p)%lat
                     lon  = mesh%pu(i,j,p)%lon
+
+                    ! Fluid depth
+                    H_pu_exact%f(i,j,p) = h0_swm(lat, lon, swm_simul%ic)
 
                     ! relative vorticity at pu
                     call rel_vort_swm(rv_pu, lat, lon, swm_simul%ic)
@@ -363,6 +383,9 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 do j = n0, nend+1
                     lat  = mesh%pv(i,j,p)%lat
                     lon  = mesh%pv(i,j,p)%lon
+
+                    ! Fluid depth
+                    H_pv_exact%f(i,j,p) = h0_swm(lat, lon, swm_simul%ic)
 
                     ! relative vorticity at pv
                     call rel_vort_swm(rv_pv, lat, lon, swm_simul%ic)

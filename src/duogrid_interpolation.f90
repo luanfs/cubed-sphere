@@ -781,10 +781,10 @@ subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc)
-        u_pu(i0:iend+1,j0:jend,:) = &
-        (u_pc(i0-1:iend,j0:jend,:) + u_pc(i0:iend+1,j0:jend,:))*0.5d0
-        v_pv(i0:iend,j0:jend+1,:) = &
-        (v_pc(i0:iend,j0-1:jend,:) + v_pc(i0:iend,j0:jend+1,:))*0.5d0
+        u_pu(i0-2:iend+3,n0:nend,:) = &
+        (u_pc(i0-3:iend+2,n0:nend,:) + u_pc(i0-2:iend+3,n0:nend,:))*0.5d0
+        v_pv(n0:nend,j0-2:jend+3,:) = &
+        (v_pc(n0:nend,j0-3:jend+2,:) + v_pc(n0:nend,j0-2:jend+3,:))*0.5d0
         !$OMP END PARALLEL WORKSHARE
 
     elseif(id == 3) then
@@ -792,13 +792,13 @@ subroutine interp_A2Cgrid(u_pu, v_pv, u_pc, v_pc, id)
         !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
         !$OMP SHARED(i0, iend, j0, jend, n0, nend) &
         !$OMP SHARED(u_pu, v_pv, u_pc, v_pc, c1, c2)
-        u_pu(i0:iend+1,j0:jend,:) = &
-        c1*(u_pc(i0-1:iend  ,j0:jend,:) + u_pc(i0:iend+1  ,j0:jend,:)) + &
-        c2*(u_pc(i0-2:iend-1,j0:jend,:) + u_pc(i0+1:iend+2,j0:jend,:))
+        u_pu(i0-2:iend+3,n0:nend,:) = &
+        c1*(u_pc(i0-3:iend+2,n0:nend,:) + u_pc(i0-2:iend+3 ,n0:nend,:)) + &
+        c2*(u_pc(i0-4:iend+1,n0:nend,:) + u_pc(i0-1:iend+4 ,n0:nend,:))
 
-        v_pv(i0:iend,j0:jend+1,:) = &
-        c1*(v_pc(i0:iend,j0-1:jend  ,:) + v_pc(i0:iend,j0:jend+1  ,:)) + &
-        c2*(v_pc(i0:iend,j0-2:jend-1,:) + v_pc(i0:iend,j0+1:jend+2,:))
+        v_pv(n0:nend,j0-2:jend+3,:) = &
+        c1*(v_pc(n0:nend,j0-3:jend+2,:) + v_pc(n0:nend,j0-2:jend+3  ,:)) + &
+        c2*(v_pc(n0:nend,j0-4:jend+1,:) + v_pc(n0:nend,j0-1:jend+4,:))
         !$OMP END PARALLEL WORKSHARE
 
     else
@@ -997,6 +997,55 @@ subroutine interp_D2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
 
 
 end subroutine interp_D2Aduogrid
+
+
+
+subroutine interp_C2Bgrid(Q_po, Q_pu, Q_pv, id)
+    !---------------------------------------------------
+    ! C2B grid
+    !---------------------------------------------------
+    real(kind=8), allocatable, intent(inout) :: Q_po(:,:,:), Q_pu(:,:,:), Q_pv(:,:,:)
+    integer(i4), intent(in) :: id
+    integer(i4):: i, j, p
+    real(kind=8) :: a1, a2, a3, a4
+
+    if(id == 1) then
+        ! linear interpolation
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(i0, iend, j0, jend) &
+        !$OMP SHARED(Q_po, Q_pu, Q_pv)
+        Q_po(i0:iend+1,j0:jend+1,:) = &
+        (Q_pv(i0-1:iend,j0:jend+1,:) + Q_pv(i0:iend+1,j0:jend+1,:))*0.25d0 + &
+        (Q_pu(i0:iend+1,i0-1:iend,:) + Q_pu(i0:iend+1,j0:jend+1,:))*0.25d0! + &
+        !$OMP END PARALLEL WORKSHARE
+
+    elseif(id == 3) then
+        ! cubic interpolation coeffs
+        a1 = -1.d0/16.d0
+        a2 =  9.d0/16.d0
+        a3 =  9.d0/16.d0
+        a4 = -1.d0/16.d0
+     
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(i0, iend, j0, jend) &
+        !$OMP SHARED(Q_po, Q_pu, Q_pv) &
+        !$OMP SHARED(a1, a2, a3, a4)
+        Q_po(i0:iend+1,j0:jend+1,:) =(a1*Q_pv(i0-2:iend-1,j0:jend+1,:) &
+                                    + a2*Q_pv(i0-1:iend  ,j0:jend+1,:) &
+                                    + a3*Q_pv(i0  :iend+1,j0:jend+1,:) &
+                                    + a4*Q_pv(i0+1:iend+2,j0:jend+1,:))*0.5d0 &
+                                    +(a1*Q_pu(i0:iend+1,j0-2:jend-1,:) &
+                                    + a2*Q_pu(i0:iend+1,j0-1:jend  ,:) &
+                                    + a3*Q_pu(i0:iend+1,j0  :jend+1,:) &
+                                    + a4*Q_pu(i0:iend+1,j0+1:jend+2,:))*0.5d0
+ 
+        !$OMP END PARALLEL WORKSHARE
+    else
+        print*, 'ERROR in interp_C2Bgrid: invalid id, ', id
+        stop
+    end if
+end subroutine interp_C2Bgrid
+
 
 
 subroutine compute_lagrange_cs(L, mesh)

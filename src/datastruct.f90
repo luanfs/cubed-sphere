@@ -291,6 +291,7 @@ type simulation
     real(kind=8):: linf_error_av   , l1_error_av   , l2_error_av
     real(kind=8):: linf_error_av_pu, l1_error_av_pu, l2_error_av_pu
     real(kind=8):: linf_error_av_pv, l1_error_av_pv, l2_error_av_pv
+    real(kind=8):: linf_error_h_po , l1_error_h_po , l2_error_h_po
 
     ! variables for mass
     real(kind=8):: mass, mass0, mass_variation

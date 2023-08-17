@@ -29,12 +29,12 @@ mfixers      = ( 'gpr'  , 'af'  , 'gpr') # mass fixers
 edgetreat    = ('duogrid', 'duogrid', 'duogrid') # edge treatments
 
 
-#reconmethods = ('hyppm', 'hyppm') # reconstruction methods
-#splitmethods = ('avlt', 'avlt' ) # splitting
-#mtmethods    = ('mt0' , 'mt0') # metric tensor formulation
-#dpmethods    = ('rk2' , 'rk2') # departure point formulation
-#mfixers      = ('af'  , 'gpr') # mass fixers 
-#edgetreat    = ('duogrid', 'duogrid') # edge treatments
+reconmethods = ('hyppm',) # reconstruction methods
+splitmethods = ('avlt',  ) # splitting
+mtmethods    = ('mt0' , ) # metric tensor formulation
+dpmethods    = ('rk2' , ) # departure point formulation
+mfixers      = ('gpr'  , ) # mass fixers 
+edgetreat    = ('duogrid', )# edge treatments
 
 
 # Program to be run
@@ -81,7 +81,7 @@ def main():
     timeplots = np.linspace(0.0, 5.0, Nplots)
 
     # Initial time step
-    if ic=='1' or ic=='2':
+    if ic=='0' or ic=='1' or ic=='2':
         dt[0] = 8000
         #dt[0] = 0.025 #3000
     else:
@@ -94,8 +94,9 @@ def main():
     elif ic=='2':
        qmin, qmax = 800.0, 3400.0
     else:
-        print('Error - invalid ic')
-        exit()
+        if ic != '0':
+            print('Error - invalid ic')
+            exit()
 
 
     for k in range(1, len(N)):
@@ -106,7 +107,8 @@ def main():
     error_l1   = np.zeros((len(N),len(reconmethods)))
     error_l2   = np.zeros((len(N),len(reconmethods)))
 
-    if ic=='2':
+    # consistency error
+    if ic=='0':
         error_linf_div = np.zeros((len(N),len(reconmethods)))
         error_l1_div   = np.zeros((len(N),len(reconmethods)))
         error_l2_div   = np.zeros((len(N),len(reconmethods)))
@@ -116,7 +118,9 @@ def main():
         error_linf_av = np.zeros((len(N),len(reconmethods)))
         error_l1_av   = np.zeros((len(N),len(reconmethods)))
         error_l2_av   = np.zeros((len(N),len(reconmethods)))
- 
+        error_linf_h_po = np.zeros((len(N),len(reconmethods)))
+        error_l1_h_po = np.zeros((len(N),len(reconmethods)))
+        error_l2_h_po = np.zeros((len(N),len(reconmethods)))
 
     # Lat/lon aux vars
     lats = np.linspace(-90.0, 90.0, Nlat+1)
@@ -185,7 +189,7 @@ def main():
             cfl = str("{:.2e}".format(cfl))
             massvar = str("{:.2e}".format(massvar))
 
-            if ic=='2':
+            if ic=='0':
                 error_linf_div[k,i] = errors[5]
                 error_l1_div[k,i]   = errors[6]
                 error_l2_div[k,i]   = errors[7]
@@ -195,7 +199,8 @@ def main():
                 error_linf_av[k,i] = errors[11]
                 error_l1_av[k,i]   = errors[12]
                 error_l2_av[k,i]   = errors[13]
- 
+                error_linf_h_po[k,i] = errors[14]
+
             k = k+1
 
             #--------------------------------------------------------
@@ -218,31 +223,37 @@ def main():
                 +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
                 '\n min = '+dmin+', max = '+dmax+', mass variation = '+massvar+'\n \n'
 
-                plot_scalar_field(data, lats, lons, \
+                if ic != '0':
+                    plot_scalar_field(data, lats, lons, \
                              colormap, map_projection, fname, title, qmin, qmax)
 
                 # plot the error
                 colormap = 'seismic'
-                fname = swm_name+'_H_error_t'+str(t)+'_'+grid_name
-                if os.path.exists(datadir+fname+'.dat'): # The file exists
-                    f = open(datadir+fname+'.dat', 'rb')
-                    data = np.fromfile(f, dtype=np.float64)
-                    data = np.reshape(data, (Nlat+1, Nlon+1))
-                    data = np.transpose(data)
-                    dabs_max = np.amax(abs(data))
-                    dmin, dmax = -dabs_max, dabs_max
+                fields = ['H', 'abs_vort']
+                fields = ['H',]
+                for fd in fields:
+                    fname = swm_name+'_'+fd+'_error_t'+str(t)+'_'+grid_name
+                    if os.path.exists(datadir+fname+'.dat'): # The file exists
+                        f = open(datadir+fname+'.dat', 'rb')
+                        data = np.fromfile(f, dtype=np.float64)
+                        data = np.reshape(data, (Nlat+1, Nlon+1))
+                        data = np.transpose(data)
+                        dabs_max = np.amax(abs(data))
+                        dmin, dmax = -dabs_max, dabs_max
 
-                    time = str("{:.2e}".format(timeplots[t]))
-                    title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
-                    '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
-                    ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
-                    plot_scalar_field(data, lats, lons, \
-                            colormap, map_projection, fname, title, dmin, dmax)
+                        time = str("{:.2e}".format(timeplots[t]))
+                        title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
+                        '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
+                        ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
+                        plot_scalar_field(data, lats, lons, \
+                                colormap, map_projection, fname, title, dmin, dmax)
 
-                if ic=='2':
+                if ic=='0':
                     # plot the error
                     colormap = 'seismic'
+                    #colormap = 'jet'
                     fields = ['div', 'rel_vort', 'abs_vort']
+                    #fields = ['div',]
                     names = ['Divergence', 'Relative vorticity', 'Absolute vorticity',]
 
                     for fd in range(0,len(fields)):
@@ -254,6 +265,7 @@ def main():
                             data = np.transpose(data)
                             dabs_max = np.amax(abs(data))
                             dmin, dmax = -dabs_max, dabs_max
+                            #dmin, dmax = 0.0, 1.0
 
                             time = str("{:.2e}".format(timeplots[t]))
                             title = names[fd]+\
@@ -303,14 +315,16 @@ def main():
         e = e+1
 
     # consistency error
-    if ic=='2':
+    if ic=='0':
         # plot the error
-        fields = ['div', 'rel_vort', 'abs_vort',]
-        names = ['Divergence', 'Relative vorticity', 'Absolute vorticity', ]
-        error_list_div = [error_linf_div, error_l1_div, error_l2_div]
-        error_list_rv  = [error_linf_rv , error_l1_rv , error_l2_rv]
-        error_list_av  = [error_linf_av , error_l1_av , error_l2_av]
-        error_lists = [error_list_div, error_list_rv, error_list_av]
+        fields = ['div', 'rel_vort', 'abs_vort', 'h_po']
+        names = ['Divergence', 'Relative vorticity', 'Absolute vorticity', 'Height field at B grid']
+
+        error_list_div   = [error_linf_div, error_l1_div, error_l2_div]
+        error_list_rv    = [error_linf_rv , error_l1_rv , error_l2_rv]
+        error_list_av    = [error_linf_av , error_l1_av , error_l2_av]
+        error_list_h_po  = [error_linf_h_po, ]
+        error_lists = [error_list_div, error_list_rv, error_list_av, error_list_h_po]
 
         for fd in range(0,len(fields)):
             error_list = error_lists[fd]

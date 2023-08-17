@@ -24,6 +24,12 @@ type(lagrange_poly_cs) :: L_pc
 type(scalar_field) :: H       ! average values of the fluid depth
 type(scalar_field) :: H_exact ! exact fluid depth
 type(scalar_field) :: H_error ! fluid depth error
+type(scalar_field) :: H_po
+type(scalar_field) :: H_pu
+type(scalar_field) :: H_pv
+type(scalar_field) :: H_pu_exact
+type(scalar_field) :: H_pv_exact
+type(scalar_field) :: H_po_exact
 
 ! Coriolis force at pc
 type(scalar_field) :: fcoriolis_pc

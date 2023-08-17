@@ -170,6 +170,9 @@ subroutine swm_deallocation()
         deallocate(abs_vort_flux_error_pu%f)
         deallocate(abs_vort_flux_exact_pv%f)
         deallocate(abs_vort_flux_error_pv%f)
+        deallocate(H_po_exact%f)
+        deallocate(H_pu_exact%f)
+        deallocate(H_pv_exact%f)
     end if
 
     deallocate(wind_pu%u%f)

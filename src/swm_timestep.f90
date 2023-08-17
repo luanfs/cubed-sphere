@@ -39,6 +39,7 @@ use duogrid_interpolation, only: &
     interp_A2Cduogrid, &
     interp_C2Agrid, &
     interp_A2Cgrid, &
+    interp_C2Bgrid, &
     dg_interp
 
 ! Model variables
@@ -74,6 +75,10 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
 
+    ! A to C grid interpolation of H
+    call interp_A2Cgrid(H_pu%f, H_pv%f, H%f, H%f, swm_simul%avd)
+    call interp_C2Bgrid(H_po%f, H_pu%f, H_pv%f, swm_simul%avd)
+
     ! Discrete divergence
     dginterp = .false. 
     call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
@@ -90,31 +95,6 @@ subroutine sw_timestep_Dgrid(mesh)
         call dg_interp(H%f, L_pc)
     end if
 
-    ! compute the vorticity fluxes
-    if(swm_simul%n==-1)then
-        !----------------------------------------------------------------------------------
-        ! compute relative vorticity using the winds from D grid !formula 19 from LR1997
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(rel_vort, wind_pu, wind_pv, mesh, i0, iend, j0, jend)
-        rel_vort%f(i0:iend,j0:jend,:) = &
-        (wind_pu%vcovari%f(i0+1:iend+1,j0:jend,:) - wind_pu%vcovari%f(i0:iend,j0:jend,:))/mesh%dx - &
-        (wind_pv%ucovari%f(i0:iend,j0+1:jend+1,:) - wind_pv%ucovari%f(i0:iend,j0:jend,:))/mesh%dy
-        rel_vort%f(i0:iend,j0:jend,:) = rel_vort%f(i0:iend,j0:jend,:)/mesh%mt_pc(i0:iend,j0:jend,:)
-        !$OMP END PARALLEL WORKSHARE
-        !----------------------------------------------------------------------------------
-
-        ! interpolate relative vorticity to ghost cells
-        call dg_interp(rel_vort%f, L_pc)
-
-        !----------------------------------------------------------------------------------
-        ! absolute vorticity
-        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-        !$OMP SHARED(abs_vort, rel_vort, fcoriolis_pc, i0, iend, j0, jend)
-        abs_vort%f(:,:,:) = rel_vort%f(:,:,:) + fcoriolis_pc%f(:,:,:)
-        !$OMP END PARALLEL WORKSHARE
-        !----------------------------------------------------------------------------------
-
-    end if
 
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
                           rel_vort, abs_vort, fcoriolis_pc,&

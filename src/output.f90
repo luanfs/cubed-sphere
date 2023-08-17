@@ -466,6 +466,8 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%linf_error_av
     write(iunit, *) swm_simul%l1_error_av
     write(iunit, *) swm_simul%l2_error_av
+    write(iunit, *) swm_simul%linf_error_h_po
+
     close(iunit)
 end subroutine write_final_errors_swm
 
@@ -716,6 +718,10 @@ subroutine output_swm(mesh)
         !abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
         !call plot_scalarfield(abs_vort_error, mesh)
 
+        ! depth at po
+        swm_simul%linf_error_h_po = &
+        maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)-H_po%f(i0:iend+1,j0:jend+1,:)))
+
 
         print*
         print '(a34, 3e16.8)','(linf, l1, l2) divergence  errors:', &
@@ -724,9 +730,8 @@ subroutine output_swm(mesh)
         swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
         print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
         swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
-        print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
-        swm_simul%linf_error_av_pu, swm_simul%l1_error_av_pu, swm_simul%l2_error_av_pu
- 
+        print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_av
+
     end if
 
 end subroutine output_swm
