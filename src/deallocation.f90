@@ -162,14 +162,20 @@ subroutine swm_deallocation()
     if(swm_simul%ic==0)then
         deallocate(div_ugH_exact%f)
         deallocate(div_ugH_error%f)
+        deallocate(div_ugH_pu%f)
+        deallocate(div_ugH_pv%f)
+        deallocate(div_ugH_po%f)
+
         deallocate(rel_vort_exact%f)
         deallocate(rel_vort_error%f)
+
         deallocate(abs_vort_exact%f)
         deallocate(abs_vort_error%f)
         deallocate(abs_vort_flux_exact_pu%f)
         deallocate(abs_vort_flux_error_pu%f)
         deallocate(abs_vort_flux_exact_pv%f)
         deallocate(abs_vort_flux_error_pv%f)
+
         deallocate(H_po_exact%f)
         deallocate(H_pu_exact%f)
         deallocate(H_pv_exact%f)

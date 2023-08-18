@@ -75,6 +75,9 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
 
+
+    !--------------------------------------------------------------------
+    ! Depth field interpolation
     if(swm_simul%et=='duogrid') then
         ! A to C grid interpolation of H
         call interp_A2Cgrid(H_pu%f, H_pv%f, H%f, H%f, swm_simul%avd)
@@ -82,16 +85,22 @@ subroutine sw_timestep_Dgrid(mesh)
         ! A to C grid interpolation of H
         call interp_C2Bgrid(H_po%f, H_pu%f, H_pv%f, swm_simul%avd)
     end if
+    !--------------------------------------------------------------------
 
+
+    !--------------------------------------------------------------------
     ! Discrete divergence
     call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
                       px, py, Qx, Qy, swm_simul, mesh, L_pc)
+    ! interpolate div to po points (need to compute gradients
+    if(swm_simul%et=='duogrid') then
+        ! A to C grid interpolation of divuh
+        call interp_A2Cgrid(div_ugH_pu%f, div_ugH_pv%f, div_ugH%f, div_ugH%f, swm_simul%avd)
+        ! A to C grid interpolation of divuh
+        call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
+    end if
+    !--------------------------------------------------------------------
 
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(H, swm_simul, div_ugH)
-    ! Update the fluid depth
-    H%f = H%f - swm_simul%dt*div_ugH%f
-    !$OMP END PARALLEL WORKSHARE
 
 
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
@@ -127,14 +136,14 @@ subroutine sw_timestep_Dgrid(mesh)
     !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)))
     !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)))
     !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
-    !stop
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(abs_vort, swm_simul, div_abs_vort)
-    ! Update the absolute vorticity
-    !abs_vort%f = abs_vort%f - swm_simul%dt*div_abs_vort%f
-    !abs_vort%f = div_abs_vort%f
-    !$OMP END PARALLEL WORKSHARE
 
+    !--------------------------------------------------------------------
+    ! Update the fluid depth
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(H, swm_simul, div_ugH)
+    H%f = H%f - swm_simul%dt*div_ugH%f
+    !$OMP END PARALLEL WORKSHARE
+    !--------------------------------------------------------------------
 
 end subroutine sw_timestep_Dgrid
 

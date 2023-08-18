@@ -593,13 +593,20 @@ subroutine allocate_swm_vars(mesh)
     call scalar_field_allocation(H_po, mesh, 1)
     call scalar_field_allocation(H_pu, mesh, 2)
     call scalar_field_allocation(H_pv, mesh, 3)
+
     call vector_field_allocation(wind_pc, mesh, 0)
     call vector_field_allocation(wind_pu, mesh, 2)
     call vector_field_allocation(wind_pv, mesh, 3)
     call scalar_field_allocation(cx_pu, mesh, 2)
     call scalar_field_allocation(cy_pv, mesh, 3)
+
     call scalar_field_allocation(fcoriolis_pc, mesh, 0)
     call scalar_field_allocation(div_ugH, mesh, 0)
+    call scalar_field_allocation(div_ugH_pu, mesh, 2)
+    call scalar_field_allocation(div_ugH_pv, mesh, 3)
+    call scalar_field_allocation(div_ugH_po, mesh, 1)
+
+
     call scalar_field_allocation(rel_vort, mesh, 0)
     call scalar_field_allocation(abs_vort, mesh, 0)
     call scalar_field_allocation(abs_vort_flux_pu, mesh, 2)

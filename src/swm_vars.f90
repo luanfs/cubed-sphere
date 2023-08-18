@@ -66,6 +66,9 @@ type(scalar_field) :: cy_pv ! cfl y direction at pv
 type(scalar_field) :: div_ugH
 type(scalar_field) :: div_ugH_exact
 type(scalar_field) :: div_ugH_error
+type(scalar_field) :: div_ugH_pu
+type(scalar_field) :: div_ugH_pv
+type(scalar_field) :: div_ugH_po
 
 ! Dimension splitting vars
 type(scalar_field) :: Qx
