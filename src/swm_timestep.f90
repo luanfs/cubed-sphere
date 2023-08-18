@@ -102,7 +102,6 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------------------------
 
 
-
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
                           rel_vort, abs_vort, fcoriolis_pc,&
                           wind_pu, wind_pv, cx_pu, cy_pv, &

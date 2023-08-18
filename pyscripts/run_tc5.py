@@ -20,7 +20,7 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, ) # Values of N
+N = (16, 32, 64, 128) # Values of N
 reconmethods = ('hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ( 'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ( 'pl07', 'mt0' , 'mt0') # metric tensor formulation
@@ -29,12 +29,12 @@ mfixers      = ( 'gpr'  , 'af'  , 'gpr') # mass fixers
 edgetreat    = ('duogrid', 'duogrid', 'duogrid') # edge treatments
 
 
-reconmethods = ('hyppm',) # reconstruction methods
-splitmethods = ('avlt',  ) # splitting
-mtmethods    = ('mt0' , ) # metric tensor formulation
-dpmethods    = ('rk2' , ) # departure point formulation
-mfixers      = ('gpr'  , ) # mass fixers 
-edgetreat    = ('duogrid', )# edge treatments
+#reconmethods = ('hyppm',) # reconstruction methods
+#splitmethods = ('avlt',  ) # splitting
+#mtmethods    = ('mt0' , ) # metric tensor formulation
+#dpmethods    = ('rk2' , ) # departure point formulation
+#mfixers      = ('gpr'  , ) # mass fixers 
+#edgetreat    = ('duogrid', )# edge treatments
 
 
 # Program to be run
@@ -82,7 +82,7 @@ def main():
 
     # Initial time step
     if ic=='0' or ic=='1' or ic=='2':
-        dt[0] = 8000
+        dt[0] = 4000
         #dt[0] = 0.025 #3000
     else:
         print('Error - invalid ic')

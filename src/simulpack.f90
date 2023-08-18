@@ -394,6 +394,9 @@ subroutine swm_test(mesh)
 
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
+    !wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
+    !wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
+    !stop
 
     ! Temporal loop
     swm_simul%t = 0.d0
