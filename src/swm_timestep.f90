@@ -75,25 +75,23 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
 
-    ! A to C grid interpolation of H
-    call interp_A2Cgrid(H_pu%f, H_pv%f, H%f, H%f, swm_simul%avd)
-    call interp_C2Bgrid(H_po%f, H_pu%f, H_pv%f, swm_simul%avd)
+    if(swm_simul%et=='duogrid') then
+        ! A to C grid interpolation of H
+        call interp_A2Cgrid(H_pu%f, H_pv%f, H%f, H%f, swm_simul%avd)
+
+        ! A to C grid interpolation of H
+        call interp_C2Bgrid(H_po%f, H_pu%f, H_pv%f, swm_simul%avd)
+    end if
 
     ! Discrete divergence
-    dginterp = .false. 
     call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, swm_simul, mesh, L_pc, dginterp)
+                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(H, swm_simul, div_ugH)
     ! Update the fluid depth
     H%f = H%f - swm_simul%dt*div_ugH%f
     !$OMP END PARALLEL WORKSHARE
-
-    ! interpolate depth to ghost cells
-    if(swm_simul%et=='duogrid') then
-        call dg_interp(H%f, L_pc)
-    end if
 
 
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
