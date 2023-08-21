@@ -114,6 +114,25 @@ subroutine sw_timestep_Dgrid(mesh)
                           px, py, Qx, Qy, swm_simul, mesh, L_pc)
     !--------------------------------------------------------------------
 
+    !--------------------------------------------------------------------
+    ! Compute the gradient of h
+    !--------------------------------------------------------------------
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(grad_H_pu, grad_H_pv, H_po, mesh) &
+    !!$OMP SHARED(i0, j0, iend, jend)
+    dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+
+    !grad_H_pv_exact%ex%f(i0:iend,j0:jend+1,:) = (H_po_exact%f(i0+1:iend+1,j0:jend+1,:) -&
+    !H_po_exact%f(i0:iend,j0:jend+1,:))/mesh%dx
+    !grad_H_pu_exact%ey%f(i0:iend+1,j0:jend,:) = (H_po_exact%f(i0:iend+1,j0+1:jend+1,:) -&
+    !H_po_exact%f(i0:iend+1,j0:jend,:))/mesh%dy
+
+    !!$OMP END PARALLEL WORKSHARE
+    !--------------------------------------------------------------------
+
     !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
 
     !div_abs_vort%f(i0:iend,j0:jend,:) = &

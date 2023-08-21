@@ -26,7 +26,6 @@ use datastruct, only: &
   cubedsphere, &
   scalar_field, &
   velocity_field, &
-  vector_field, &
   simulation, &
   ppm_parabola, &
   lagrange_poly_cs
@@ -399,9 +398,9 @@ end subroutine scalar_field_allocation
 
 subroutine velocity_field_allocation(V, mesh, pos)
     !---------------------------------------------------
-    ! VELOCITY_FIELD_ALLOCATION
+    ! VECTOR_FIELD_ALLOCATION
     !
-    ! This routines allocates the velocity field V
+    ! This routines allocates the vector field V
     ! at position 'pos', including ghost cells.
 
     ! mesh must be already allocated.
@@ -439,37 +438,6 @@ subroutine velocity_field_allocation(V, mesh, pos)
     V%pos = pos
     return
 end subroutine velocity_field_allocation 
-
-subroutine vector_field_allocation(V, mesh, pos)
-    !---------------------------------------------------
-    ! VECTOR_FIELD_ALLOCATION
-    !
-    ! This routines allocates the vector field V
-    ! at position 'pos', including ghost cells.
-
-    ! mesh must be already allocated.
-    !
-    ! Position of the values relative to a mesh
-    !   0 - Centers (pc)
-    !   1 - Vertices (po) 
-    !   2 - Midpoint at u position (pu)
-    !   3 - Midpoint at v position (pv)
-    !
-    !--------------------------------------------------
-    type(cubedsphere), intent(in):: mesh
-    type(vector_field), intent(inout) :: V
-   
-    ! Position
-    integer, intent(in) :: pos
-     
-    ! Allocate all the vector representations
-    call scalar_field_allocation(V%ex, mesh, pos) 
-    call scalar_field_allocation(V%ey, mesh, pos) 
-     
-    ! Store the position
-    V%pos = pos
-    return
-end subroutine vector_field_allocation 
 
 
 
@@ -626,6 +594,11 @@ subroutine allocate_swm_vars(mesh)
     call scalar_field_allocation(H_pu, mesh, 2)
     call scalar_field_allocation(H_pv, mesh, 3)
 
+    call scalar_field_allocation(dx_H_pv, mesh, 3)
+    call scalar_field_allocation(dy_H_pu, mesh, 2)
+    call scalar_field_allocation(dx_div_ugh_pv, mesh, 3)
+    call scalar_field_allocation(dy_div_ugh_pu, mesh, 2)
+ 
     call velocity_field_allocation(wind_pc, mesh, 0)
     call velocity_field_allocation(wind_pu, mesh, 2)
     call velocity_field_allocation(wind_pv, mesh, 3)
@@ -634,14 +607,9 @@ subroutine allocate_swm_vars(mesh)
 
     call scalar_field_allocation(fcoriolis_pc, mesh, 0)
     call scalar_field_allocation(div_ugH, mesh, 0)
-    call scalar_field_allocation(div_ugH_pu, mesh, 2)
-    call scalar_field_allocation(div_ugH_pv, mesh, 3)
+    call scalar_field_allocation(div_ugh_pu, mesh, 2)
+    call scalar_field_allocation(div_ugh_pv, mesh, 3)
     call scalar_field_allocation(div_ugH_po, mesh, 1)
-
-    call vector_field_allocation(grad_H_pu, mesh, 2)
-    call vector_field_allocation(grad_H_pv, mesh, 3)
-    call vector_field_allocation(grad_divuh_pu, mesh, 2)
-    call vector_field_allocation(grad_divuh_pv, mesh, 3)
 
     call scalar_field_allocation(rel_vort, mesh, 0)
     call scalar_field_allocation(abs_vort, mesh, 0)
@@ -676,8 +644,6 @@ subroutine allocate_swm_vars(mesh)
         call scalar_field_allocation(H_po_exact, mesh, 1)
         call scalar_field_allocation(H_pu_exact, mesh, 2)
         call scalar_field_allocation(H_pv_exact, mesh, 3)
-        call vector_field_allocation(grad_H_pu_exact, mesh, 2)
-        call vector_field_allocation(grad_H_pv_exact, mesh, 3)
     end if
 
 end subroutine allocate_swm_vars

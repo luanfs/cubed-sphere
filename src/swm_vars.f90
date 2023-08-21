@@ -10,7 +10,6 @@ module swm_vars
 use datastruct, only: &
   scalar_field, &
   velocity_field, &
-  vector_field, &
   ppm_parabola, &
   lagrange_poly_cs, &
   simulation
@@ -41,14 +40,12 @@ type(scalar_field) :: rel_vort_exact
 type(scalar_field) :: rel_vort_error
 
 ! Gradient of h
-type(vector_field) :: grad_H_pu
-type(vector_field) :: grad_H_pv
-type(vector_field) :: grad_H_pu_exact
-type(vector_field) :: grad_H_pv_exact
+type(scalar_field) :: dy_H_pu
+type(scalar_field) :: dx_H_pv
 
 ! Gradient of divuh
-type(vector_field) :: grad_divuh_pu
-type(vector_field) :: grad_divuh_pv
+type(scalar_field) :: dy_div_ugh_pu
+type(scalar_field) :: dx_div_ugh_pv
 
 ! Absolute vorticity
 type(scalar_field) :: abs_vort

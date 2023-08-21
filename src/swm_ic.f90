@@ -214,7 +214,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     !aux
     real(kind=8) :: lat, lon
     real(kind=8) :: ulon, vlat, ucontra, vcontra, ucovari, vcovari
-    real(kind=8) :: rv_pu, rv_pv, av_pu, av_pv, f_pu, f_pv
+    real(kind=8) :: rv_pu, rv_pv, av_pu, av_pv, f_pu, f_pv, gradh_lat, gradh_lon
 
     !debug - check if wind conversion is correct
     real(kind=8) :: ull, vll, error1, error
@@ -499,13 +499,12 @@ end subroutine velocity_swm
 
 subroutine div_swm(div, lat, lon, vf)
     !--------------------------------------------------
-    ! Compute the exact divergence of the velocity fields
+    ! Compute the exact divergence of the velocity field * depth
     ! 
     !--------------------------------------------------
     integer(i4), intent(in) :: vf
     real(kind=8), intent(in) :: lat, lon
     real(kind=8), intent(out) :: div
-    integer(i4) :: m, n
 
     select case(vf)
         case(0, 1, 2)
@@ -526,7 +525,6 @@ subroutine rel_vort_swm(rel_vort, lat, lon, vf)
     integer(i4), intent(in) :: vf
     real(kind=8), intent(in) :: lat, lon
     real(kind=8), intent(out) :: rel_vort
-    integer(i4) :: m, n
     real(kind=8) :: u0, alpha
 
     select case(vf)
@@ -566,6 +564,41 @@ function fcoriolis(lat, lon, ic)
     end select
     return
 end function fcoriolis
+
+
+subroutine gradh_swm(gradh_lon, gradh_lat, lat, lon, vf)
+    !--------------------------------------------------
+    ! Compute the exact divergence of the depth field
+    ! 
+    !--------------------------------------------------
+    integer(i4), intent(in) :: vf
+    real(kind=8), intent(in) :: lat, lon
+    real(kind=8), intent(out) :: gradh_lon, gradh_lat
+    real(kind=8) :: alpha ! rotation angle
+    real(kind=8) :: u0
+
+    select case(vf)
+        case(0, 1, 2)
+            alpha = -45.d0*deg2rad ! Rotation angle
+            u0    =  erad*2.d0*pi/12.d0*sec2day ! Wind speed
+
+            gradh_lon = 2.d0*dcos(lon)*dcos(lat)*dsin(alpha)*dsin(lon)*dcos(lat)*dsin(alpha) + &
+            2.d0*dsin(lat)*dcos(alpha)*dsin(lon)*dcos(lat)*dsin(alpha)
+            gradh_lon = gradh_lon/dcos(lat)
+
+            gradh_lat = 2.d0*(-dcos(lon)*dcos(lat)*dsin(alpha)+&
+                        dsin(lat)*dcos(alpha))*(dcos(lon)*dsin(lat)*dsin(alpha)-&
+                        dcos(lat)*dcos(alpha))
+
+
+            gradh_lat = -gravi*(erad*omega*u0 + u0*u0*0.5d0)*gradh_lat
+            gradh_lon = -gravi*(erad*omega*u0 + u0*u0*0.5d0)*gradh_lon
+        case default
+            print*, "ERROR on gradh_swm: invalid vector field"
+            stop
+    end select
+    return
+end subroutine gradh_swm
 
 
 end module swm_ic

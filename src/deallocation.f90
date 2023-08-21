@@ -150,9 +150,9 @@ subroutine swm_deallocation()
     deallocate(H%f)
     deallocate(H_exact%f)
     deallocate(div_ugH%f, rel_vort%f, abs_vort%f, fcoriolis_pc%f, div_abs_vort%f)
+    deallocate(dx_H_pv%f, dy_H_pu%f)
+    deallocate(dx_div_ugH_pv%f, dy_div_ugH_pu%f)
     deallocate(Qx%f, Qy%f)
-    deallocate(grad_H_pu%ex%f, grad_H_pv%ey%f) 
-    deallocate(grad_divuh_pu%ex%f, grad_divuh_pv%ey%f) 
 
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
     deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)
@@ -181,9 +181,6 @@ subroutine swm_deallocation()
         deallocate(H_po_exact%f)
         deallocate(H_pu_exact%f)
         deallocate(H_pv_exact%f)
-
-        deallocate(grad_H_pu_exact%ex%f)
-        deallocate(grad_H_pv_exact%ey%f) 
     end if
 
     deallocate(wind_pu%u%f)
