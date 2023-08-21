@@ -27,7 +27,7 @@ use constants, only: &
 use datastruct, only: &
     cubedsphere, &
     scalar_field, &
-    vector_field, &
+    velocity_field, &
     simulation
 
 ! Allocation

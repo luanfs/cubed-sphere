@@ -26,13 +26,13 @@ use sphgeo, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   simulation
 
 ! Data allocation
 use allocation, only: &
   scalar_field_allocation, &
-  vector_field_allocation, &
+  velocity_field_allocation, &
   allocate_adv_vars
 
 ! Diagnostics
@@ -311,7 +311,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
     type(cubedsphere), intent(in) :: mesh
     type(simulation), intent(inout) :: advsimul
     type(scalar_field), intent(inout) :: Q
-    type(vector_field), intent(inout) :: V_pu, V_pv, V_pc
+    type(velocity_field), intent(inout) :: V_pu, V_pv, V_pc
 
     ! aux
     integer(i4) :: i, j, p

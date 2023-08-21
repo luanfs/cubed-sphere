@@ -9,7 +9,7 @@ module advection_vars
 ! Data structures
 use datastruct, only: &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   ppm_parabola, &
   lagrange_poly_cs, &
   simulation
@@ -26,7 +26,7 @@ type(scalar_field) :: Q_exact ! exact solution
 type(scalar_field) :: Q_error ! error
 
 ! Vector field
-type(vector_field) :: wind_pu, wind_pv, wind_pc
+type(velocity_field) :: wind_pu, wind_pv, wind_pc
 
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu

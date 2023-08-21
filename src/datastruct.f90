@@ -239,7 +239,7 @@ end type scalar_field
 !---------------------------------------------------------
 ! Variable for vector values on cubed-sphere grid
 !---------------------------------------------------------
-type vector_field
+type velocity_field
     ! Geographical coordinates 
     type(scalar_field) :: u
     type(scalar_field) :: v
@@ -278,7 +278,8 @@ type vector_field
     !Variable name - long name - detailed name
     ! This is used to for filenames of this variable
     character (len=256) :: name
-end type vector_field 
+end type velocity_field 
+
 
 !---------------------------------------------------------
 ! Data structure for simulation class

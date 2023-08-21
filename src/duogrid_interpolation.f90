@@ -28,7 +28,7 @@ use constants, only: &
 use datastruct, only: &
     cubedsphere, &
     scalar_field, &
-    vector_field, &
+    velocity_field, &
     matrix, &
     simulation, &
     lagrange_poly_cs
@@ -816,7 +816,7 @@ subroutine interp_D2Aduogrid(U_pu, U_pv, U_pc, L, mesh)
     ! to the A grid (covariant) ghost cell values at centers
     !---------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
-    type(vector_field), intent(inout) :: U_pu, U_pv, U_pc
+    type(velocity_field), intent(inout) :: U_pu, U_pv, U_pc
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4):: i, j, p, h
     real(kind=8) :: a1, a2, a3, a4

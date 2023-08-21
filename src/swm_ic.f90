@@ -26,14 +26,14 @@ use sphgeo, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   simulation, &
   lagrange_poly_cs
 
 ! Data allocation
 use allocation, only: &
   scalar_field_allocation, &
-  vector_field_allocation, &
+  velocity_field_allocation, &
   allocate_swm_vars
 
 use diagnostics, only: &
@@ -206,7 +206,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     type(simulation), intent(inout) :: swm_simul
     type(lagrange_poly_cs), intent(inout) :: L_pc
     type(scalar_field), intent(inout) :: H
-    type(vector_field), intent(inout) :: V_pu, V_pv, V_pc
+    type(velocity_field), intent(inout) :: V_pu, V_pv, V_pc
 
     ! aux
     integer(i4) :: i, j, p

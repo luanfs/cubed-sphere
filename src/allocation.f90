@@ -25,7 +25,7 @@ use datastruct, only: &
   matrix, &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   simulation, &
   ppm_parabola, &
   lagrange_poly_cs
@@ -396,7 +396,7 @@ subroutine scalar_field_allocation(Q, mesh, pos)
     return
 end subroutine scalar_field_allocation 
 
-subroutine vector_field_allocation(V, mesh, pos)
+subroutine velocity_field_allocation(V, mesh, pos)
     !---------------------------------------------------
     ! VECTOR_FIELD_ALLOCATION
     !
@@ -413,7 +413,7 @@ subroutine vector_field_allocation(V, mesh, pos)
     !
     !--------------------------------------------------
     type(cubedsphere), intent(in):: mesh
-    type(vector_field), intent(inout) :: V
+    type(velocity_field), intent(inout) :: V
    
     ! Position
     integer, intent(in) :: pos
@@ -437,7 +437,7 @@ subroutine vector_field_allocation(V, mesh, pos)
     ! Store the position
     V%pos = pos
     return
-end subroutine vector_field_allocation 
+end subroutine velocity_field_allocation 
 
 
 
@@ -554,9 +554,9 @@ subroutine allocate_adv_vars(mesh)
     call scalar_field_allocation(Q, mesh, 0)
     call scalar_field_allocation(Q_exact, mesh, 0)
     call scalar_field_allocation(Q_error, mesh, 0)
-    call vector_field_allocation(wind_pc, mesh, 0)
-    call vector_field_allocation(wind_pu, mesh, 2)
-    call vector_field_allocation(wind_pv, mesh, 3)
+    call velocity_field_allocation(wind_pc, mesh, 0)
+    call velocity_field_allocation(wind_pu, mesh, 2)
+    call velocity_field_allocation(wind_pv, mesh, 3)
     call scalar_field_allocation(cx_pu, mesh, 2)
     call scalar_field_allocation(cy_pv, mesh, 3)
     call scalar_field_allocation(div_ugq, mesh, 0)
@@ -594,9 +594,9 @@ subroutine allocate_swm_vars(mesh)
     call scalar_field_allocation(H_pu, mesh, 2)
     call scalar_field_allocation(H_pv, mesh, 3)
 
-    call vector_field_allocation(wind_pc, mesh, 0)
-    call vector_field_allocation(wind_pu, mesh, 2)
-    call vector_field_allocation(wind_pv, mesh, 3)
+    call velocity_field_allocation(wind_pc, mesh, 0)
+    call velocity_field_allocation(wind_pu, mesh, 2)
+    call velocity_field_allocation(wind_pv, mesh, 3)
     call scalar_field_allocation(cx_pu, mesh, 2)
     call scalar_field_allocation(cy_pv, mesh, 3)
 

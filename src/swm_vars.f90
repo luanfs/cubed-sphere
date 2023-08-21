@@ -9,7 +9,7 @@ module swm_vars
 ! Data structures
 use datastruct, only: &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   ppm_parabola, &
   lagrange_poly_cs, &
   simulation
@@ -56,7 +56,7 @@ type(scalar_field) :: abs_vort_flux_error_pv
 
 
 ! Vector field
-type(vector_field) :: wind_pu, wind_pv, wind_pc
+type(velocity_field) :: wind_pu, wind_pv, wind_pc
 
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu

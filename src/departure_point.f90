@@ -19,7 +19,7 @@ use constants, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   lagrange_poly_cs
 
 ! Interpolation
@@ -37,7 +37,7 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
     ! for the departure point scheme
     !
     !--------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pu, wind_pv, wind_pc
+    type(velocity_field), intent(inout) :: wind_pu, wind_pv, wind_pc
     type(cubedsphere), intent(inout) :: mesh
     type(lagrange_poly_cs), intent(inout) :: L_pc
     character(len=16) :: dp ! departute point method
@@ -153,7 +153,7 @@ subroutine swm_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
     ! for the departure point scheme
     ! Assume that ghost cells are filled
     !--------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pu, wind_pv, wind_pc
+    type(velocity_field), intent(inout) :: wind_pu, wind_pv, wind_pc
     type(cubedsphere), intent(inout) :: mesh
     type(lagrange_poly_cs), intent(inout) :: L_pc
     character(len=16) :: dp ! departute point method

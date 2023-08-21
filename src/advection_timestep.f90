@@ -24,7 +24,7 @@ use sphgeo, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   simulation
 
 ! Discrete operators 
@@ -95,7 +95,7 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     !
     !--------------------------------------------------
     type(cubedsphere), intent(in) :: mesh
-    type(vector_field), intent(inout) :: V_pu, V_pv
+    type(velocity_field), intent(inout) :: V_pu, V_pv
     integer(i4), intent(in) :: vf
     real(kind=8), intent(in) :: t
 

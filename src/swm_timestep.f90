@@ -24,7 +24,7 @@ use sphgeo, only: &
 use datastruct, only: &
   cubedsphere, &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   simulation
 
 ! Discrete operators 

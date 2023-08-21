@@ -15,7 +15,7 @@ use constants, only: &
 !Data structures
 use datastruct, only: &
   scalar_field, &
-  vector_field, &
+  velocity_field, &
   cubedsphere, &
   ppm_parabola, &
   simulation, &
@@ -51,7 +51,7 @@ subroutine F_operator(Q, wind_pu, cx_pu, px, mesh, dt)
     ! Flux operator in x direction
     ! Formula 2.7 from Lin and Rood 1996
     !---------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pu
+    type(velocity_field), intent(inout) :: wind_pu
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
@@ -84,7 +84,7 @@ subroutine G_operator(Q, wind_pv, cy_pv, py, mesh, dt)
     ! Flux operator in y direction
     ! Formula 2.8 from Lin and Rood 1996
     !---------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pv
+    type(velocity_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cy_pv
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
@@ -108,7 +108,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, sp)
     !---------------------------------------------------
     ! Inner flux operator in x direction
     !---------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pu
+    type(velocity_field), intent(inout) :: wind_pu
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
@@ -152,7 +152,7 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, sp)
     !---------------------------------------------------
     ! Inner flux operator in y direction
     !---------------------------------------------------
-    type(vector_field), intent(inout) :: wind_pv
+    type(velocity_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cy_pv
     type(scalar_field), intent(inout) :: Q
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
@@ -202,8 +202,8 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     !---------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
     type(simulation), intent(inout) :: advsimul
-    type(vector_field), intent(inout) :: wind_pu
-    type(vector_field), intent(inout) :: wind_pv
+    type(velocity_field), intent(inout) :: wind_pu
+    type(velocity_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: cy_pv
     type(scalar_field), intent(inout) :: Q
@@ -333,8 +333,8 @@ subroutine vorticity_fluxes(div_abs_vort,abs_vort_flux_pu, abs_vort_flux_pv, &
     type(scalar_field), intent(inout) :: abs_vort
     type(scalar_field), intent(inout) :: div_abs_vort
     type(scalar_field), intent(inout) :: fcoriolis_pc
-    type(vector_field), intent(inout) :: wind_pu
-    type(vector_field), intent(inout) :: wind_pv
+    type(velocity_field), intent(inout) :: wind_pu
+    type(velocity_field), intent(inout) :: wind_pv
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: cy_pv
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
