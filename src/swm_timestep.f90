@@ -76,12 +76,16 @@ subroutine sw_timestep_Dgrid(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
 
+    !====================================================================
     !--------------------------------------------------------------------
     ! Discrete divergence
+    !--------------------------------------------------------------------
     call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
                       px, py, Qx, Qy, swm_simul, mesh, L_pc)
 
+    !--------------------------------------------------------------------
     ! interpolate div to po points (need to compute gradients)
+    !--------------------------------------------------------------------
     if(swm_simul%et=='duogrid') then
         ! ghost cell interpolation 
         call dg_interp(div_ugH%f, L_pc)
@@ -91,9 +95,25 @@ subroutine sw_timestep_Dgrid(mesh)
         ! A to C grid interpolation of divuh
         call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
     end if
+
     !--------------------------------------------------------------------
+    ! Compute the gradient of div(uh)
+    !--------------------------------------------------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(dy_div_ugh_pu, dx_div_ugh_pv, div_ugh_po, mesh) &
+    !$OMP SHARED(i0, j0, iend, jend)
+    dx_div_ugh_pv%f(i0:iend,j0:jend+1,:) = (div_ugh_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    div_ugh_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    dy_div_ugh_pu%f(i0:iend+1,j0:jend,:) = (div_ugh_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    div_ugh_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    !$OMP END PARALLEL WORKSHARE
+    !--------------------------------------------------------------------
+    !====================================================================
 
 
+
+
+    !====================================================================
     !--------------------------------------------------------------------
     ! Depth field interpolation need for gradient
     if(swm_simul%et=='duogrid') then
@@ -104,8 +124,22 @@ subroutine sw_timestep_Dgrid(mesh)
         call interp_C2Bgrid(H_po%f, H_pu%f, H_pv%f, swm_simul%avd)
     end if
     !--------------------------------------------------------------------
+    ! Compute the gradient of h
+    !--------------------------------------------------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(dy_H_pu, dx_H_pv, H_po, mesh) &
+    !$OMP SHARED(i0, j0, iend, jend)
+    dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    !$OMP END PARALLEL WORKSHARE
+    !====================================================================
 
 
+
+
+    !====================================================================
     !--------------------------------------------------------------------
     ! Compute the vorticity fluxes
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
@@ -113,24 +147,11 @@ subroutine sw_timestep_Dgrid(mesh)
                           wind_pu, wind_pv, cx_pu, cy_pv, &
                           px, py, Qx, Qy, swm_simul, mesh, L_pc)
     !--------------------------------------------------------------------
+    !====================================================================
 
-    !--------------------------------------------------------------------
-    ! Compute the gradient of h
-    !--------------------------------------------------------------------
-    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !!$OMP SHARED(grad_H_pu, grad_H_pv, H_po, mesh) &
-    !!$OMP SHARED(i0, j0, iend, jend)
-    dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx
-    dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy
 
-    !grad_H_pv_exact%ex%f(i0:iend,j0:jend+1,:) = (H_po_exact%f(i0+1:iend+1,j0:jend+1,:) -&
-    !H_po_exact%f(i0:iend,j0:jend+1,:))/mesh%dx
-    !grad_H_pu_exact%ey%f(i0:iend+1,j0:jend,:) = (H_po_exact%f(i0:iend+1,j0+1:jend+1,:) -&
-    !H_po_exact%f(i0:iend+1,j0:jend,:))/mesh%dy
 
-    !!$OMP END PARALLEL WORKSHARE
+
     !--------------------------------------------------------------------
 
     !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
