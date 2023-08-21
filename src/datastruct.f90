@@ -237,7 +237,7 @@ type scalar_field
 end type scalar_field 
 
 !---------------------------------------------------------
-! Variable for vector values on cubed-sphere grid
+! Variable for velocity vector values on cubed-sphere grid
 !---------------------------------------------------------
 type velocity_field
     ! Geographical coordinates 
@@ -279,6 +279,27 @@ type velocity_field
     ! This is used to for filenames of this variable
     character (len=256) :: name
 end type velocity_field 
+
+!---------------------------------------------------------
+! Variable for vector values on cubed-sphere grid
+!---------------------------------------------------------
+type vector_field
+    ! coordinates on cubed sphere mapping
+    type(scalar_field) :: ex
+    type(scalar_field) :: ey
+
+    ! Position of the values relative to a mesh
+    !   0 - Centers (pc)
+    !   1 - Vertices (po) 
+    !   2 - Midpoint at u position (pu)
+    !   3 - Midpoint at v position (pv)
+    integer (i4) :: pos
+
+    !Variable name - long name - detailed name
+    ! This is used to for filenames of this variable
+    character (len=256) :: name
+end type vector_field 
+
 
 
 !---------------------------------------------------------

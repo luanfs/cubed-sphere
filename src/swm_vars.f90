@@ -10,6 +10,7 @@ module swm_vars
 use datastruct, only: &
   scalar_field, &
   velocity_field, &
+  vector_field, &
   ppm_parabola, &
   lagrange_poly_cs, &
   simulation
@@ -38,6 +39,12 @@ type(scalar_field) :: fcoriolis_pc
 type(scalar_field) :: rel_vort
 type(scalar_field) :: rel_vort_exact
 type(scalar_field) :: rel_vort_error
+
+! Gradient of h
+type(vector_field) :: grad_H_pu
+type(vector_field) :: grad_H_pv
+type(vector_field) :: grad_H_pu_exact
+type(vector_field) :: grad_H_pv_exact
 
 ! Absolute vorticity
 type(scalar_field) :: abs_vort
