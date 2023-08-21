@@ -640,6 +640,8 @@ subroutine allocate_swm_vars(mesh)
 
     call vector_field_allocation(grad_H_pu, mesh, 2)
     call vector_field_allocation(grad_H_pv, mesh, 3)
+    call vector_field_allocation(grad_divuh_pu, mesh, 2)
+    call vector_field_allocation(grad_divuh_pv, mesh, 3)
 
     call scalar_field_allocation(rel_vort, mesh, 0)
     call scalar_field_allocation(abs_vort, mesh, 0)

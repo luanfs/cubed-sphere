@@ -70,7 +70,7 @@ subroutine tgvectors_deallocation(mesh)
     deallocate(mesh%tgy_pv) ! Tangent vector at pv in y direction
     deallocate(mesh%tgx_pc) ! Tangent vector at pc in x direction
     deallocate(mesh%tgy_pc) ! Tangent vector at pc in y direction
-  end subroutine tgvectors_deallocation 
+end subroutine tgvectors_deallocation 
 
 subroutine adv_deallocation()
     use advection_vars
@@ -151,8 +151,8 @@ subroutine swm_deallocation()
     deallocate(H_exact%f)
     deallocate(div_ugH%f, rel_vort%f, abs_vort%f, fcoriolis_pc%f, div_abs_vort%f)
     deallocate(Qx%f, Qy%f)
-    deallocate(grad_H_pu%ex%f)
-    deallocate(grad_H_pv%ey%f) 
+    deallocate(grad_H_pu%ex%f, grad_H_pv%ey%f) 
+    deallocate(grad_divuh_pu%ex%f, grad_divuh_pv%ey%f) 
 
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
     deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)

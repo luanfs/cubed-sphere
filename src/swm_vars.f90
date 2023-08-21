@@ -46,6 +46,10 @@ type(vector_field) :: grad_H_pv
 type(vector_field) :: grad_H_pu_exact
 type(vector_field) :: grad_H_pv_exact
 
+! Gradient of divuh
+type(vector_field) :: grad_divuh_pu
+type(vector_field) :: grad_divuh_pv
+
 ! Absolute vorticity
 type(scalar_field) :: abs_vort
 type(scalar_field) :: abs_vort_exact
