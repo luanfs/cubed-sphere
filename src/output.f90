@@ -720,8 +720,8 @@ subroutine output_swm(mesh)
 
         ! depth at po
         swm_simul%linf_error_h_po = &
-        maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)-H_po%f(i0:iend+1,j0:jend+1,:)))
-
+        maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)-H_po%f(i0:iend+1,j0:jend+1,:)))/&
+        maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)))
 
         print*
         print '(a34, 3e16.8)','(linf, l1, l2) divergence  errors:', &
@@ -730,7 +730,7 @@ subroutine output_swm(mesh)
         swm_simul%linf_error_rv, swm_simul%l1_error_rv, swm_simul%l2_error_rv
         print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
         swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
-        print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_av
+        print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_h_po
 
     end if
 
@@ -948,7 +948,7 @@ subroutine print_advparameters(advsimul)
     print '(a, a21)',    " Operator spltting            : ", advsimul%opsplit
     print '(a, a21)',    " Metric tensor                : ", advsimul%mt
     print '(a, a21)',    " Departure point              : ", advsimul%dp
-    print '(a, a21)',    " Mass fixer                   : ", advsimul%dp
+    print '(a, a21)',    " Mass fixer                   : ", advsimul%mf
     print '(a, a21)',    " Edge treatment               : ", advsimul%et
     print '(a, i8)',     " Duo grid interpolation degree: ", advsimul%id
     print*
@@ -970,7 +970,7 @@ subroutine print_swmparameters(swm_simul)
     print '(a, a21)',    " Operator spltting            : ", swm_simul%opsplit
     print '(a, a21)',    " Metric tensor                : ", swm_simul%mt
     print '(a, a21)',    " Departure point              : ", swm_simul%dp
-    print '(a, a21)',    " Mass fixer                   : ", swm_simul%dp
+    print '(a, a21)',    " Mass fixer                   : ", swm_simul%mf
     print '(a, a21)',    " Edge treatment               : ", swm_simul%et
     print '(a, i8)',     " Duo grid interpolation degree: ", swm_simul%id
     print*

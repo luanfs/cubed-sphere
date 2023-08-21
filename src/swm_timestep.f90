@@ -77,7 +77,25 @@ subroutine sw_timestep_Dgrid(mesh)
 
 
     !--------------------------------------------------------------------
-    ! Depth field interpolation
+    ! Discrete divergence
+    call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
+                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
+
+    ! interpolate div to po points (need to compute gradients)
+    if(swm_simul%et=='duogrid') then
+        ! ghost cell interpolation 
+        call dg_interp(div_ugH%f, L_pc)
+
+        ! A to C grid interpolation of divuh
+        call interp_A2Cgrid(div_ugH_pu%f, div_ugH_pv%f, div_ugH%f, div_ugH%f, swm_simul%avd)
+        ! A to C grid interpolation of divuh
+        call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
+    end if
+    !--------------------------------------------------------------------
+
+
+    !--------------------------------------------------------------------
+    ! Depth field interpolation need for gradient
     if(swm_simul%et=='duogrid') then
         ! A to C grid interpolation of H
         call interp_A2Cgrid(H_pu%f, H_pv%f, H%f, H%f, swm_simul%avd)
@@ -89,23 +107,12 @@ subroutine sw_timestep_Dgrid(mesh)
 
 
     !--------------------------------------------------------------------
-    ! Discrete divergence
-    call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
-    ! interpolate div to po points (need to compute gradients
-    if(swm_simul%et=='duogrid') then
-        ! A to C grid interpolation of divuh
-        call interp_A2Cgrid(div_ugH_pu%f, div_ugH_pv%f, div_ugH%f, div_ugH%f, swm_simul%avd)
-        ! A to C grid interpolation of divuh
-        call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
-    end if
-    !--------------------------------------------------------------------
-
-
+    ! Compute the vorticity fluxes
     call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
                           rel_vort, abs_vort, fcoriolis_pc,&
                           wind_pu, wind_pv, cx_pu, cy_pv, &
                           px, py, Qx, Qy, swm_simul, mesh, L_pc)
+    !--------------------------------------------------------------------
 
     !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
 
@@ -172,7 +179,7 @@ subroutine sw_timestep_Cgrid(mesh)
     wind_pc%ucovari%f(n0:nend,n0:nend,:)*mesh%covari2contra_pc(n0:nend,n0:nend,:)%M(1,1)+&
     wind_pc%vcovari%f(n0:nend,n0:nend,:)*mesh%covari2contra_pc(n0:nend,n0:nend,:)%M(1,2) 
 
-    wind_pc%vcontra%f(n0:nend,n0:nend,:) =&
+    wind_pc%vcontra%f(n0:nend,n0:nend,:) = &
     wind_pc%ucovari%f(n0:nend,n0:nend,:)*mesh%covari2contra_pc(n0:nend,n0:nend,:)%M(2,1)+&
     wind_pc%vcovari%f(n0:nend,n0:nend,:)*mesh%covari2contra_pc(n0:nend,n0:nend,:)%M(2,2) 
     !$OMP END PARALLEL WORKSHARE
