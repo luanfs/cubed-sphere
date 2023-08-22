@@ -318,6 +318,39 @@ subroutine meshstore(mesh, header)
 
 
     !---------------------------------------
+    !Write tgx at po
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_po.dat"
+    open(iunit, file=filename, status='replace')
+    !Write coordinates
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                write(iunit,*) mesh%tgx_po(i,j,p)%v(1), mesh%tgx_po(i,j,p)%v(2), mesh%tgx_po(i,j,p)%v(3)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+    !---------------------------------------
+    !Write tgy at po
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_po.dat"
+    open(iunit, file=filename, status='replace')
+    !Write coordinates
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                write(iunit,*) mesh%tgy_po(i,j,p)%v(1), mesh%tgy_po(i,j,p)%v(2), mesh%tgy_po(i,j,p)%v(3)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+
+    !---------------------------------------
     ! Write latlon grid indexes
     !---------------------------------------
     call getunit(iunit)
@@ -467,6 +500,8 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%l1_error_av
     write(iunit, *) swm_simul%l2_error_av
     write(iunit, *) swm_simul%linf_error_h_po
+    write(iunit, *) swm_simul%linf_error_av_pu
+    write(iunit, *) swm_simul%linf_error_av_pv
 
     close(iunit)
 end subroutine write_final_errors_swm
@@ -715,6 +750,8 @@ subroutine output_swm(mesh)
         ! absolute vorticity fluxes
         call compute_errors_field(abs_vort_flux_pu, abs_vort_flux_exact_pu, abs_vort_flux_error_pu, &
         swm_simul%linf_error_av_pu, swm_simul%l1_error_av_pu, swm_simul%l2_error_av_pu, mesh)
+        call compute_errors_field(abs_vort_flux_pv, abs_vort_flux_exact_pv, abs_vort_flux_error_pv, &
+        swm_simul%linf_error_av_pv, swm_simul%l1_error_av_pv, swm_simul%l2_error_av_pv, mesh)
         !abs_vort_error%name = "swm_"//trim(swm_simul%name)//"_abs_vort_error_t"//trim(adjustl(an))
         !call plot_scalarfield(abs_vort_error, mesh)
 
@@ -731,7 +768,8 @@ subroutine output_swm(mesh)
         print '(a34, 3e16.8)','(linf, l1, l2) abs vort   errors:', &
         swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
         print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_h_po
-
+        print '(a34, 1e16.8)','linf avfu errors:', swm_simul%linf_error_av_pu
+        print '(a34, 1e16.8)','linf avfv errors:', swm_simul%linf_error_av_pv
     end if
 
 end subroutine output_swm

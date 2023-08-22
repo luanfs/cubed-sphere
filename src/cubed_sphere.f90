@@ -413,37 +413,6 @@ subroutine cubedsphere_properties(mesh)
     integer(i4) :: i, j ! 2D grid counters
     integer(i4) :: p ! Panel counter
 
-    ! multiply the vectors by the earth radius
-
-    !if (simulcase==5) then
-    !    mesh%radius = erad
-    !    mesh%tgx_pc(:,:,:)%v(1) = mesh%radius*mesh%tgx_pc(:,:,:)%v(1) 
-    !    mesh%tgx_pc(:,:,:)%v(2) = mesh%radius*mesh%tgx_pc(:,:,:)%v(2) 
-    !    mesh%tgx_pc(:,:,:)%v(3) = mesh%radius*mesh%tgx_pc(:,:,:)%v(3) 
-
-    !    mesh%tgy_pc(:,:,:)%v(1) = mesh%radius*mesh%tgy_pc(:,:,:)%v(1) 
-    !    mesh%tgy_pc(:,:,:)%v(2) = mesh%radius*mesh%tgy_pc(:,:,:)%v(2) 
-    !    mesh%tgy_pc(:,:,:)%v(3) = mesh%radius*mesh%tgy_pc(:,:,:)%v(3) 
-
-    !    mesh%tgx_pu(:,:,:)%v(1) = mesh%radius*mesh%tgx_pu(:,:,:)%v(1) 
-    !    mesh%tgx_pu(:,:,:)%v(2) = mesh%radius*mesh%tgx_pu(:,:,:)%v(2) 
-    !    mesh%tgx_pu(:,:,:)%v(3) = mesh%radius*mesh%tgx_pu(:,:,:)%v(3) 
-
-    !    mesh%tgy_pu(:,:,:)%v(1) = mesh%radius*mesh%tgy_pu(:,:,:)%v(1) 
-    !    mesh%tgy_pu(:,:,:)%v(2) = mesh%radius*mesh%tgy_pu(:,:,:)%v(2) 
-    !    mesh%tgy_pu(:,:,:)%v(3) = mesh%radius*mesh%tgy_pu(:,:,:)%v(3) 
-
-    !    mesh%tgx_pv(:,:,:)%v(1) = mesh%radius*mesh%tgx_pv(:,:,:)%v(1) 
-    !    mesh%tgx_pv(:,:,:)%v(2) = mesh%radius*mesh%tgx_pv(:,:,:)%v(2) 
-    !    mesh%tgx_pv(:,:,:)%v(3) = mesh%radius*mesh%tgx_pv(:,:,:)%v(3) 
-
-    !    mesh%tgy_pv(:,:,:)%v(1) = mesh%radius*mesh%tgy_pv(:,:,:)%v(1) 
-    !    mesh%tgy_pv(:,:,:)%v(2) = mesh%radius*mesh%tgy_pv(:,:,:)%v(2) 
-    !    mesh%tgy_pv(:,:,:)%v(3) = mesh%radius*mesh%tgy_pv(:,:,:)%v(3) 
-    !else
-    !    mesh%radius = 1.d0
-    !end if
-
     ! Compute metric tensor
     call compute_metric_tensor(mesh)
 
@@ -475,7 +444,34 @@ subroutine compute_tgvectors(mesh)
 
     ! Allocation
     call r8_1darray_allocation(x, n0, nend+1)
+    call r8_1darray_allocation(y, n0, nend+1)
+
+    ! Init local coordinates grid
+    x(n0) = -pio4 - mesh%halosize*mesh%dx
+    do i = n0+1, nend+1
+        x(i) = x(i-1) + mesh%dx
+    end do
+    y = x
+
+    ! Compute the tgx/tgy at the vertices po
+    do panel = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                call derivative_xdir_equiangular_gnomonic_map(y(i), y(j), v, panel)
+                mesh%tgx_po(i,j,panel)%v = v
+                call derivative_ydir_equiangular_gnomonic_map(y(i), y(j), v, panel)
+                mesh%tgy_po(i,j,panel)%v = v
+            end do
+        end do
+    end do
+
+    ! Deallocation
+    deallocate(x, y)
+
+    ! Allocation
+    call r8_1darray_allocation(x, n0, nend+1)
     call r8_1darray_allocation(y, n0, nend)
+
 
     ! Init local coordinates grid
     x(n0) = -pio4 - mesh%halosize*mesh%dx
@@ -651,6 +647,17 @@ subroutine compute_metric_tensor(mesh)
         end do
     end do
 
+    ! Compute metric tensor at po
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                v1 = mesh%tgx_po(i,j,p)%v
+                v2 = mesh%tgy_po(i,j,p)%v
+                mesh%mt_po(i,j,p) = (norm2(v1)**2)*(norm2(v2)**2) - dot_product(v1,v2)**2
+                mesh%mt_po(i,j,p) = dsqrt(mesh%mt_po(i,j,p))
+            end do
+        end do
+    end do
 end subroutine compute_metric_tensor
 
 
@@ -782,6 +789,46 @@ subroutine compute_conversion_matrices(mesh)
         end do
     end do
 
+
+    ! Compute at po
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                ex = mesh%tgx_po(i,j,p)%v
+                ey = mesh%tgy_po(i,j,p)%v
+
+                lat = mesh%po(i,j,p)%lat
+                lon = mesh%po(i,j,p)%lon
+
+                call tangent_ll_lon(lon, elon)
+                call tangent_ll_lat(lon, lat, elat)
+
+                a11 = dot_product(ex, elon)
+                a12 = dot_product(ey, elon)
+                a21 = dot_product(ex, elat)
+                a22 = dot_product(ey, elat)
+                det = a11*a22 - a21*a12
+
+                ! Contra to latlon matrix
+                mesh%contra2ll_po(i,j,p)%M(1,1) = a11
+                mesh%contra2ll_po(i,j,p)%M(1,2) = a12
+                mesh%contra2ll_po(i,j,p)%M(2,1) = a21
+                mesh%contra2ll_po(i,j,p)%M(2,2) = a22
+
+                ! latlon to contra matrix
+                mesh%ll2contra_po(i,j,p)%M(1,1) =  a22
+                mesh%ll2contra_po(i,j,p)%M(1,2) = -a12
+                mesh%ll2contra_po(i,j,p)%M(2,1) = -a21
+                mesh%ll2contra_po(i,j,p)%M(2,2) =  a11
+                mesh%ll2contra_po(i,j,p)%M(:,:) = mesh%ll2contra_po(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+
+    !-----------------------------------------------------------------------------------
+    ! Contravariant/covariant
+
+
     ! Contravariant/covariant
     ! Compute at pu
     do p = 1, nbfaces
@@ -871,6 +918,36 @@ subroutine compute_conversion_matrices(mesh)
     end do
 
 
+    ! Compute at po
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                ex = mesh%tgx_po(i,j,p)%v
+                ey = mesh%tgy_po(i,j,p)%v
+
+                a11 = dot_product(ex, ex)
+                a12 = dot_product(ey, ex)
+                a21 = dot_product(ex, ey)
+                a22 = dot_product(ey, ey)
+                det = a11*a22 - a21*a12
+
+                ! Contra to covari matrix
+                mesh%contra2covari_po(i,j,p)%M(1,1) = a11
+                mesh%contra2covari_po(i,j,p)%M(1,2) = a12
+                mesh%contra2covari_po(i,j,p)%M(2,1) = a21
+                mesh%contra2covari_po(i,j,p)%M(2,2) = a22
+
+                ! Covari to contra matrix
+                mesh%covari2contra_po(i,j,p)%M(1,1) =  a22
+                mesh%covari2contra_po(i,j,p)%M(1,2) = -a12
+                mesh%covari2contra_po(i,j,p)%M(2,1) = -a21
+                mesh%covari2contra_po(i,j,p)%M(2,2) =  a11
+                mesh%covari2contra_po(i,j,p)%M(:,:) = mesh%covari2contra_po(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+    !------------------------------------------------------------------------
+
 
     ! latlon/covariant
     ! Compute at pu
@@ -941,6 +1018,31 @@ subroutine compute_conversion_matrices(mesh)
             end do
         end do
     end do
+
+
+    ! Compute at po
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                ! latlon to covari matrix
+                mesh%ll2covari_po(i,j,p)%M = matmul(mesh%contra2covari_po(i,j,p)%M, mesh%ll2contra_po(i,j,p)%M )
+
+                a11 = mesh%ll2covari_po(i,j,p)%M(1,1)
+                a12 = mesh%ll2covari_po(i,j,p)%M(1,2)
+                a21 = mesh%ll2covari_po(i,j,p)%M(2,1)
+                a22 = mesh%ll2covari_po(i,j,p)%M(2,2)
+                det = a11*a22 - a21*a12
+
+                ! Covari to latlon matrix
+                mesh%covari2ll_po(i,j,p)%M(1,1) =  a22
+                mesh%covari2ll_po(i,j,p)%M(1,2) = -a12
+                mesh%covari2ll_po(i,j,p)%M(2,1) = -a21
+                mesh%covari2ll_po(i,j,p)%M(2,2) =  a11
+                mesh%covari2ll_po(i,j,p)%M(:,:) = mesh%covari2ll_po(i,j,p)%M(:,:)/det
+            end do
+        end do
+    end do
+    !-----------------------------------------------------------------------------------
 end subroutine compute_conversion_matrices
 
 end module cubed_sphere 

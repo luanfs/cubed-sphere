@@ -295,6 +295,38 @@ subroutine meshload(mesh, header)
     close(iunit)
 
     !---------------------------------------
+    ! Read tgx at po
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_tgx_po.dat"
+    open(iunit, file=filename, status='old')
+    ! Read coordinates
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                read(iunit,*) mesh%tgx_po(i,j,p)%v(1), mesh%tgx_po(i,j,p)%v(2), mesh%tgx_po(i,j,p)%v(3)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+    !---------------------------------------
+    ! Read tgy at po
+    !---------------------------------------
+    call getunit(iunit)
+    filename=trim(griddir)//trim(mesh%name)//"_tgy_po.dat"
+    open(iunit, file=filename, status='old')
+    ! Read coordinates
+    do p = 1, nbfaces
+        do i = n0, nend+1
+            do j = n0, nend+1
+                read(iunit,*) mesh%tgy_po(i,j,p)%v(1), mesh%tgy_po(i,j,p)%v(2), mesh%tgy_po(i,j,p)%v(3)
+            end do 
+        end do
+    end do
+    close(iunit)
+
+    !---------------------------------------
     ! Read latlon grid indexes
     !---------------------------------------
     call getunit(iunit)
