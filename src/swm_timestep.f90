@@ -152,10 +152,6 @@ subroutine sw_timestep_Dgrid(mesh)
 
 
 
-    !--------------------------------------------------------------------
-
-    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
-
     !div_abs_vort%f(i0:iend,j0:jend,:) = &
     !((abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)  - &
     !  abs_vort_flux_pu%f(i0:iend    ,j0:jend,:)) +  &
@@ -163,8 +159,12 @@ subroutine sw_timestep_Dgrid(mesh)
     !  abs_vort_flux_pv%f(i0:iend,j0:jend,:) ))/mesh%mt_pc(i0:iend,j0:jend,:)/mesh%dx
     !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
 
-    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)))
-    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)-abs_vort_flux_exact_pu%f(i0:iend,j0:jend,:)))/&
+    !maxval(abs(abs_vort_flux_exact_pu%f(i0:iend,j0:jend,:)))
+    !print*, maxval(abs(abs_vort_flux_pv%f(i0:iend,j0+1:jend+1,:)-abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:)))/&
+    !maxval(abs(abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:)))
+
+    !stop
     !print*, maxval(abs(abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))
     !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:) - &
     !                   abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))/maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:)))

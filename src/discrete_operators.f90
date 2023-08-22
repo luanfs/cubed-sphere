@@ -403,11 +403,11 @@ subroutine vorticity_fluxes(div_abs_vort,abs_vort_flux_pu, abs_vort_flux_pv, &
         div_abs_vort%f = -(px%df + py%df)/swmsimul%dt/mesh%mt_pc
         !$OMP END PARALLEL WORKSHARE
 
-        abs_vort_flux_pu%f = -px%f_upw
+        abs_vort_flux_pu%f = px%f_upw
         !abs_vort_flux_pu%f = abs_vort_flux_pu%f/swmsimul%dt
         !abs_vort_flux_pu%f = abs_vort_flux_pu%f/mesh%mt_pc
 
-        abs_vort_flux_pv%f = -py%f_upw
+        abs_vort_flux_pv%f = py%f_upw
         !abs_vort_flux_pv%f = abs_vort_flux_pv%f/swmsimul%dt
         !abs_vort_flux_pv%f = abs_vort_flux_pv%f/mesh%mt_pc
 

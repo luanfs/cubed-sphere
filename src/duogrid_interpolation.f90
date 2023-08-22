@@ -1046,6 +1046,52 @@ subroutine interp_C2Bgrid(Q_po, Q_pu, Q_pv, id)
     end if
 end subroutine interp_C2Bgrid
 
+subroutine interp_windC2Bgrid(U_po, V_po, U_pu, V_pv, id)
+    !---------------------------------------------------
+    ! Wind C2B grid
+    !---------------------------------------------------
+    real(kind=8), allocatable, intent(inout) :: U_po(:,:,:), V_po(:,:,:)
+    real(kind=8), allocatable, intent(inout) :: U_pu(:,:,:), V_pv(:,:,:)
+    integer(i4), intent(in) :: id
+    integer(i4):: i, j, p
+    real(kind=8) :: a1, a2, a3, a4
+
+    if(id == 1) then
+        ! linear interpolation
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(i0, iend, j0, jend) &
+        !$OMP SHARED(U_po, V_po, U_pu, V_pv)
+        U_po(i0-1:iend+2,j0:jend+1,:) = (U_pu(i0-1:iend+2,j0-1:jend,:) + U_pu(i0-1:iend+2,j0:jend+1,:))*0.5d0
+        V_po(i0:iend+1,j0-1:jend+2,:) = (V_pv(i0-1:iend,j0-1:jend+2,:) + V_pv(i0:iend+1,j0-1:jend+2,:))*0.5d0
+        !$OMP END PARALLEL WORKSHARE
+
+    elseif(id == 3) then
+        ! cubic interpolation coeffs
+        a1 = -1.d0/16.d0
+        a2 =  9.d0/16.d0
+        a3 =  9.d0/16.d0
+        a4 = -1.d0/16.d0
+
+        !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+        !$OMP SHARED(i0, iend, j0, jend) &
+        !$OMP SHARED(U_po, V_po, U_pu, V_pv) &
+        !$OMP SHARED(a1, a2, a3, a4)
+        U_po(i0-1:iend+2,j0:jend+1,:) = a1*U_pu(i0-1:iend+2,j0-2:jend-1,:) &
+                                      + a2*U_pu(i0-1:iend+2,j0-1:jend  ,:) &
+                                      + a3*U_pu(i0-1:iend+2,j0  :jend+1,:) &
+                                      + a4*U_pu(i0-1:iend+2,j0+1:jend+2,:)
+
+        V_po(i0:iend+1,j0-1:jend+2,:) = a1*V_pv(i0-2:iend-1,j0-1:jend+2,:) &
+                                      + a2*V_pv(i0-1:iend  ,j0-1:jend+2,:) &
+                                      + a3*V_pv(i0  :iend+1,j0-1:jend+2,:) &
+                                      + a4*V_pv(i0+1:iend+2,j0-1:jend+2,:)
+        !$OMP END PARALLEL WORKSHARE
+    else
+        print*, 'ERROR in interp_windC2Bgrid: invalid id, ', id
+        stop
+    end if
+end subroutine interp_windC2Bgrid
+
 
 
 subroutine compute_lagrange_cs(L, mesh)

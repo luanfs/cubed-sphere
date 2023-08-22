@@ -88,8 +88,8 @@ use duogrid_interpolation, only: &
     interp_C2Agrid, &
     interp_A2Cduogrid, &
     interp_A2Cgrid, &
-    interp_D2Aduogrid
-
+    interp_D2Aduogrid, &
+    interp_windC2Bgrid
 implicit none
 
 contains 
@@ -158,8 +158,9 @@ subroutine interpolation_test(mesh)
 
     !Errors
     real(kind=8) :: error_q
-    real(kind=8) :: error_ucontra, error_vcontra
-    real(kind=8) :: error_ucovari, error_vcovari
+    real(kind=8) :: error_ucontra   , error_vcontra
+    real(kind=8) :: error_ucontra_po, error_vcontra_po
+    real(kind=8) :: error_ucovari   , error_vcovari
 
     ! Get test parameter from par/interpolation.par
     call getadvparameters(advsimul)
@@ -199,6 +200,16 @@ subroutine interpolation_test(mesh)
     error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
     error_ucontra = max(error_ucontra, error_vcontra)
 
+    ! interpolate from C to B grid
+    call interp_windC2Bgrid(wind_po%ucontra%f, wind_po%vcontra%f, &
+    wind_pu%ucontra%f, wind_pv%vcontra%f, advsimul%avd)
+
+    ! error at po
+    error_ucontra_po = maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend,:)))
+    error_vcontra_po = maxval(abs(wind_po%vcontra%f(i0:iend,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend,j0-1:jend+2,:)))
+    error_ucontra_po = max(error_ucontra_po, error_vcontra_po)
+    error_ucontra = max(error_ucontra, error_ucontra_po)
+
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a D grid
     ! first we interpolate to the A grid ghost cells)
@@ -213,7 +224,7 @@ subroutine interpolation_test(mesh)
     ! now we fill the ghost cell D grid
     call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pu%vcovari%f, wind_pv%ucovari%f, &
     wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
- 
+
     ! then we interpolate from A grid to the D grid inner cell
     call interp_A2Cgrid(wind_pu%ucovari%f, wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f, advsimul%avd)
 

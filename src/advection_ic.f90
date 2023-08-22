@@ -444,8 +444,8 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
 
  
     ! Vector field at po
-    do p = 1 , nbfaces+1
-        do i = n0, nend
+    do p = 1 , nbfaces
+        do i = n0, nend+1
             do j = n0, nend+1
                 lat  = mesh%po(i,j,p)%lat
                 lon  = mesh%po(i,j,p)%lon
@@ -454,12 +454,12 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
 
                 ! LL2contra
-                ucontra = mesh%ll2contra_pv(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(1,2)*vlat
-                vcontra = mesh%ll2contra_pv(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(2,2)*vlat
+                ucontra = mesh%ll2contra_po(i,j,p)%M(1,1)*ulon + mesh%ll2contra_po(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_po(i,j,p)%M(2,1)*ulon + mesh%ll2contra_po(i,j,p)%M(2,2)*vlat
 
                 ! LL2covari
-                ucovari = mesh%ll2covari_pv(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(1,2)*vlat
-                vcovari = mesh%ll2covari_pv(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(2,2)*vlat
+                ucovari = mesh%ll2covari_po(i,j,p)%M(1,1)*ulon + mesh%ll2covari_po(i,j,p)%M(1,2)*vlat
+                vcovari = mesh%ll2covari_po(i,j,p)%M(2,1)*ulon + mesh%ll2covari_po(i,j,p)%M(2,2)*vlat
 
 
                 V_po%ucontra_old%f(i,j,p) = ucontra
@@ -468,7 +468,13 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 V_po%ucovari_old%f(i,j,p) = ucovari
                 V_po%vcovari_old%f(i,j,p) = vcovari
 
-
+                ! LL2contra
+                !ull = mesh%contra2ll_po(i,j,p)%M(1,1)*ucontra + mesh%contra2ll_po(i,j,p)%M(1,2)*vcontra
+                !vll = mesh%contra2ll_po(i,j,p)%M(2,1)*ucontra + mesh%contra2ll_po(i,j,p)%M(2,2)*vcontra
+                !print*, mesh%ll2covari_po(i,j,p)%M(1,1)
+                ! debug 
+                !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
+                !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)
                 ! debug 
                 !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
                 !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)
@@ -478,6 +484,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
             end do
         end do
     end do
+
     ! CFL number
     advsimul%cfl = maxval(abs(V_pu%ucontra%f))
     advsimul%cfl = max(advsimul%cfl, maxval(abs(V_pv%vcontra%f)))
