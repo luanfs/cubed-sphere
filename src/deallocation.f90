@@ -36,7 +36,7 @@ subroutine meshdeallocation(mesh)
     deallocate(mesh%contra2ll_pu) ! contravariant 2 latlon conversion at u
     deallocate(mesh%contra2ll_pv) ! contravariant 2 latlon conversion at v 
     deallocate(mesh%contra2ll_pc) ! contravariant 2 latlon conversion at c
-    deallocate(mesh%ll2contra_po) ! latlon 2 contravariant conversion at o
+    deallocate(mesh%contra2ll_po) ! latlon 2 contravariant conversion at o
 
     deallocate(mesh%ll2covari_pu) ! latlon 2 covariant conversion at u
     deallocate(mesh%ll2covari_pv) ! latlon 2 covariant conversion at v
