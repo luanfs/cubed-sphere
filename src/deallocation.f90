@@ -135,6 +135,21 @@ subroutine adv_deallocation()
     deallocate(wind_pc%ucovari_old%f)
     deallocate(wind_pc%vcovari_old%f)
 
+    deallocate(wind_po%u%f)
+    deallocate(wind_po%v%f)
+    deallocate(wind_po%ucontra%f)
+    deallocate(wind_po%vcontra%f)
+    deallocate(wind_po%ucontra_old%f)
+    deallocate(wind_po%vcontra_old%f)
+    deallocate(wind_po%ucontra_time_av%f)
+    deallocate(wind_po%vcontra_time_av%f)
+    deallocate(wind_po%ucontra_time_centered%f)
+    deallocate(wind_po%vcontra_time_centered%f) 
+    deallocate(wind_po%ucovari%f)
+    deallocate(wind_po%vcovari%f)
+    deallocate(wind_po%ucovari_old%f)
+    deallocate(wind_po%vcovari_old%f)
+
 
 
 end subroutine adv_deallocation
@@ -223,6 +238,22 @@ subroutine swm_deallocation()
     deallocate(wind_pc%vcovari%f)
     deallocate(wind_pc%ucovari_old%f)
     deallocate(wind_pc%vcovari_old%f)
+
+    deallocate(wind_po%u%f)
+    deallocate(wind_po%v%f)
+    deallocate(wind_po%ucontra%f)
+    deallocate(wind_po%vcontra%f)
+    deallocate(wind_po%ucontra_old%f)
+    deallocate(wind_po%vcontra_old%f)
+    deallocate(wind_po%ucontra_time_av%f)
+    deallocate(wind_po%vcontra_time_av%f)
+    deallocate(wind_po%ucontra_time_centered%f)
+    deallocate(wind_po%vcontra_time_centered%f) 
+    deallocate(wind_po%ucovari%f)
+    deallocate(wind_po%vcovari%f)
+    deallocate(wind_po%ucovari_old%f)
+    deallocate(wind_po%vcovari_old%f)
+
 
 end subroutine swm_deallocation
 

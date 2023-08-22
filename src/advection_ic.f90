@@ -238,7 +238,7 @@ subroutine init_adv_vars(mesh)
     advsimul%plotcounter = 0
 
     ! Compute the initial conditions
-    call compute_ic_adv(Q_exact, wind_pu, wind_pv, wind_pc, mesh, advsimul)
+    call compute_ic_adv(Q_exact, wind_pu, wind_pv, wind_pc, wind_po, mesh, advsimul)
     Q%f(i0:iend,j0:jend,:) = Q_exact%f(i0:iend,j0:jend,:)
 
     ! Compute initial mass
@@ -294,7 +294,7 @@ subroutine init_adv_vars(mesh)
 
 end subroutine init_adv_vars
 
-subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
+subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
     !--------------------------------------------------
     ! Compute the initial conditions for the advection
     ! problem on the sphere
@@ -311,7 +311,7 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
     type(cubedsphere), intent(in) :: mesh
     type(simulation), intent(inout) :: advsimul
     type(scalar_field), intent(inout) :: Q
-    type(velocity_field), intent(inout) :: V_pu, V_pv, V_pc
+    type(velocity_field), intent(inout) :: V_pu, V_pv, V_pc, V_po
 
     ! aux
     integer(i4) :: i, j, p
@@ -441,7 +441,43 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, mesh, advsimul)
     V_pv%vcontra%f(i0:iend,j0:jend+1,:) = V_pv%vcontra_old%f(i0:iend,j0:jend+1,:)
     V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
     V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
+
  
+    ! Vector field at po
+    do p = 1 , nbfaces+1
+        do i = n0, nend
+            do j = n0, nend+1
+                lat  = mesh%po(i,j,p)%lat
+                lon  = mesh%po(i,j,p)%lon
+
+                ! Compute velocity
+                call velocity_adv(ulon, vlat, lat, lon, 0.d0, advsimul%vf)
+
+                ! LL2contra
+                ucontra = mesh%ll2contra_pv(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(1,2)*vlat
+                vcontra = mesh%ll2contra_pv(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(2,2)*vlat
+
+                ! LL2covari
+                ucovari = mesh%ll2covari_pv(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(1,2)*vlat
+                vcovari = mesh%ll2covari_pv(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(2,2)*vlat
+
+
+                V_po%ucontra_old%f(i,j,p) = ucontra
+                V_po%vcontra_old%f(i,j,p) = vcontra
+
+                V_po%ucovari_old%f(i,j,p) = ucovari
+                V_po%vcovari_old%f(i,j,p) = vcovari
+
+
+                ! debug 
+                !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
+                !call contra2ll(ull, vll, ucontra, vcontra, mesh%contra2ll_pv(i,j,p)%M)
+                !error1 =  abs(ulon-ull)
+                !error1 = max(error1, abs(vll-vlat))
+                !error = max(error, error1)
+            end do
+        end do
+    end do
     ! CFL number
     advsimul%cfl = maxval(abs(V_pu%ucontra%f))
     advsimul%cfl = max(advsimul%cfl, maxval(abs(V_pv%vcontra%f)))

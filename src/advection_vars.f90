@@ -26,7 +26,7 @@ type(scalar_field) :: Q_exact ! exact solution
 type(scalar_field) :: Q_error ! error
 
 ! Vector field
-type(velocity_field) :: wind_pu, wind_pv, wind_pc
+type(velocity_field) :: wind_pu, wind_pv, wind_pc, wind_po
 
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu
