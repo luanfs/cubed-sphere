@@ -302,11 +302,15 @@ subroutine meshallocation(mesh)
     call vector_3darray_allocation(mesh%tgy_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
     call vector_3darray_allocation(mesh%tgx_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
     call vector_3darray_allocation(mesh%tgy_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgx_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
+    call vector_3darray_allocation(mesh%tgy_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
+
 
     ! Metric tensor
     call r8_3darray_allocation(mesh%mt_pc, n0, nf  , n0, nf  , 1, nbfaces)
     call r8_3darray_allocation(mesh%mt_pu, n0, nf+1, n0, nf  , 1, nbfaces)
     call r8_3darray_allocation(mesh%mt_pv, n0, nf  , n0, nf+1, 1, nbfaces)
+    call r8_3darray_allocation(mesh%mt_po, n0, nf+1, n0, nf+1, 1, nbfaces)
 
     ! Allocate the cubed-sphere latlon/contravariant conversion matrix
     call matrix_3darray_allocation(mesh%contra2ll_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
@@ -315,6 +319,8 @@ subroutine meshallocation(mesh)
     call matrix_3darray_allocation(mesh%ll2contra_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
     call matrix_3darray_allocation(mesh%contra2ll_pc, n0, nf  , n0, nf  , 1, nbfaces) 
     call matrix_3darray_allocation(mesh%ll2contra_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%contra2ll_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%ll2contra_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
 
     ! Allocate the cubed-sphere latlon/covariant conversion matrix
     call matrix_3darray_allocation(mesh%covari2ll_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
@@ -323,6 +329,8 @@ subroutine meshallocation(mesh)
     call matrix_3darray_allocation(mesh%ll2covari_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
     call matrix_3darray_allocation(mesh%covari2ll_pc, n0, nf  , n0, nf  , 1, nbfaces) 
     call matrix_3darray_allocation(mesh%ll2covari_pc, n0, nf  , n0, nf  , 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%covari2ll_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%ll2covari_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
 
     ! Allocate the cubed-sphere covariant/contravariant conversion matrix
     call matrix_3darray_allocation(mesh%contra2covari_pu, n0, nf+1, n0, nf  , 1, nbfaces) 
@@ -331,7 +339,8 @@ subroutine meshallocation(mesh)
     call matrix_3darray_allocation(mesh%covari2contra_pv, n0, nf  , n0, nf+1, 1, nbfaces) 
     call matrix_3darray_allocation(mesh%contra2covari_pc, n0, nf  , n0, nf  , 1, nbfaces) 
     call matrix_3darray_allocation(mesh%covari2contra_pc, n0, nf  , n0, nf  , 1, nbfaces) 
-
+    call matrix_3darray_allocation(mesh%contra2covari_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
+    call matrix_3darray_allocation(mesh%covari2contra_po, n0, nf+1, n0, nf+1, 1, nbfaces) 
 
     ! Latlon-grid allocation
     mesh%nlon = n_lon

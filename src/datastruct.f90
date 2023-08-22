@@ -78,6 +78,7 @@ type cubedsphere
     ! Lat/lon grid (for plotting)
     type(point_structure), allocatable :: ll(:,:)
 
+    !--------------------------------------------------------------------
     ! Tangent vector at pu in x direction
     type(vector), allocatable :: tgx_pu(:,:,:)
 
@@ -96,6 +97,13 @@ type cubedsphere
     ! Tangent vector at pc in y direction
     type(vector), allocatable :: tgy_pc(:,:,:)
 
+    ! Tangent vector at po in x direction
+    type(vector), allocatable :: tgx_po(:,:,:)
+
+    ! Tangent vector at po in y direction
+    type(vector), allocatable :: tgy_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! latlon to contravariant conversion at pu
     type(matrix), allocatable :: ll2contra_pu(:,:,:)
 
@@ -105,6 +113,10 @@ type cubedsphere
     ! latlon to contravariant conversion at pc
     type(matrix), allocatable :: ll2contra_pc(:,:,:)
 
+    ! latlon to contravariant conversion at po
+    type(matrix), allocatable :: ll2contra_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! Contravariant to latlon conversion at pu
     type(matrix), allocatable :: contra2ll_pu(:,:,:)
 
@@ -114,6 +126,10 @@ type cubedsphere
     ! Contravariant to latlon conversion at pc
     type(matrix), allocatable :: contra2ll_pc(:,:,:)
 
+    ! Contravariant to latlon conversion at po
+    type(matrix), allocatable :: contra2ll_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! latlon to covari conversion at pu
     type(matrix), allocatable :: ll2covari_pu(:,:,:)
 
@@ -123,6 +139,10 @@ type cubedsphere
     ! latlon to covariant conversion at pc
     type(matrix), allocatable :: ll2covari_pc(:,:,:)
 
+    ! latlon to covariant conversion at po
+    type(matrix), allocatable :: ll2covari_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! covariant to latlon conversion at pu
     type(matrix), allocatable :: covari2ll_pu(:,:,:)
 
@@ -132,6 +152,10 @@ type cubedsphere
     ! covariant to latlon conversion at pc
     type(matrix), allocatable :: covari2ll_pc(:,:,:)
 
+    ! covariant to latlon conversion at po
+    type(matrix), allocatable :: covari2ll_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! Contravariant to covariant conversion at pu
     type(matrix), allocatable :: contra2covari_pu(:,:,:)
 
@@ -141,6 +165,10 @@ type cubedsphere
     ! Contravariant to covariant conversion at pc
     type(matrix), allocatable :: contra2covari_pc(:,:,:)
 
+    ! Contravariant to covariant conversion at po
+    type(matrix), allocatable :: contra2covari_po(:,:,:)
+
+    !--------------------------------------------------------------------
     ! Covariant to contravariant conversion at pu
     type(matrix), allocatable :: covari2contra_pu(:,:,:)
 
@@ -150,6 +178,11 @@ type cubedsphere
     ! Covariant to contravariant conversion at pc
     type(matrix), allocatable :: covari2contra_pc(:,:,:)
 
+    ! Covariant to contravariant conversion at po
+    type(matrix), allocatable :: covari2contra_po(:,:,:)
+
+
+    !--------------------------------------------------------------------
 
     ! Metric tensor at pc
     real(kind=8), allocatable:: mt_pc(:,:,:)
@@ -159,6 +192,10 @@ type cubedsphere
 
     ! Metric tensor at pu
     real(kind=8), allocatable:: mt_pv(:,:,:)
+
+    ! Metric tensor at po
+    real(kind=8), allocatable:: mt_po(:,:,:)
+    !--------------------------------------------------------------------
 
     ! Minimum/Maximum geodesic distance between vertice points in radians
     real(kind=8):: mindist, maxdist, meandist
