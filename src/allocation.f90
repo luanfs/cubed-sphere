@@ -676,8 +676,8 @@ subroutine allocate_swm_vars(mesh)
     ! PPM vars
     call ppm_parabola_allocation(px, mesh)
     call ppm_parabola_allocation(py, mesh)
-    call ppm_parabola_allocation(Kv_px, mesh)
-    call ppm_parabola_allocation(Ku_py, mesh)
+    call ppm_parabola_allocation(Ku_px, mesh)
+    call ppm_parabola_allocation(Kv_py, mesh)
 
 
     ! Lagrange polynomial vars
