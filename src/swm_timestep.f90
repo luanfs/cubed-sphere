@@ -150,39 +150,6 @@ subroutine sw_timestep_Dgrid(mesh)
     !====================================================================
 
 
-
-
-    !div_abs_vort%f(i0:iend,j0:jend,:) = &
-    !((abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)  - &
-    !  abs_vort_flux_pu%f(i0:iend    ,j0:jend,:)) +  &
-    !( abs_vort_flux_pv%f(i0:iend,j0+1:jend+1,:) - &
-    !  abs_vort_flux_pv%f(i0:iend,j0:jend,:) ))/mesh%mt_pc(i0:iend,j0:jend,:)/mesh%dx
-    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
-
-    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)-abs_vort_flux_exact_pu%f(i0:iend,j0:jend,:)))/&
-    !maxval(abs(abs_vort_flux_exact_pu%f(i0:iend,j0:jend,:)))
-    !print*, maxval(abs(abs_vort_flux_pv%f(i0:iend,j0+1:jend+1,:)-abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:)))/&
-    !maxval(abs(abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:)))
-
-    !stop
-    !print*, maxval(abs(abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))
-    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:) - &
-    !                   abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))/maxval(abs(abs_vort_flux_exact_pu%f(i0:iend+1,j0:jend,:)))
-    !print*
-    !div_abs_vort%f(i0:iend,j0:jend,:) = &
-    !((abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)  - &
-    !  abs_vort_flux_exact_pu%f(i0:iend    ,j0:jend,:)) +  &
-    !( abs_vort_flux_exact_pv%f(i0:iend,j0+1:jend+1,:) - &
-    !  abs_vort_flux_exact_pv%f(i0:iend,j0:jend,:) ))/mesh%mt_pc(i0:iend,j0:jend,:)/mesh%dx
-
-    !print*, maxval(abs( &
-    !abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:) - &
-    !abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:) ))/maxval(abs(abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)))
-
-    !print*, maxval(abs(abs_vort_flux_exact_pu%f(i0+1:iend+1,j0:jend,:)))
-    !print*, maxval(abs(abs_vort_flux_pu%f(i0+1:iend+1,j0:jend,:)))
-    !print*, maxval(abs(div_abs_vort%f(i0:iend,j0:jend,:)))
-
     !--------------------------------------------------------------------
     ! Update the fluid depth
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
@@ -199,6 +166,27 @@ subroutine sw_timestep_Cgrid(mesh)
     !--------------------------------------------------
     ! Compute one time step for the shallow water
     ! problem on the sphere on the C grid
+    !
+    !--------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+
+    ! interpolation of wind
+    call sw_wind_interpolation(mesh)
+
+    ! Compute time-averaged wind
+    call swm_time_averaged_wind(wind_pu, wind_pv, wind_pc, swm_simul%dp, &
+        swm_simul%dto2, mesh%dx, mesh, L_pc)
+
+    ! CFL number
+    call cfl_x(mesh, wind_pu%ucontra_time_av, cx_pu, swm_simul%dt)
+    call cfl_y(mesh, wind_pv%vcontra_time_av, cy_pv, swm_simul%dt)
+
+end subroutine sw_timestep_Cgrid
+
+subroutine sw_wind_interpolation(mesh)
+    !--------------------------------------------------
+    ! Compute all the wind interpolations needed
+    ! for the swm
     !
     !--------------------------------------------------
     type(cubedsphere), intent(inout) :: mesh
@@ -224,24 +212,20 @@ subroutine sw_timestep_Cgrid(mesh)
     wind_pc%vcovari%f(n0:nend,n0:nend,:)*mesh%covari2contra_pc(n0:nend,n0:nend,:)%M(2,2) 
     !$OMP END PARALLEL WORKSHARE
 
-    ! now we fill the ghost cell C grid
+    ! now we fill the ghost cell C grid contravariant components
     call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, &
     wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f)
 
-    ! then we interpolate from A grid to the C grid inner cells
+    ! then we interpolate from A grid to the C grid inner cells contravariant components
     call interp_A2Cgrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f, swm_simul%avd)
 
+    ! Now let us do the same for the covariant components
+    ! fill the ghost cell D grid (covariant)
+    !call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pu%vcovari%f, wind_pv%ucovari%f, &
+    !wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
 
-    ! Compute time-averaged wind
-    call swm_time_averaged_wind(wind_pu, wind_pv, wind_pc, swm_simul%dp, &
-        swm_simul%dto2, mesh%dx, mesh, L_pc)
-
-    ! CFL number
-    call cfl_x(mesh, wind_pu%ucontra_time_av, cx_pu, swm_simul%dt)
-    call cfl_y(mesh, wind_pv%vcontra_time_av, cy_pv, swm_simul%dt)
-
-end subroutine sw_timestep_Cgrid
-
-
+    ! then we interpolate from A grid to the D grid inner cell (covariant)
+    !call interp_A2Cgrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f, swm_simul%avd)
+end subroutine sw_wind_interpolation
 
 end module swm_timestep

@@ -75,7 +75,7 @@ use advection_timestep, only: &
 ! Shallow water timestep
 use swm_timestep, only: &
     sw_timestep, &
-    sw_timestep_Cgrid
+    sw_wind_interpolation
 
 ! Diagnostics 
 use diagnostics, only: &
@@ -219,7 +219,7 @@ subroutine interpolation_test(mesh)
     call interp_D2Aduogrid(wind_pu, wind_pv, wind_pc, L_pc, mesh)
 
     ! then we interpolate from d grid to the a grid inner cells
-    call interp_c2agrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f,  advsimul%avd)
+    call interp_C2Agrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f,  advsimul%avd)
 
     ! now we fill the ghost cell D grid
     call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pu%vcovari%f, wind_pv%ucovari%f, &
@@ -384,13 +384,16 @@ subroutine swm_test(mesh)
     call init_swm_vars(mesh)
 
     ! Initialize velocity at ghost cells
-    call sw_timestep_Cgrid(mesh)
+    call sw_wind_interpolation(mesh)
     !print*, maxval(abs(wind_pc%ucovari%f(:,:,:)-wind_pc%ucovari_old%f(:,:,:)))
     !print*, maxval(abs(wind_pc%vcovari%f(:,:,:)-wind_pc%vcovari_old%f(:,:,:)))
     !print*, maxval(abs(wind_pc%ucontra%f(:,:,:)-wind_pc%ucontra_old%f(:,:,:)))
     !print*, maxval(abs(wind_pc%vcontra%f(:,:,:)-wind_pc%vcontra_old%f(:,:,:)))
     !print*, maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,:,:)-wind_pu%ucontra_old%f(i0-1:iend+2,:,:)))
     !print*, maxval(abs(wind_pv%vcontra%f(:,j0-1:jend+2,:)-wind_pv%vcontra_old%f(:,j0-1:jend+2,:)))
+    !print*, maxval(abs(wind_pu%vcovari%f(i0-1:iend+2,:,:)-wind_pu%vcovari_old%f(i0-1:iend+2,:,:)))
+    !print*, maxval(abs(wind_pv%ucovari%f(:,j0-1:jend+2,:)-wind_pv%ucovari_old%f(:,j0-1:jend+2,:)))
+    !stop
 
     ! CFL number
     swm_simul%cfl = maxval(abs(wind_pu%ucontra%f))
@@ -402,12 +405,10 @@ subroutine swm_test(mesh)
 
     ! Initial output
     call output_swm(mesh)
-
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
     !wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
     !wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
-    !stop
 
     ! Temporal loop
     swm_simul%t = 0.d0
