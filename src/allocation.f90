@@ -463,32 +463,65 @@ subroutine ppm_parabola_allocation(p, mesh)
     !   1 - x direction
     !   2 - y direction 
     !
+    ! Possible reference points
+    ! 1 - pc
+    ! 2 - po
     !--------------------------------------------------
     type(cubedsphere), intent(in):: mesh
     type(ppm_parabola), intent(inout) :: p
-   
 
-    call r8_3darray_allocation(p%q_L, n0, nend, n0, nend, 1, nbfaces) 
-    call r8_3darray_allocation(p%q_R, n0, nend, n0, nend, 1, nbfaces) 
-    call r8_3darray_allocation(p%dq,  n0, nend, n0, nend, 1, nbfaces) 
-    call r8_3darray_allocation(p%q6,  n0, nend, n0, nend, 1, nbfaces) 
-    call r8_3darray_allocation(p%df,  n0, nend, n0, nend, 1, nbfaces) 
-    call scalar_field_allocation(p%Q, mesh, 0)
+    if(p%point==1)then
+        call r8_3darray_allocation(p%q_L, n0, nend, n0, nend, 1, nbfaces) 
+        call r8_3darray_allocation(p%q_R, n0, nend, n0, nend, 1, nbfaces) 
+        call r8_3darray_allocation(p%dq,  n0, nend, n0, nend, 1, nbfaces) 
+        call r8_3darray_allocation(p%q6,  n0, nend, n0, nend, 1, nbfaces) 
+        call r8_3darray_allocation(p%df,  n0, nend, n0, nend, 1, nbfaces) 
+        call scalar_field_allocation(p%Q, mesh, 0)
 
-    !---------------------------------------------------
-    ! Allocate the cubed-sphere points
-    select case(p%dir)
-        case(1) ! x direction
-            call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend, 1, nbfaces) 
+        ! Allocate the cubed-sphere points
+        select case(p%dir)
+            case(1) ! x direction
+                call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend, 1, nbfaces) 
 
-      case(2) ! y direction
-            call r8_3darray_allocation(p%f_upw, n0, nend, n0, nend+1, 1, nbfaces) 
+            case(2) ! y direction
+                call r8_3darray_allocation(p%f_upw, n0, nend, n0, nend+1, 1, nbfaces) 
 
-      case default
-            print*, 'ERROR on ppm_parabola_allocation: invalid direction', p%dir
+            case default
+                print*, 'ERROR on ppm_parabola_allocation: invalid direction', p%dir
+                stop
+        end select
+     
+    else if(p%point==2)then
+        ! Allocate the cubed-sphere points
+        select case(p%dir)
+            case(1) ! x direction
+                call r8_3darray_allocation(p%q_L, n0, nend, n0, nend+1, 1, nbfaces) 
+                call r8_3darray_allocation(p%q_R, n0, nend, n0, nend+1, 1, nbfaces) 
+                call r8_3darray_allocation(p%dq,  n0, nend, n0, nend+1, 1, nbfaces) 
+                call r8_3darray_allocation(p%q6,  n0, nend, n0, nend+1, 1, nbfaces) 
+                call r8_3darray_allocation(p%df,  n0, nend, n0, nend+1, 1, nbfaces) 
+                call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend+1, 1, nbfaces) 
+                call scalar_field_allocation(p%Q, mesh, 3)
+            case(2) ! y direction
+                call r8_3darray_allocation(p%q_L, n0, nend+1, n0, nend, 1, nbfaces) 
+                call r8_3darray_allocation(p%q_R, n0, nend+1, n0, nend, 1, nbfaces) 
+                call r8_3darray_allocation(p%dq,  n0, nend+1, n0, nend, 1, nbfaces) 
+                call r8_3darray_allocation(p%q6,  n0, nend+1, n0, nend, 1, nbfaces) 
+                call r8_3darray_allocation(p%df,  n0, nend+1, n0, nend, 1, nbfaces) 
+                call r8_3darray_allocation(p%f_upw, n0, nend+1, n0, nend+1, 1, nbfaces) 
+                call scalar_field_allocation(p%Q, mesh, 2)
 
-      end select
-      return
+            case default
+                print*, 'ERROR on ppm_parabola_allocation: invalid direction', p%dir
+                stop
+        end select
+ 
+    else
+        print*, 'ERROR on ppm_parabola_allocation: invalid position', p%point
+        stop
+    end if
+
+     return
 end subroutine ppm_parabola_allocation 
 
 

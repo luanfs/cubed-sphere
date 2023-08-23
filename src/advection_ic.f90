@@ -200,6 +200,10 @@ subroutine init_adv_vars(mesh)
     px%dir = 1 ! x direction
     py%dir = 2 ! y direction
 
+    ! ppm reference point
+    px%point = 1 ! pc
+    py%point = 1 ! pc
+
     ! Reconstruction scheme
     px%recon = advsimul%recon1d
     py%recon = advsimul%recon1d

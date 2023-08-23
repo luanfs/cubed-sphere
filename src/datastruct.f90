@@ -426,6 +426,12 @@ type ppm_parabola
     !   2 - y direction 
     integer (i4) :: dir
 
+    ! reference point (pc or po)
+    !   1 - pc
+    !   2 - po
+    integer (i4) :: point
+
+
     ! N - number of cells along a coordinate axis
     integer (i4) :: N
 

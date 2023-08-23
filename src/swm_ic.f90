@@ -82,6 +82,11 @@ subroutine init_swm_vars(mesh)
     px%dir = 1 ! x direction
     py%dir = 2 ! y direction
 
+    ! ppm reference point
+    px%point = 1 ! pc
+    py%point = 1 ! pc
+
+
     ! Reconstruction scheme
     px%recon = swm_simul%recon1d
     py%recon = swm_simul%recon1d
@@ -189,7 +194,8 @@ end subroutine init_swm_vars
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
     abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort, &
-    H_po_exact, H_pu_exact, H_pv_exact
+    H_po_exact, H_pu_exact, H_pv_exact, Ku_po, Kv_po, &
+    wind_po
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -403,6 +409,43 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 end do
             end do
         end do
+
+        ! Vector field at po
+        do p = 1 , nbfaces
+            do i = n0, nend+1
+                do j = n0, nend+1
+                    lat  = mesh%po(i,j,p)%lat
+                    lon  = mesh%po(i,j,p)%lon
+
+                    ! Compute velocity
+                    call velocity_swm(ulon, vlat, lat, lon, 0.d0, swm_simul%vf)
+
+                    ! LL2contra
+                    ucontra = mesh%ll2contra_po(i,j,p)%M(1,1)*ulon + mesh%ll2contra_po(i,j,p)%M(1,2)*vlat
+                    vcontra = mesh%ll2contra_po(i,j,p)%M(2,1)*ulon + mesh%ll2contra_po(i,j,p)%M(2,2)*vlat
+
+                    ! LL2covari
+                    ucovari = mesh%ll2covari_po(i,j,p)%M(1,1)*ulon + mesh%ll2covari_po(i,j,p)%M(1,2)*vlat
+                    vcovari = mesh%ll2covari_po(i,j,p)%M(2,1)*ulon + mesh%ll2covari_po(i,j,p)%M(2,2)*vlat
+
+
+                    wind_po%ucontra_old%f(i,j,p) = ucontra
+                    wind_po%vcontra_old%f(i,j,p) = vcontra
+
+                    wind_po%ucovari_old%f(i,j,p) = ucovari
+                    wind_po%vcovari_old%f(i,j,p) = vcovari
+
+                    Ku_po%f(i,j,p) = ucontra*ucovari
+                    Kv_po%f(i,j,p) = vcontra*vcovari
+                    !error = max(error, abs(Ku_po%f(i,j,p)-ulon*ulon))
+                    !error = max(error, abs(Kv_po%f(i,j,p)-vlat*vlat))
+                    !error = max(error, abs(Ku_po%f(i,j,p)+Kv_po%f(i,j,p)-ulon**2-vlat**2))
+                end do
+            end do
+        end do
+        !print*, error
+        !stop
+
     end if
    !stop
 end subroutine compute_ic_swm
