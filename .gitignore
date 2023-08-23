@@ -4,4 +4,10 @@
 /grid/*
 main
 pyscripts/src/__pycache__/
-
+/src/*.swp
+/src/*.swo
+/par/*.swp
+/par/*.swo
+/pyscripts/*.swp
+/pyscripts/*.swo
+workspace
