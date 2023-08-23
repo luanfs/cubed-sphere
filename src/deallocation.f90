@@ -180,6 +180,9 @@ subroutine swm_deallocation()
     deallocate(px%q_L, px%q_R, px%dq, px%q6, px%f_upw, px%df, px%Q%f)
     deallocate(py%q_L, py%q_R, py%dq, py%q6, py%f_upw, py%df, py%Q%f)
 
+    deallocate(Kv_px%q_L, Kv_px%q_R, Kv_px%dq, Kv_px%q6, Kv_px%f_upw, Kv_px%df, Kv_px%Q%f)
+    deallocate(Ku_py%q_L, Ku_py%q_R, Ku_py%dq, Ku_py%q6, Ku_py%f_upw, Ku_py%df, Ku_py%Q%f)
+
     deallocate(L_pc%y_support, L_pc%f_support, L_pc%x_nodes, L_pc%y_nodes)
     deallocate(L_pc%p_nodes, L_pc%f_nodes, L_pc%k0, L_pc%kend) 
     deallocate(L_pc%halodata_east, L_pc%halodata_west, L_pc%halodata_north, L_pc%halodata_south) 

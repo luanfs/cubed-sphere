@@ -93,6 +93,9 @@ type(scalar_field) :: Qy
 ! PPM fields
 type(ppm_parabola) :: px ! ppm in x direction
 type(ppm_parabola) :: py ! ppm in y direction
+type(ppm_parabola) :: Kv_px ! ppm in x direction for kinetic energy
+type(ppm_parabola) :: Ku_py ! ppm in y direction for kinetic energy
+
 
 
 contains 
