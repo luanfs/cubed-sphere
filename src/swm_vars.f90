@@ -77,6 +77,8 @@ type(velocity_field) :: wind_pu, wind_pv, wind_pc, wind_po
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu
 type(scalar_field) :: cy_pv ! cfl y direction at pv
+type(scalar_field) :: cx_po ! cfl x direction at po
+type(scalar_field) :: cy_po ! cfl y direction at po
 
 ! Divergence
 type(scalar_field) :: div_ugH

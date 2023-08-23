@@ -648,6 +648,8 @@ subroutine allocate_swm_vars(mesh)
     call velocity_field_allocation(wind_pv, mesh, 3)
     call scalar_field_allocation(cx_pu, mesh, 2)
     call scalar_field_allocation(cy_pv, mesh, 3)
+    call scalar_field_allocation(cx_po, mesh, 1)
+    call scalar_field_allocation(cy_po, mesh, 1)
 
     call scalar_field_allocation(fcoriolis_pc, mesh, 0)
     call scalar_field_allocation(div_ugH, mesh, 0)
@@ -674,6 +676,9 @@ subroutine allocate_swm_vars(mesh)
     ! PPM vars
     call ppm_parabola_allocation(px, mesh)
     call ppm_parabola_allocation(py, mesh)
+    call ppm_parabola_allocation(Kv_px, mesh)
+    call ppm_parabola_allocation(Ku_py, mesh)
+
 
     ! Lagrange polynomial vars
     call lagrange_poly_allocation(L_pc, mesh)
