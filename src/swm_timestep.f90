@@ -31,7 +31,8 @@ use datastruct, only: &
 use discrete_operators, only: &
     divergence, &
     vorticity_fluxes, &
-    cfl_x, cfl_y
+    cfl_x, cfl_y, &
+    ke_fluxes
 
 ! duo grid interpolation
 use duogrid_interpolation, only: &
@@ -149,6 +150,13 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------------------------
     !====================================================================
 
+    !====================================================================
+    !--------------------------------------------------------------------
+    ! Compute the kinetic energy fluxes
+    call ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
+                   Ku_px, Kv_py, swm_simul, mesh)
+    !--------------------------------------------------------------------
+    !====================================================================
 
     !--------------------------------------------------------------------
     ! Update the fluid depth

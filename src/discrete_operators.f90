@@ -27,6 +27,10 @@ use ppm_flux, only: &
   ppm_flux_pv, &
   ppm_fluxes_PL07
 
+! reconstruction 
+use ppm_reconstruction, only: &
+    ppm_reconstruction_x, &
+    ppm_reconstruction_y
 ! Mass fixer
 use mass_fixer
 
@@ -416,6 +420,30 @@ subroutine vorticity_fluxes(div_abs_vort,abs_vort_flux_pu, abs_vort_flux_pv, &
         stop
     end if
 end subroutine vorticity_fluxes
+
+
+
+subroutine ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
+                      Ku_px, Kv_py, swmsimul, mesh)
+    !---------------------------------------------------
+    ! Computes the kinetic energy fluxes at po
+    ! time averaged winds must be already computed
+    !---------------------------------------------------
+    type(cubedsphere), intent(inout) :: mesh
+    type(simulation), intent(inout) :: swmsimul
+    type(velocity_field), intent(inout) :: wind_pu
+    type(velocity_field), intent(inout) :: wind_pv
+    type(velocity_field), intent(inout) :: wind_po
+    type(scalar_field), intent(inout) :: cx_po
+    type(scalar_field), intent(inout) :: cy_po
+    type(ppm_parabola), intent(inout) :: Ku_px ! ppm in x direction
+    type(ppm_parabola), intent(inout) :: Kv_py ! ppm in y direction
+
+    ! PPM reconstructions
+    call ppm_reconstruction_x(wind_pv%ucovari, Ku_px)
+    call ppm_reconstruction_y(wind_pu%vcovari, Kv_py)
+end subroutine ke_fluxes
+
 
 
 subroutine cfl_x(mesh, ucontra_pu, cx_pu, dt)

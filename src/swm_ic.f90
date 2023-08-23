@@ -81,20 +81,20 @@ subroutine init_swm_vars(mesh)
     ! ppm direction
     px%dir = 1 ! x direction
     py%dir = 2 ! y direction
-    Kv_px%dir = 1 ! x direction
-    Ku_py%dir = 2 ! y direction
+    Ku_px%dir = 1 ! x direction
+    Kv_py%dir = 2 ! y direction
 
     ! ppm reference point
     px%point = 1 ! pc
     py%point = 1 ! pc
-    Kv_px%point = 2 ! po
-    Ku_py%point = 2 ! po
+    Ku_px%point = 2 ! po
+    Kv_py%point = 2 ! po
 
     ! Reconstruction scheme
     px%recon = swm_simul%recon1d
     py%recon = swm_simul%recon1d
-    Kv_px%recon = swm_simul%recon1d
-    Ku_py%recon = swm_simul%recon1d
+    Ku_px%recon = swm_simul%recon1d
+    Kv_py%recon = swm_simul%recon1d
 
 
     ! Metric tensor formulation
@@ -102,17 +102,17 @@ subroutine init_swm_vars(mesh)
     py%mt = swm_simul%mt
     px%et = swm_simul%et
     py%et = swm_simul%et
-    Kv_px%mt = swm_simul%mt
-    Ku_py%mt = swm_simul%mt
-    Kv_px%et = swm_simul%et
-    Ku_py%et = swm_simul%et
+    Ku_px%mt = swm_simul%mt
+    Kv_py%mt = swm_simul%mt
+    Ku_px%et = swm_simul%et
+    Kv_py%et = swm_simul%et
 
 
     ! N
     px%n = mesh%n
     py%n = mesh%n
-    Kv_px%n = mesh%n
-    Ku_py%n = mesh%n
+    Ku_px%n = mesh%n
+    Kv_py%n = mesh%n
 
 
     ! Lagrange polynomial at centers
@@ -459,6 +459,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
         end do
         !print*, error
         !stop
+
     end if
    !stop
 end subroutine compute_ic_swm

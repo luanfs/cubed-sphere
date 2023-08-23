@@ -770,6 +770,17 @@ subroutine output_swm(mesh)
         print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_h_po
         print '(a34, 1e16.8)','linf avfu errors:', swm_simul%linf_error_av_pu
         print '(a34, 1e16.8)','linf avfv errors:', swm_simul%linf_error_av_pv
+
+        print*, maxval(abs(Ku_px%q_L(i0:iend,j0:jend+1,:)-wind_po%ucovari_old%f(i0:iend,j0:jend+1,:)))
+        print*, maxval(abs(Ku_px%q_R(i0:iend,j0:jend+1,:)-wind_po%ucovari_old%f(i0+1:iend+1,j0:jend+1,:)))
+        print*, maxval(abs(Kv_py%q_L(i0:iend+1,j0:jend,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend,:)))
+        print*, maxval(abs(Kv_py%q_R(i0:iend+1,j0:jend,:)-wind_po%vcovari_old%f(i0:iend+1,j0+1:jend+1,:)))
+    
+    
+        print*
+        !stop
+
+
     end if
 
 end subroutine output_swm
