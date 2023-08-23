@@ -395,6 +395,7 @@ subroutine swm_test(mesh)
     !print*, maxval(abs(wind_pv%ucovari%f(:,j0-1:jend+2,:)-wind_pv%ucovari_old%f(:,j0-1:jend+2,:)))
     !stop
 
+
     ! CFL number
     swm_simul%cfl = maxval(abs(wind_pu%ucontra%f))
     swm_simul%cfl = max(swm_simul%cfl, maxval(abs(wind_pv%vcontra%f)))

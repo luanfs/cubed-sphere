@@ -221,11 +221,9 @@ subroutine sw_wind_interpolation(mesh)
 
     ! Now let us do the same for the covariant components
     ! fill the ghost cell D grid (covariant)
-    !call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pu%vcovari%f, wind_pv%ucovari%f, &
-    !wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
-
-    ! then we interpolate from A grid to the D grid inner cell (covariant)
-    !call interp_A2Cgrid(wind_pu%vcovari%f, wind_pv%ucovari%f, wind_pc%vcovari%f, wind_pc%ucovari%f, swm_simul%avd)
+    !print*, maxval(abs(wind_pu%vcovari%f(i0:iend+1,j0:jend,:)))
+    call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pv%ucovari%f, wind_pu%vcovari%f, &
+    wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
 end subroutine sw_wind_interpolation
 
 end module swm_timestep
