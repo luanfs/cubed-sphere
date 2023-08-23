@@ -332,6 +332,8 @@ type simulation
     real(kind=8):: linf_error_h_po
     real(kind=8):: linf_error_gradh_pu
     real(kind=8):: linf_error_gradh_pv
+    real(kind=8):: linf_error_Ku_po
+    real(kind=8):: linf_error_Kv_po
 
     ! variables for mass
     real(kind=8):: mass, mass0, mass_variation

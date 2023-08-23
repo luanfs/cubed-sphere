@@ -62,6 +62,14 @@ type(scalar_field) :: abs_vort_flux_exact_pv
 type(scalar_field) :: abs_vort_flux_error_pu
 type(scalar_field) :: abs_vort_flux_error_pv
 
+! Kinectic energy
+type(scalar_field) :: Ku_po ! u part at po
+type(scalar_field) :: Kv_po ! v part at po
+type(scalar_field) :: dy_K_pu ! derivative in x direction of (Ku^2+Kv^2)/2
+type(scalar_field) :: dx_K_pv ! derivative in y direction of (Ku^2+Kv^2)/2
+type(scalar_field) :: Ku_po_exact ! u part at po
+type(scalar_field) :: Kv_po_exact ! v part at po
+
 
 ! Vector field
 type(velocity_field) :: wind_pu, wind_pv, wind_pc, wind_po
