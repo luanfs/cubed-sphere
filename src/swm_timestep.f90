@@ -41,6 +41,7 @@ use duogrid_interpolation, only: &
     interp_C2Agrid, &
     interp_A2Cgrid, &
     interp_C2Bgrid, &
+    interp_windC2Bgrid, &
     dg_interp
 
 ! Model variables
@@ -181,13 +182,21 @@ subroutine sw_timestep_Cgrid(mesh)
     ! interpolation of wind
     call sw_wind_interpolation(mesh)
 
-    ! Compute time-averaged wind
-    call swm_time_averaged_wind(wind_pu, wind_pv, wind_pc, swm_simul%dp, &
-        swm_simul%dto2, mesh%dx, mesh, L_pc)
+    ! Compute time-averaged wind at C grid
+    call swm_time_averaged_wind(wind_pu, wind_pv, swm_simul%dp, &
+        swm_simul%dto2, mesh%dx, mesh)
 
-    ! CFL number
+    ! Compute time-averaged wind at B grid
+    call swm_time_averaged_wind(wind_po, wind_po, swm_simul%dp, &
+        swm_simul%dto2, mesh%dx, mesh)
+
+    ! CFL number - C grid
     call cfl_x(mesh, wind_pu%ucontra_time_av, cx_pu, swm_simul%dt)
     call cfl_y(mesh, wind_pv%vcontra_time_av, cy_pv, swm_simul%dt)
+
+    ! CFL number - B grid
+    call cfl_x(mesh, wind_po%ucontra_time_av, cx_po, swm_simul%dt)
+    call cfl_y(mesh, wind_po%vcontra_time_av, cy_po, swm_simul%dt)
 
 end subroutine sw_timestep_Cgrid
 
@@ -229,9 +238,13 @@ subroutine sw_wind_interpolation(mesh)
 
     ! Now let us do the same for the covariant components
     ! fill the ghost cell D grid (covariant)
-    !print*, maxval(abs(wind_pu%vcovari%f(i0:iend+1,j0:jend,:)))
     call interp_A2Cduogrid(wind_pu%ucovari%f, wind_pv%ucovari%f, wind_pu%vcovari%f, &
     wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f)
+
+    ! interpolate contravariant from C to B grid (neeeded from ke flux)
+    call interp_windC2Bgrid(wind_po%ucontra%f, wind_po%vcontra%f, &
+    wind_pu%ucontra%f, wind_pv%vcontra%f, swm_simul%avd)
+
 end subroutine sw_wind_interpolation
 
 end module swm_timestep

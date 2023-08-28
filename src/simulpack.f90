@@ -393,6 +393,8 @@ subroutine swm_test(mesh)
     !print*, maxval(abs(wind_pv%vcontra%f(:,j0-1:jend+2,:)-wind_pv%vcontra_old%f(:,j0-1:jend+2,:)))
     !print*, maxval(abs(wind_pu%vcovari%f(i0-1:iend+2,:,:)-wind_pu%vcovari_old%f(i0-1:iend+2,:,:)))
     !print*, maxval(abs(wind_pv%ucovari%f(:,j0-1:jend+2,:)-wind_pv%ucovari_old%f(:,j0-1:jend+2,:)))
+    !print*, maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
+    !print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
     !stop
 
 
@@ -408,6 +410,9 @@ subroutine swm_test(mesh)
     call output_swm(mesh)
     wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
     wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
+    !wind_po%ucontra_old%f(:,:,:) = wind_po%ucontra%f(:,:,:)
+    !wind_po%vcontra_old%f(:,:,:) = wind_po%vcontra%f(:,:,:)
+ 
     !wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
     !wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
 
