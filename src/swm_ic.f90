@@ -208,7 +208,7 @@ end subroutine init_swm_vars
 subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
     abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort, &
-    H_po_exact, H_pu_exact, H_pv_exact, Ku_po, Kv_po, &
+    H_po_exact, H_pu_exact, H_pv_exact, Ku_po_exact, Kv_po_exact, K_po_exact, &
     wind_po
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
@@ -449,14 +449,16 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                     wind_po%ucovari_old%f(i,j,p) = ucovari
                     wind_po%vcovari_old%f(i,j,p) = vcovari
 
-                    Ku_po%f(i,j,p) = ucontra*ucovari
-                    Kv_po%f(i,j,p) = vcontra*vcovari
+                    Ku_po_exact%f(i,j,p) = ucontra*ucovari
+                    Kv_po_exact%f(i,j,p) = vcontra*vcovari
+                    K_po_exact%f(i,j,p) = (Ku_po_exact%f(i,j,p)+Kv_po_exact%f(i,j,p))*0.5d0
                     !error = max(error, abs(Ku_po%f(i,j,p)-ulon*ulon))
                     !error = max(error, abs(Kv_po%f(i,j,p)-vlat*vlat))
                     !error = max(error, abs(Ku_po%f(i,j,p)+Kv_po%f(i,j,p)-ulon**2-vlat**2))
                 end do
             end do
         end do
+
         !print*, error
         !stop
 

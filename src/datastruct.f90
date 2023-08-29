@@ -334,6 +334,7 @@ type simulation
     real(kind=8):: linf_error_gradh_pv
     real(kind=8):: linf_error_Ku_po
     real(kind=8):: linf_error_Kv_po
+    real(kind=8):: linf_error_K_po
     real(kind=8):: linf_error_ucovari_po
     real(kind=8):: linf_error_vcovari_po
 

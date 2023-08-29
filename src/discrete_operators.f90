@@ -428,7 +428,7 @@ end subroutine vorticity_fluxes
 
 
 subroutine ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
-                      Ku_px, Kv_py, swmsimul, mesh)
+                      Ku_px, Kv_py, K_po, swmsimul, mesh)
     !---------------------------------------------------
     ! Computes the kinetic energy fluxes at po
     ! time averaged winds must be already computed
@@ -438,6 +438,7 @@ subroutine ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
     type(velocity_field), intent(inout) :: wind_pu
     type(velocity_field), intent(inout) :: wind_pv
     type(velocity_field), intent(inout) :: wind_po
+    type(scalar_field), intent(inout) :: K_po
     type(scalar_field), intent(inout) :: cx_po
     type(scalar_field), intent(inout) :: cy_po
     type(ppm_parabola), intent(inout) :: Ku_px ! ppm in x direction
@@ -449,9 +450,14 @@ subroutine ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
 
     ! Compute the fluxes
     call numerical_flux_ppm_pu(wind_pv%ucovari, Ku_px, wind_po%ucontra_time_av, cx_po, mesh)
-    call numerical_flux_ppm_pv(wind_pv%ucovari, Kv_py, wind_po%vcontra_time_av, cy_po, mesh)
+    call numerical_flux_ppm_pv(wind_pu%vcovari, Kv_py, wind_po%vcontra_time_av, cy_po, mesh)
+    ! now we can compute the kinetic energy
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(K_po, Ku_px, Kv_py)
+    K_po%f = (Ku_px%f_upw + Kv_py%f_upw)*0.5d0
+    !$OMP END PARALLEL WORKSHARE
+ 
 end subroutine ke_fluxes
-
 
 
 subroutine cfl_x(mesh, ucontra_pu, cx_pu, dt)

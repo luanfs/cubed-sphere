@@ -504,6 +504,10 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%linf_error_av_pv
     write(iunit, *) swm_simul%linf_error_ucovari_po
     write(iunit, *) swm_simul%linf_error_vcovari_po
+    write(iunit, *) swm_simul%linf_error_Ku_po
+    write(iunit, *) swm_simul%linf_error_Kv_po
+    write(iunit, *) swm_simul%linf_error_K_po
+
 
     close(iunit)
 end subroutine write_final_errors_swm
@@ -777,6 +781,20 @@ subroutine output_swm(mesh)
         maxval(abs(Kv_py%q_R(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:))))
         swm_simul%linf_error_vcovari_po = swm_simul%linf_error_vcovari_po/&
         maxval(abs(wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:)))
+
+        ! error of kinetic energy flux at B grid
+        swm_simul%linf_error_Ku_po = maxval(abs(Ku_px%f_upw(i0:iend+1,j0:jend+1,:)) - &
+        Ku_po_exact%f(i0:iend+1,j0:jend+1,:))/&
+        maxval(abs(Ku_po_exact%f(i0:iend+1,j0:jend+1,:)))
+
+        swm_simul%linf_error_Kv_po = maxval(abs(Kv_py%f_upw(i0:iend+1,j0:jend+1,:)) - &
+        Kv_po_exact%f(i0:iend+1,j0:jend+1,:))/&
+        maxval(abs(Kv_po_exact%f(i0:iend+1,j0:jend+1,:)))
+
+        swm_simul%linf_error_K_po = maxval(abs(K_po%f(i0:iend+1,j0:jend+1,:)) - &
+        K_po_exact%f(i0:iend+1,j0:jend+1,:))/&
+        maxval(abs(K_po_exact%f(i0:iend+1,j0:jend+1,:)))
+ 
         print*
         print '(a34, 3e16.8)','(linf, l1, l2) divergence  errors:', &
         swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
@@ -789,18 +807,17 @@ subroutine output_swm(mesh)
         print '(a34, 1e16.8)','linf avfv errors:', swm_simul%linf_error_av_pv
         print '(a34, 1e16.8)','linf u_po errors:', swm_simul%linf_error_ucovari_po
         print '(a34, 1e16.8)','linf v_po errors:', swm_simul%linf_error_vcovari_po
+        print '(a34, 1e16.8)','linf Kupo errors:', swm_simul%linf_error_Ku_po
+        print '(a34, 1e16.8)','linf Kvpo errors:', swm_simul%linf_error_Kv_po
+        print '(a34, 1e16.8)','linf K_po errors:', swm_simul%linf_error_K_po
 
+        !print*,  maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))/&
+        !maxval(abs(wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
 
+        !print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))/&
+        !maxval(abs(wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
 
-        !print*, maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
-        !print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
-        !print*, maxval(abs(Ku_px%f_upw(i0:iend+1,j0:jend,:)) - Ku_po%f(i0:iend+1,j0:jend,:))
-        !print*, maxval(abs(Kv_py%f_upw(i0:iend,j0:jend+1,:))-Kv_po%f(i0:iend,j0:jend+1,:))
-    
-        !print*
-        !stop
-
-
+   
     end if
 
 end subroutine output_swm

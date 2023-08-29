@@ -123,7 +123,9 @@ def main():
         error_linf_av_pv = np.zeros((len(N),len(reconmethods)))
         error_linf_u_po = np.zeros((len(N),len(reconmethods)))
         error_linf_v_po = np.zeros((len(N),len(reconmethods)))
-
+        error_linf_ku_po = np.zeros((len(N),len(reconmethods)))
+        error_linf_kv_po = np.zeros((len(N),len(reconmethods)))
+        error_linf_k_po = np.zeros((len(N),len(reconmethods)))
 
     # Lat/lon aux vars
     lats = np.linspace(-90.0, 90.0, Nlat+1)
@@ -207,6 +209,10 @@ def main():
                 error_linf_av_pv[k,i] = errors[16]
                 error_linf_u_po[k,i] = errors[17]
                 error_linf_v_po[k,i] = errors[18]
+                error_linf_ku_po[k,i] = errors[19]
+                error_linf_kv_po[k,i] = errors[20]
+                error_linf_k_po[k,i] = errors[21]
+
 
 
             k = k+1
@@ -324,10 +330,12 @@ def main():
     # consistency error
     if ic=='0':
         # plot the error
-        fields = ['div', 'rel_vort', 'abs_vort', 'h_po', 'av_pu', 'av_pv', 'u_po', 'v_po']
+        fields = ['div', 'rel_vort', 'abs_vort', 'h_po', 'av_pu', 'av_pv', \
+        'u_po', 'v_po', 'ku_po', 'kv_po', 'k_po' ]
         names = ['Divergence', 'Relative vorticity', 'Absolute vorticity',\
         'Height field at B grid', 'Absolute vorticity at pu', 'Absolute vorticity at pv',\
-        'Covariant u at B grid', 'Covariant v at B grid']
+        'Covariant u at B grid', 'Covariant v at B grid', \
+        'U part of kinetic energy','V part of kinetic energy', 'Kinetic energy']
 
         error_list_div   = [error_linf_div, ]#error_l1_div, error_l2_div]
         error_list_rv    = [error_linf_rv , ]#error_l1_rv , error_l2_rv]
@@ -337,8 +345,13 @@ def main():
         error_list_av_pv  = [error_linf_av_pv, ]
         error_list_u_po  = [error_linf_u_po, ]
         error_list_v_po  = [error_linf_v_po, ] 
+        error_list_ku_po  = [error_linf_ku_po, ]
+        error_list_kv_po  = [error_linf_kv_po, ] 
+        error_list_k_po  = [error_linf_k_po, ] 
+ 
         error_lists = [error_list_div, error_list_rv, error_list_av, error_list_h_po,\
-        error_list_av_pu, error_list_av_pv, error_list_u_po, error_list_v_po]
+        error_list_av_pu, error_list_av_pv, error_list_u_po, error_list_v_po, \
+        error_list_ku_po, error_list_kv_po, error_list_k_po]
 
         for fd in range(0,len(fields)):
             error_list = error_lists[fd]
