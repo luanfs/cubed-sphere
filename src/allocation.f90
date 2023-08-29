@@ -663,9 +663,6 @@ subroutine allocate_swm_vars(mesh)
     call scalar_field_allocation(abs_vort_flux_pv, mesh, 3)
     call scalar_field_allocation(div_abs_vort, mesh, 0)
 
-
-    call scalar_field_allocation(Ku_po, mesh, 1)
-    call scalar_field_allocation(Kv_po, mesh, 1)
     call scalar_field_allocation(dx_K_pv, mesh, 3)
     call scalar_field_allocation(dy_K_pu, mesh, 2)
  
