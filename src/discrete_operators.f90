@@ -448,8 +448,8 @@ subroutine ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
     call ppm_reconstruction_y(wind_pu%vcovari, Kv_py)
 
     ! Compute the fluxes
-    !call numerical_flux_ppm_pu(wind_pu%ucovari, Ku_px, wind_po%ucontra_time_av, cx_po, mesh)
-    !call numerical_flux_ppm_pv(wind_pv%ucovari, Kv_py, wind_po%vcontra_time_av, cy_po, mesh)
+    call numerical_flux_ppm_pu(wind_pv%ucovari, Ku_px, wind_po%ucontra_time_av, cx_po, mesh)
+    call numerical_flux_ppm_pv(wind_pv%ucovari, Kv_py, wind_po%vcontra_time_av, cy_po, mesh)
 end subroutine ke_fluxes
 
 

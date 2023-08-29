@@ -502,6 +502,8 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%linf_error_h_po
     write(iunit, *) swm_simul%linf_error_av_pu
     write(iunit, *) swm_simul%linf_error_av_pv
+    write(iunit, *) swm_simul%linf_error_ucovari_po
+    write(iunit, *) swm_simul%linf_error_vcovari_po
 
     close(iunit)
 end subroutine write_final_errors_swm
@@ -760,6 +762,21 @@ subroutine output_swm(mesh)
         maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)-H_po%f(i0:iend+1,j0:jend+1,:)))/&
         maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)))
 
+        ! error of ppm recontruction for the covariant component u
+        swm_simul%linf_error_ucovari_po = &
+        maxval(abs(Ku_px%q_L(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0-1:iend+1,j0:jend+1,:)))
+        swm_simul%linf_error_ucovari_po = max(swm_simul%linf_error_ucovari_po, &
+        maxval(abs(Ku_px%q_R(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:))))
+        swm_simul%linf_error_ucovari_po = swm_simul%linf_error_ucovari_po/&
+        maxval(abs(wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:)))
+
+        ! error of ppm recontruction for the covariant component v
+        swm_simul%linf_error_vcovari_po = &
+        maxval(abs(Kv_py%q_L(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0-1:jend+1,:)))
+        swm_simul%linf_error_vcovari_po = max(swm_simul%linf_error_vcovari_po, &
+        maxval(abs(Kv_py%q_R(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:))))
+        swm_simul%linf_error_vcovari_po = swm_simul%linf_error_vcovari_po/&
+        maxval(abs(wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:)))
         print*
         print '(a34, 3e16.8)','(linf, l1, l2) divergence  errors:', &
         swm_simul%linf_error_div, swm_simul%l1_error_div, swm_simul%l2_error_div
@@ -770,16 +787,17 @@ subroutine output_swm(mesh)
         print '(a34, 1e16.8)','linf h_po errors:', swm_simul%linf_error_h_po
         print '(a34, 1e16.8)','linf avfu errors:', swm_simul%linf_error_av_pu
         print '(a34, 1e16.8)','linf avfv errors:', swm_simul%linf_error_av_pv
+        print '(a34, 1e16.8)','linf u_po errors:', swm_simul%linf_error_ucovari_po
+        print '(a34, 1e16.8)','linf v_po errors:', swm_simul%linf_error_vcovari_po
 
-        print*, maxval(abs(Ku_px%q_L(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0-1:iend+1,j0:jend+1,:)))
-        print*, maxval(abs(Ku_px%q_R(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:)))
-        print*, maxval(abs(Kv_py%q_L(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0-1:jend+1,:)))
-        print*, maxval(abs(Kv_py%q_R(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:)))
-        print*, maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
-        print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
- 
+
+
+        !print*, maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
+        !print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
+        !print*, maxval(abs(Ku_px%f_upw(i0:iend+1,j0:jend,:)) - Ku_po%f(i0:iend+1,j0:jend,:))
+        !print*, maxval(abs(Kv_py%f_upw(i0:iend,j0:jend+1,:))-Kv_po%f(i0:iend,j0:jend+1,:))
     
-        print*
+        !print*
         !stop
 
 

@@ -102,8 +102,8 @@ subroutine init_swm_vars(mesh)
     py%mt = swm_simul%mt
     px%et = swm_simul%et
     py%et = swm_simul%et
-    Ku_px%mt = swm_simul%mt
-    Kv_py%mt = swm_simul%mt
+    Ku_px%mt = 'plane'
+    Kv_py%mt = 'plane'
     Ku_px%et = swm_simul%et
     Kv_py%et = swm_simul%et
 

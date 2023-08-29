@@ -176,7 +176,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
             px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)*mesh%mt_pc(i0-1:iend+1,:,:)
             !$OMP END PARALLEL WORKSHARE
 
-        case('pl07')
+        case('pl07', 'plane')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(px, Q, i0, iend)
             px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)
@@ -258,7 +258,7 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
             py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)*mesh%mt_pc(:,j0-1:jend+1,:)
             !$OMP END PARALLEL WORKSHARE
 
-        case('pl07')
+        case('pl07', 'plane') 
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(py, Q, j0, jend)
             py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)

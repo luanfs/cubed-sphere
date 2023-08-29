@@ -20,7 +20,7 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128) # Values of N
+N = (16, 32, 64, 128, 256) # Values of N
 reconmethods = ('hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ( 'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ( 'pl07', 'mt0' , 'mt0') # metric tensor formulation
@@ -56,7 +56,7 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '2'
+    ic = '0'
     replace_line(pardir+'swm.par', ic, 3)
 
     # final integration time (days)
@@ -82,7 +82,7 @@ def main():
 
     # Initial time step
     if ic=='0' or ic=='1' or ic=='2':
-        dt[0] = 4000
+        dt[0] = 8000
         #dt[0] = 0.025 #3000
     else:
         print('Error - invalid ic')
@@ -119,8 +119,11 @@ def main():
         error_l1_av   = np.zeros((len(N),len(reconmethods)))
         error_l2_av   = np.zeros((len(N),len(reconmethods)))
         error_linf_h_po = np.zeros((len(N),len(reconmethods)))
-        error_l1_h_po = np.zeros((len(N),len(reconmethods)))
-        error_l2_h_po = np.zeros((len(N),len(reconmethods)))
+        error_linf_av_pu = np.zeros((len(N),len(reconmethods)))
+        error_linf_av_pv = np.zeros((len(N),len(reconmethods)))
+        error_linf_u_po = np.zeros((len(N),len(reconmethods)))
+        error_linf_v_po = np.zeros((len(N),len(reconmethods)))
+
 
     # Lat/lon aux vars
     lats = np.linspace(-90.0, 90.0, Nlat+1)
@@ -200,6 +203,11 @@ def main():
                 error_l1_av[k,i]   = errors[12]
                 error_l2_av[k,i]   = errors[13]
                 error_linf_h_po[k,i] = errors[14]
+                error_linf_av_pu[k,i] = errors[15]
+                error_linf_av_pv[k,i] = errors[16]
+                error_linf_u_po[k,i] = errors[17]
+                error_linf_v_po[k,i] = errors[18]
+
 
             k = k+1
 
@@ -229,7 +237,6 @@ def main():
 
                 # plot the error
                 colormap = 'seismic'
-                fields = ['H', 'abs_vort']
                 fields = ['H',]
                 for fd in fields:
                     fname = swm_name+'_'+fd+'_error_t'+str(t)+'_'+grid_name
@@ -279,7 +286,7 @@ def main():
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
-    error_list = [error_linf, error_l1, error_l2]
+    error_list = [error_linf, ]#error_l1, error_l2]
     norm_list  = ['linf','l1','l2']
     norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
 
@@ -317,20 +324,26 @@ def main():
     # consistency error
     if ic=='0':
         # plot the error
-        fields = ['div', 'rel_vort', 'abs_vort', 'h_po']
-        names = ['Divergence', 'Relative vorticity', 'Absolute vorticity', 'Height field at B grid']
+        fields = ['div', 'rel_vort', 'abs_vort', 'h_po', 'av_pu', 'av_pv', 'u_po', 'v_po']
+        names = ['Divergence', 'Relative vorticity', 'Absolute vorticity',\
+        'Height field at B grid', 'Absolute vorticity at pu', 'Absolute vorticity at pv',\
+        'Covariant u at B grid', 'Covariant v at B grid']
 
-        error_list_div   = [error_linf_div, error_l1_div, error_l2_div]
-        error_list_rv    = [error_linf_rv , error_l1_rv , error_l2_rv]
-        error_list_av    = [error_linf_av , error_l1_av , error_l2_av]
+        error_list_div   = [error_linf_div, ]#error_l1_div, error_l2_div]
+        error_list_rv    = [error_linf_rv , ]#error_l1_rv , error_l2_rv]
+        error_list_av    = [error_linf_av , ]#error_l1_av , error_l2_av]
         error_list_h_po  = [error_linf_h_po, ]
-        error_lists = [error_list_div, error_list_rv, error_list_av, error_list_h_po]
+        error_list_av_pu  = [error_linf_av_pu, ]
+        error_list_av_pv  = [error_linf_av_pv, ]
+        error_list_u_po  = [error_linf_u_po, ]
+        error_list_v_po  = [error_linf_v_po, ] 
+        error_lists = [error_list_div, error_list_rv, error_list_av, error_list_h_po,\
+        error_list_av_pu, error_list_av_pv, error_list_u_po, error_list_v_po]
 
         for fd in range(0,len(fields)):
             error_list = error_lists[fd]
             norm_list  = ['linf','l1','l2']
             norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
-
             e = 0
             for error in error_list:
                 emin, emax = np.amin(error[:]), np.amax(error[:])
