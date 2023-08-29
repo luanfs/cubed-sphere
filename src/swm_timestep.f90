@@ -158,6 +158,20 @@ subroutine sw_timestep_Dgrid(mesh)
     !====================================================================
 
     !--------------------------------------------------------------------
+    ! Compute the gradient of kinetic energy
+    !--------------------------------------------------------------------
+    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !$OMP SHARED(dy_K_pu, dx_K_pv, K_po, mesh) &
+    !$OMP SHARED(i0, j0, iend, jend)
+    dx_K_pv%f(i0:iend,j0:jend+1,:) = (K_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    K_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    dy_K_pu%f(i0:iend+1,j0:jend,:) = (K_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    K_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    !$OMP END PARALLEL WORKSHARE
+    !====================================================================
+
+
+    !--------------------------------------------------------------------
     ! Update the fluid depth
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(H, swm_simul, div_ugH)

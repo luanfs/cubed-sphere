@@ -507,8 +507,6 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%linf_error_Ku_po
     write(iunit, *) swm_simul%linf_error_Kv_po
     write(iunit, *) swm_simul%linf_error_K_po
-
-
     close(iunit)
 end subroutine write_final_errors_swm
 
