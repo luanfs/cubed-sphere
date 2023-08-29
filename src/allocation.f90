@@ -698,6 +698,7 @@ subroutine allocate_swm_vars(mesh)
         call scalar_field_allocation(H_pv_exact, mesh, 3)
         call scalar_field_allocation(Ku_po_exact, mesh, 1)
         call scalar_field_allocation(Kv_po_exact, mesh, 1)
+        call scalar_field_allocation(K_po_exact, mesh, 1)
  
     end if
 

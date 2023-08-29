@@ -210,6 +210,7 @@ subroutine swm_deallocation()
 
         deallocate(Ku_po_exact%f)
         deallocate(Kv_po_exact%f)
+        deallocate(K_po_exact%f)
     end if
 
     deallocate(wind_pu%u%f)
