@@ -129,6 +129,7 @@ subroutine init_swm_vars(mesh)
 
     ! Time step over 2
     swm_simul%dto2 = swm_simul%dt*0.5d0
+    swm_simul%dt2 = swm_simul%dt*swm_simul%dt
 
     ! Final time step converted to seconds
     swm_simul%tf = swm_simul%tf*day2sec

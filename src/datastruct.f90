@@ -345,6 +345,7 @@ type simulation
     ! Time step
     real(kind=8):: dt
     real(kind=8):: dto2
+    real(kind=8):: dt2
     real(kind=8):: t, tf
     integer(i4) :: nsteps, nplot, n, plotcounter
 
