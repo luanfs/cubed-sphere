@@ -226,7 +226,6 @@ subroutine sw_timestep_Dgrid(mesh)
     print*, maxval(abs(dy_K_pu%f(i0:iend+1,j0:jend,:)))
     print*, maxval(abs(dy_div_ugh_pu%f(i0:iend+1,j0:jend,:)*swm_simul%dt*grav))
 
-    !stop
     !print*, maxval(abs(swm_simul%dt*abs_vort_flux_pv%f(i0:iend,j0:jend+1,:)))
     !print*
     !print*, maxval(abs(H%f(i0:iend,j0:jend,:)))
