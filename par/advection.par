@@ -1,10 +1,10 @@
 #Advection test case parameters 
 #Initial condition field 
-2
+3
 #Vector field
-1
+2
 #Time step
-0.0015625
+0.00078125
 #Number of plots
 2
 #1D reconstruction (ppm or hyppm)

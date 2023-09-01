@@ -13,19 +13,20 @@ use constants, only: &
     nbfaces, &
     i0, iend, &
     j0, jend, &
-    n0, nend
+    n0, nend, &
+    grav, erad
 
 ! Spherical geometry
 use sphgeo, only: &
-  sph2cart, &
-  deg2rad
+    sph2cart, &
+    deg2rad
 
 ! Data structures
 use datastruct, only: &
-  cubedsphere, &
-  scalar_field, &
-  velocity_field, &
-  simulation
+    cubedsphere, &
+    scalar_field, &
+    velocity_field, &
+    simulation
 
 ! Discrete operators 
 use discrete_operators, only: &
@@ -105,9 +106,9 @@ subroutine sw_timestep_Dgrid(mesh)
     !$OMP SHARED(dy_div_ugh_pu, dx_div_ugh_pv, div_ugh_po, mesh) &
     !$OMP SHARED(i0, j0, iend, jend)
     dx_div_ugh_pv%f(i0:iend,j0:jend+1,:) = (div_ugh_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    div_ugh_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    div_ugh_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
     dy_div_ugh_pu%f(i0:iend+1,j0:jend,:) = (div_ugh_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    div_ugh_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    div_ugh_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
     !$OMP END PARALLEL WORKSHARE
     !--------------------------------------------------------------------
     !====================================================================
@@ -132,9 +133,9 @@ subroutine sw_timestep_Dgrid(mesh)
     !$OMP SHARED(dy_H_pu, dx_H_pv, H_po, mesh) &
     !$OMP SHARED(i0, j0, iend, jend)
     dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
     dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
     !$OMP END PARALLEL WORKSHARE
     !====================================================================
 
@@ -164,12 +165,22 @@ subroutine sw_timestep_Dgrid(mesh)
     !$OMP SHARED(dy_K_pu, dx_K_pv, K_po, mesh) &
     !$OMP SHARED(i0, j0, iend, jend)
     dx_K_pv%f(i0:iend,j0:jend+1,:) = (K_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    K_po%f(i0:iend,j0:jend+1,:))/mesh%dx
+    K_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
     dy_K_pu%f(i0:iend+1,j0:jend,:) = (K_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    K_po%f(i0:iend+1,j0:jend,:))/mesh%dy
+    K_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
     !$OMP END PARALLEL WORKSHARE
     !====================================================================
 
+
+    !--------------------------------------------------------------------
+    ! Store the wind for the next step
+    wind_pu%vcovari_old%f(:,:,:) = wind_pu%vcovari%f(:,:,:)
+    wind_pv%ucovari_old%f(:,:,:) = wind_pv%ucovari%f(:,:,:) 
+    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
+    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
+    wind_po%ucontra_old%f(:,:,:) = wind_po%ucontra%f(:,:,:)
+    wind_po%vcontra_old%f(:,:,:) = wind_po%vcontra%f(:,:,:)
+    !--------------------------------------------------------------------
 
     !--------------------------------------------------------------------
     ! Update the fluid depth
@@ -178,7 +189,49 @@ subroutine sw_timestep_Dgrid(mesh)
     H%f = H%f - swm_simul%dt*div_ugH%f
     !$OMP END PARALLEL WORKSHARE
     !--------------------------------------------------------------------
+    print*, maxval(abs(wind_pv%ucovari%f(i0:iend,j0:jend+1,:)))/swm_simul%dt
+    print*, maxval(abs(wind_pu%vcovari%f(i0:iend+1,j0:jend,:)))/swm_simul%dt
+    print*, grav
+    !--------------------------------------------------------------------
+    ! Update the velocity
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(wind_pu, wind_pv, swm_simul) &
+    !!$OMP SHARED(i0, iend, j0, jend)
+    wind_pv%ucovari%f(i0:iend,j0:jend+1,:) = wind_pv%ucovari%f(i0:iend,j0:jend+1,:) - swm_simul%dt*&
+    (abs_vort_flux_pv%f(i0:iend,j0:jend+1,:) &
+    +dx_H_pv%f(i0:iend,j0:jend+1,:)*grav &
+    +dx_K_pv%f(i0:iend,j0:jend+1,:) &
+    +dx_div_ugh_pv%f(i0:iend,j0:jend+1,:)*swm_simul%dt*grav)
 
+    wind_pu%vcovari%f(i0:iend+1,j0:jend,:) = wind_pu%vcovari%f(i0:iend+1,j0:jend,:) - swm_simul%dt*&
+    (abs_vort_flux_pu%f(i0:iend+1,j0:jend,:) &
+    +dy_H_pu%f(i0:iend+1,j0:jend,:)*grav&
+    +dy_K_pu%f(i0:iend+1,j0:jend,:) &
+    +dy_div_ugh_pu%f(i0:iend+1,j0:jend,:)*swm_simul%dt*grav)
+ 
+    !!$OMP END PARALLEL WORKSHARE
+    !--------------------------------------------------------------------
+    print*
+    print*,'pv operators'
+    print*, maxval(abs(wind_pv%ucovari%f(i0:iend,j0:jend+1,:)))/swm_simul%dt
+    print*, maxval(abs(abs_vort_flux_pv%f(i0:iend,j0:jend+1,:)))
+    print*, maxval(abs(dx_H_pv%f(i0:iend,j0:jend+1,:)*grav))
+    print*, maxval(abs(dx_K_pv%f(i0:iend,j0:jend+1,:)))
+    print*, maxval(abs(dx_div_ugh_pv%f(i0:iend,j0:jend+1,:)*swm_simul%dt*grav))
+    print*
+    print*,'pu operators'
+    print*, maxval(abs(wind_pu%vcovari%f(i0:iend+1,j0:jend,:)))/swm_simul%dt
+    print*, maxval(abs(abs_vort_flux_pu%f(i0:iend+1,j0:jend,:)))
+    print*, maxval(abs(dy_H_pu%f(i0:iend+1,j0:jend,:)*grav))
+    print*, maxval(abs(dy_K_pu%f(i0:iend+1,j0:jend,:)))
+    print*, maxval(abs(dy_div_ugh_pu%f(i0:iend+1,j0:jend,:)*swm_simul%dt*grav))
+
+    !stop
+    !print*, maxval(abs(swm_simul%dt*abs_vort_flux_pv%f(i0:iend,j0:jend+1,:)))
+    !print*
+    !print*, maxval(abs(H%f(i0:iend,j0:jend,:)))
+    !print*, maxval(abs(wind_pv%ucovari%f(i0:iend,j0:jend+1,:)))
+    !print*, maxval(abs(wind_pv%ucovari%f(i0:iend+1,j0:jend,:)))
 end subroutine sw_timestep_Dgrid
 
 

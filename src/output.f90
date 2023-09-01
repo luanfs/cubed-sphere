@@ -681,6 +681,10 @@ subroutine output_swm(mesh)
             print '(a33, 3e16.8)','(linf, l1, l2) H norms :', &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
 
+            if(swm_simul%linf_error_h>100000000.d0)then
+                print*, 'Stopping due to large errors.'
+                stop
+            end if
             ! absolute vorticity
             !call compute_norms_field(abs_vort, &
             !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
