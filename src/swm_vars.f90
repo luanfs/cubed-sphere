@@ -71,6 +71,8 @@ type(scalar_field) :: Kv_po_exact ! exact ke v part at po
 
 ! Vector field
 type(velocity_field) :: wind_pu, wind_pv, wind_pc, wind_po
+type(scalar_field) :: vcovari_pu_exact, vcovari_pu_error
+type(scalar_field) :: ucovari_pv_exact, ucovari_pv_error
 
 ! CFL
 type(scalar_field) :: cx_pu ! cfl x direction at pu

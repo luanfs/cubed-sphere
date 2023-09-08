@@ -488,6 +488,12 @@ subroutine write_final_errors_swm(swm_simul, mesh, filename)
     write(iunit, *) swm_simul%linf_error_h
     write(iunit, *) swm_simul%l1_error_h
     write(iunit, *) swm_simul%l2_error_h
+    write(iunit, *) swm_simul%linf_error_ucovari_pv
+    write(iunit, *) swm_simul%l1_error_ucovari_pv
+    write(iunit, *) swm_simul%l2_error_ucovari_pv
+    write(iunit, *) swm_simul%linf_error_vcovari_pu
+    write(iunit, *) swm_simul%l1_error_vcovari_pu
+    write(iunit, *) swm_simul%l2_error_vcovari_pu
     write(iunit, *) swm_simul%cfl
     write(iunit, *) swm_simul%mass_variation
     write(iunit, *) swm_simul%linf_error_div
@@ -662,26 +668,63 @@ subroutine output_swm(mesh)
             call compute_errors_field(H, H_exact, H_error, &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
-            print '(a33, 3e16.8)','(linf, l1, l2) H errors :', &
+            print '(a33, 3e16.8)','(linf, l1, l2) height  errors :', &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
 
-            ! absolute vorticity
-            !call compute_errors_field(abs_vort, abs_vort_exact, abs_vort_error, &
-            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av, mesh)
+            ! ucovari at pv
+            call compute_errors_field(wind_pv%ucovari, ucovari_pv_exact, ucovari_pv_error, &
+            swm_simul%linf_error_ucovari_pv, &
+            swm_simul%l1_error_ucovari_pv, &
+            swm_simul%l2_error_ucovari_pv, mesh)
 
-            !print '(a33, 3e16.8)','(linf, l1, l2) av errors:', &
-            !swm_simul%linf_error_av, swm_simul%l1_error_av, swm_simul%l2_error_av
+            print '(a33, 3e16.8)','(linf, l1, l2) ucontra norms :', &
+            swm_simul%linf_error_ucovari_pv, & 
+            swm_simul%l1_error_ucovari_pv, & 
+            swm_simul%l2_error_ucovari_pv
 
+            ! vcovari at pu
+            call compute_errors_field(wind_pu%vcovari, vcovari_pu_exact, vcovari_pu_error, &
+            swm_simul%linf_error_vcovari_pu, &
+            swm_simul%l1_error_vcovari_pu, &
+            swm_simul%l2_error_vcovari_pu, mesh)
+
+            print '(a33, 3e16.8)','(linf, l1, l2) vcontra norms :', &
+            swm_simul%linf_error_vcovari_pu, & 
+            swm_simul%l1_error_vcovari_pu, & 
+            swm_simul%l2_error_vcovari_pu
 
         else 
             ! fluid depth
             call compute_norms_field(H,&
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h, mesh)
 
-            print '(a33, 3e16.8)','(linf, l1, l2) H norms :', &
+            print '(a33, 3e16.8)','(linf, l1, l2) height  norms :', &
             swm_simul%linf_error_h, swm_simul%l1_error_h, swm_simul%l2_error_h
 
-            if(swm_simul%linf_error_h>100000000.d0)then
+            ! ucovari at pv
+            call compute_norms_field(wind_pv%ucovari,&
+            swm_simul%linf_error_ucovari_pv, &
+            swm_simul%l1_error_ucovari_pv, &
+            swm_simul%l2_error_ucovari_pv, mesh)
+
+            print '(a33, 3e16.8)','(linf, l1, l2) ucontra norms :', &
+            swm_simul%linf_error_ucovari_pv*erad, & 
+            swm_simul%l1_error_ucovari_pv*erad, & 
+            swm_simul%l2_error_ucovari_pv*erad
+
+            ! vcovari at pu
+            call compute_norms_field(wind_pu%vcovari,&
+            swm_simul%linf_error_vcovari_pu, &
+            swm_simul%l1_error_vcovari_pu, &
+            swm_simul%l2_error_vcovari_pu, mesh)
+
+            print '(a33, 3e16.8)','(linf, l1, l2) vcontra norms :', &
+            swm_simul%linf_error_vcovari_pu*erad, & 
+            swm_simul%l1_error_vcovari_pu*erad, & 
+            swm_simul%l2_error_vcovari_pu*erad
+
+            if(swm_simul%linf_error_h>100000000.d0 .or. &
+swm_simul%linf_error_ucovari_pv>100000000.d0 .or. swm_simul%linf_error_vcovari_pu>100000000.d0)then
                 print*, 'Stopping due to large errors.'
                 stop
             end if

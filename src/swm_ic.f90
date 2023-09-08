@@ -210,7 +210,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
     use swm_vars, only: div_ugH_exact, rel_vort_exact, fcoriolis_pc, &
     abs_vort_exact, abs_vort_flux_exact_pu, abs_vort_flux_exact_pv, abs_vort, &
     H_po_exact, H_pu_exact, H_pv_exact, Ku_po_exact, Kv_po_exact, K_po_exact, &
-    wind_po
+    wind_po, vcovari_pu_exact, ucovari_pv_exact
     !--------------------------------------------------
     ! Compute the initial conditions for the shallow water
     ! problem on the sphere
@@ -298,7 +298,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 V_pu%vcontra_old%f(i,j,p) = vcontra
                 V_pu%ucovari_old%f(i,j,p) = ucovari
                 V_pu%vcovari_old%f(i,j,p) = vcovari
-
+                vcovari_pu_exact%f(i,j,p) = vcovari
             end do
         end do
     end do
@@ -329,6 +329,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 V_pv%vcontra_old%f(i,j,p) = vcontra
                 V_pv%ucovari_old%f(i,j,p) = ucovari
                 V_pv%vcovari_old%f(i,j,p) = vcovari
+                ucovari_pv_exact%f(i,j,p) = ucovari
             end do
         end do
     end do

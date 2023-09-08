@@ -337,7 +337,8 @@ type simulation
     real(kind=8):: linf_error_K_po
     real(kind=8):: linf_error_ucovari_po
     real(kind=8):: linf_error_vcovari_po
-
+    real(kind=8):: linf_error_vcovari_pu, l1_error_vcovari_pu, l2_error_vcovari_pu
+    real(kind=8):: linf_error_ucovari_pv, l1_error_ucovari_pv, l2_error_ucovari_pv
 
     ! variables for mass
     real(kind=8):: mass, mass0, mass_variation

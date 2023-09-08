@@ -699,8 +699,12 @@ subroutine allocate_swm_vars(mesh)
         call scalar_field_allocation(Ku_po_exact, mesh, 1)
         call scalar_field_allocation(Kv_po_exact, mesh, 1)
         call scalar_field_allocation(K_po_exact, mesh, 1)
- 
-    end if
+   end if
+   call scalar_field_allocation(vcovari_pu_exact, mesh, 2)
+   call scalar_field_allocation(ucovari_pv_exact, mesh, 3)
+   call scalar_field_allocation(vcovari_pu_error, mesh, 2)
+   call scalar_field_allocation(ucovari_pv_error, mesh, 3)
+
 
 end subroutine allocate_swm_vars
 

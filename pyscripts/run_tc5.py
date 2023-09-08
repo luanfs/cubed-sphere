@@ -20,7 +20,7 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128, 256) # Values of N
+N = (16, 32, 64, 128,  ) # Values of N
 reconmethods = ('hyppm', 'hyppm', 'hyppm') # reconstruction methods
 splitmethods = ( 'pl07', 'avlt', 'avlt' ) # splitting
 mtmethods    = ( 'pl07', 'mt0' , 'mt0') # metric tensor formulation
@@ -39,7 +39,8 @@ edgetreat    = ('duogrid', 'duogrid', 'duogrid') # edge treatments
 
 # Program to be run
 program = "./main"
-run = True # Run the simulation?
+run = True# Run the simulation?
+#run = False# Run the simulation?
 
 # Plotting parameters
 #map_projection = 'sphere'
@@ -56,7 +57,7 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '0'
+    ic = '2'
     replace_line(pardir+'swm.par', ic, 3)
 
     # final integration time (days)
@@ -103,9 +104,17 @@ def main():
         dt[k] = 0.5*dt[k-1]
 
     # Error arrays
-    error_linf = np.zeros((len(N),len(reconmethods)))
-    error_l1   = np.zeros((len(N),len(reconmethods)))
-    error_l2   = np.zeros((len(N),len(reconmethods)))
+    error_linf_h = np.zeros((len(N),len(reconmethods)))
+    error_l1_h   = np.zeros((len(N),len(reconmethods)))
+    error_l2_h   = np.zeros((len(N),len(reconmethods)))
+    error_linf_u = np.zeros((len(N),len(reconmethods)))
+    error_l1_u   = np.zeros((len(N),len(reconmethods)))
+    error_l2_u   = np.zeros((len(N),len(reconmethods)))
+    error_linf_v = np.zeros((len(N),len(reconmethods)))
+    error_l1_v   = np.zeros((len(N),len(reconmethods)))
+    error_l2_v   = np.zeros((len(N),len(reconmethods)))
+
+
 
     # consistency error
     if ic=='0':
@@ -186,34 +195,38 @@ def main():
                 subprocess.run('cd .. ; ./main', shell=True)
 
             errors = np.loadtxt(filename)
-            error_linf[k,i] = errors[0]
-            error_l1[k,i] = errors[1]
-            error_l2[k,i] = errors[2]
-            cfl = errors[3]
-            massvar = errors[4]
+            error_linf_h[k,i] = errors[0]
+            error_l1_h[k,i] = errors[1]
+            error_l2_h[k,i] = errors[2]
+            error_linf_u[k,i] = errors[3]
+            error_l1_u[k,i] = errors[4]
+            error_l2_u[k,i] = errors[5]
+            error_linf_v[k,i] = errors[6]
+            error_l1_v[k,i] = errors[7]
+            error_l2_v[k,i] = errors[8]
+            cfl = errors[9]
+            massvar = errors[10]
             cfl = str("{:.2e}".format(cfl))
             massvar = str("{:.2e}".format(massvar))
 
             if ic=='0':
-                error_linf_div[k,i] = errors[5]
-                error_l1_div[k,i]   = errors[6]
-                error_l2_div[k,i]   = errors[7]
-                error_linf_rv[k,i] = errors[8]
-                error_l1_rv[k,i]   = errors[9]
-                error_l2_rv[k,i]   = errors[10]
-                error_linf_av[k,i] = errors[11]
-                error_l1_av[k,i]   = errors[12]
-                error_l2_av[k,i]   = errors[13]
-                error_linf_h_po[k,i] = errors[14]
-                error_linf_av_pu[k,i] = errors[15]
-                error_linf_av_pv[k,i] = errors[16]
-                error_linf_u_po[k,i] = errors[17]
-                error_linf_v_po[k,i] = errors[18]
-                error_linf_ku_po[k,i] = errors[19]
-                error_linf_kv_po[k,i] = errors[20]
-                error_linf_k_po[k,i] = errors[21]
-
-
+                error_linf_div[k,i] = errors[11]
+                error_l1_div[k,i]   = errors[12]
+                error_l2_div[k,i]   = errors[13]
+                error_linf_rv[k,i] = errors[14]
+                error_l1_rv[k,i]   = errors[15]
+                error_l2_rv[k,i]   = errors[16]
+                error_linf_av[k,i] = errors[17]
+                error_l1_av[k,i]   = errors[18]
+                error_l2_av[k,i]   = errors[19]
+                error_linf_h_po[k,i] = errors[20]
+                error_linf_av_pu[k,i] = errors[21]
+                error_linf_av_pv[k,i] = errors[22]
+                error_linf_u_po[k,i] = errors[23]
+                error_linf_v_po[k,i] = errors[24]
+                error_linf_ku_po[k,i] = errors[25]
+                error_linf_kv_po[k,i] = errors[26]
+                error_linf_k_po[k,i] = errors[27]
 
             k = k+1
 
@@ -237,9 +250,9 @@ def main():
                 +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
                 '\n min = '+dmin+', max = '+dmax+', mass variation = '+massvar+'\n \n'
 
-                if ic != '0':
-                    plot_scalar_field(data, lats, lons, \
-                             colormap, map_projection, fname, title, qmin, qmax)
+                #if ic != '0':
+                #    plot_scalar_field(data, lats, lons, \
+                #             colormap, map_projection, fname, title, qmin, qmax)
 
                 # plot the error
                 colormap = 'seismic'
@@ -258,8 +271,8 @@ def main():
                         title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
                         '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
                         ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
-                        plot_scalar_field(data, lats, lons, \
-                                colormap, map_projection, fname, title, dmin, dmax)
+                        #plot_scalar_field(data, lats, lons, \
+                        #        colormap, map_projection, fname, title, dmin, dmax)
 
                 if ic=='0':
                     # plot the error
@@ -292,11 +305,16 @@ def main():
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
-    error_list = [error_linf, ]#error_l1, error_l2]
-    norm_list  = ['linf','l1','l2']
-    norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
+    if ic == '1':
+        error_list = [error_linf_h,]# error_l1_h, error_l2_h]
+        norm_list  = ['linf','l1','l2']
+        norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
+    else: 
+        error_list = [error_linf_h, error_linf_u, error_linf_v]
+        norm_list  = ['linf_h','linf_u','linf_v']
+        norm_title  = [r'$L_{\infty}$, $h$ error', r'$L_{\infty}$, $u$ error' ,r'$L_{\infty}$, $v$ error']
 
-    e = 0
+    e = 0 
     for error in error_list:
         emin, emax = np.amin(error[:]), np.amax(error[:])
 

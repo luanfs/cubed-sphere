@@ -211,6 +211,7 @@ subroutine swm_deallocation()
         deallocate(Ku_po_exact%f)
         deallocate(Kv_po_exact%f)
         deallocate(K_po_exact%f)
+
     end if
 
     deallocate(wind_pu%u%f)
@@ -269,6 +270,10 @@ subroutine swm_deallocation()
     deallocate(wind_po%ucovari_old%f)
     deallocate(wind_po%vcovari_old%f)
 
+    deallocate(ucovari_pv_exact%f)
+    deallocate(vcovari_pu_exact%f)
+    deallocate(ucovari_pv_error%f)
+    deallocate(vcovari_pu_error%f)
 
 end subroutine swm_deallocation
 
