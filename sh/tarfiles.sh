@@ -6,16 +6,18 @@ date=` date +%F `
 version=` date +%y.%m.%d `
 echo "Today: " $date
 
-sourcefiles="src/*.f90"
+sourcefiles="../src/*.f90"
 
-parfiles="par/*.par "
+pyfiles="../pyscripts/*.py ../pyscripts/src"
 
-scripts="sh/*.sh "
+parfiles="../par/*.par "
 
-others="Makefile \
-README.*"
+scripts="../sh/*.sh "
 
-files="$sourcefiles $parfiles $scripts $others"
+others="../Makefile \
+../README.*"
+
+files="$sourcefiles $parfiles $scripts $pyfiles $others"
 
 #output="fvcs$version.tar.bz2"
 output="fvcs.tar.bz2"
