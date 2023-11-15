@@ -1,20 +1,21 @@
 !Grid parameters 
 !Number of cells N along a coordinates axis (total number of cells is 6*N*N)
-256
+16
 !Kind of mesh use: equiangular
 equiangular
 !Loadable grid? 0-No; 1-Yes
-1
+0
 !Show ongoing process details on screen? 0-No; 1-Yes
-1
+0
 !Test case to be done
-5
+1
 !If mesh read from file give filename (Extensions: .xyz)
 file.xyz
 
 !-----------Description of parameters -------------------------------------!
 !Mesh kind
 !   equiangular
+!   equiedge
 
 !Possible test cases
 !  case(1) ! Grid generation, storage and quality (see plotgrid.py and plot_tc1.py for outputs)
