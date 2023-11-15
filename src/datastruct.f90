@@ -471,6 +471,7 @@ type lagrange_poly_cs
 
     ! stencil
     integer(i4), allocatable :: k0(:,:), kend(:,:)
+    integer(i4), allocatable :: offset
 
     ! degree
     integer (i4) :: degree

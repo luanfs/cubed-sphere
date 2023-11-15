@@ -1108,6 +1108,8 @@ subroutine compute_lagrange_cs(L, mesh)
         stop
     end if
 
+    L%offset = ceiling(L%order*0.5d0)
+
     if(L%pos==1) then
         ! Compute the nodes
         ! Init local coordinates grid
@@ -1126,74 +1128,63 @@ subroutine compute_lagrange_cs(L, mesh)
             end do
         end do
 
-        L%k0(:,:) = 0
-        L%kend(:,:) =0
 
         ! Compute stencils
         do g = 1, nghost
-            do j = j0-g, jend+g
-                ! Point that are not at the corners
-                if (j>j0-g .and. j<jend+g)then
-                    jnearest =  minloc(abs(L%y_support(j0:jend)-L%y_nodes(j,g)),DIM=1)
-                    if(L%y_nodes(j,g) > L%y_support(jnearest))then
-                        L%kend(j,g) = jnearest  + ceiling(L%order*0.5d0)
-                        L%k0(j,g) = L%kend(j,g) - L%order + 1 
-                    else 
-                        L%k0(j,g) = jnearest - ceiling(L%order*0.5d0)
-                        L%kend(j,g) = L%k0(j,g) + L%order - 1 
-                    end if
-                
-                    if(L%k0(j,g)<j0)then
-                        L%k0(j,g) = j0
-                        L%kend(j,g) = L%k0(j,g) + L%order - 1 
-                    end if
+           do j = j0-g, jend+g
+              do i = n0, nend-1
+                 if( (L%y_support(i) <= L%y_nodes(j,g)) .and. (L%y_nodes(j,g) <= L%y_support(i+1) )) then
+                    exit
+                 end if
+              enddo
 
-                    if(L%kend(j,g)>jend)then
-                        L%kend(j,g) = jend
-                        L%k0(j,g) = L%kend(j,g) - L%order + 1 
-                    end if
+              ! not corner points
+              if(j>j0-g .and. j<jend+g) then
+                 L%kend(j,g)   = i + L%offset
+                 L%k0(j,g) = L%kend(j,g) - L%order + 1
 
-                ! Corner points
-                else if (j==jend+g) then
-                    L%kend(j,g) = min(nend, jend + ceiling(L%order*0.5d0))
-                    L%k0(j,g)   = L%kend(j,g) - L%order + 1
-                else 
-                    L%k0(j,g)   = max(n0, j0-ceiling(L%order*0.5d0))
+                 if(L%k0(j,g)<j0)then 
+                    L%k0(j,g) = j0
                     L%kend(j,g) = L%k0(j,g) + L%order - 1
-                end if
-            end do
-            !read(*,*)
-            !stop
-        end do
+                 else if(L%kend(j,g)>jend)then 
+                    L%kend(j,g) = jend
+                    L%k0(j,g) = L%kend(j,g) - L%order + 1
+                 end if
 
+              ! corner points
+              else if (j==jend+g) then
+                 L%kend(j,g) = min(nend, jend + L%offset)
+                 L%k0(j,g) = L%kend(j,g) - L%order + 1
+              else
+                 L%k0(j,g) = max(n0, j0 - L%offset)
+                 L%kend(j,g) = L%k0(j,g) + L%order - 1
+              end if
+           enddo
+        enddo
+
+        ! Debug
         do g = 1, nghost
             do i = i0-g, iend+g
                 if(L%kend(i,g)-L%k0(i,g) .ne. L%degree)then
-                    print*, 'error1'
+                    print*, 'ERROR in compute_lagrange_polynomials: stencil size is not correct.'
                     stop
                 end if
 
-                !if(L%kend(i,g)<i0 .or. L%k0(i,g)>iend)then
-                !    print*, 'error2'
-                !    stop
-                !end if
+                if(L%kend(i,g)<i0 .or. L%k0(i,g)>iend)then
+                    print*, 'ERROR in compute_lagrange_polynomials: stencil bounds are not correct.'
+                    stop
+                end if
 
                 if(L%y_support(L%k0(i,g))>L%y_nodes(i,g))then
-                    print*, 'error3'
-                    print*, i,g,L%k0(i,g), L%kend(i,g)
-                    read(*,*)
+                    print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. >'
                     stop
                 end if
 
                 if(L%y_support(L%kend(i,g))<L%y_nodes(i,g))then
-                    print*, 'error4'
-                    print*, i,g,L%k0(i,g), L%kend(i,g)
-                    read(*,*)
+                    print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. <'
                     stop
                 end if
  
-                !print*, i, g, L%y_support(L%k0(i,g)), L%y_nodes(i,g), L%y_support(L%kend(i,g))
-                !print*, i, g,L%k0(i,g), L%kend(i,g)
             end do
             !read(*,*)
         end do  
