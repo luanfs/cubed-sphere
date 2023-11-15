@@ -35,7 +35,8 @@ use datastruct, only: &
 
 ! CS mapping
 use sphgeo, only: &
-    inverse_equiangular_gnomonic_map2
+    inverse_equiangular_gnomonic_map, &
+    inverse_equiedge_gnomonic_map
 
 implicit none
 
@@ -1103,7 +1104,7 @@ subroutine compute_lagrange_cs(L, mesh)
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4) ::  i, j, p, g, d, k, h, jnearest
 
-    if(mesh%kind .ne. 'equiangular') then
+    if(mesh%kind .ne. 'equiangular' .and. mesh%kind .ne. 'equiedge') then
         print*, 'ERROR in compute_lagrange_cs: invalid mesh kind, ', mesh%kind
         stop
     end if
@@ -1113,7 +1114,7 @@ subroutine compute_lagrange_cs(L, mesh)
     if(L%pos==1) then
         ! Compute the nodes
         ! Init local coordinates grid
-        L%y_support(n0) = -pio4 - (mesh%halosize-0.5d0)*mesh%dx
+        L%y_support(n0) = -mesh%aref - (mesh%halosize-0.5d0)*mesh%dx
         do j = n0+1, nend
             L%y_support(j) = L%y_support(j-1) + mesh%dx
         end do
@@ -1123,12 +1124,17 @@ subroutine compute_lagrange_cs(L, mesh)
         do g = 1, nghost
             do j = n0, nend
                 ! invert it
-                call inverse_equiangular_gnomonic_map2(L%x_nodes(j,g), L%y_nodes(j,g), p, &
-                mesh%pc(iend+g,j,1)%p, mesh)
+                if( mesh%kind=='equiangular')then
+                  call inverse_equiangular_gnomonic_map(mesh%pc(iend+g,j,1)%p, L%x_nodes(j,g), L%y_nodes(j,g), p)
+                else if( mesh%kind=='equiedge')then
+                  call inverse_equiedge_gnomonic_map(mesh%pc(iend+g,j,1)%p, L%x_nodes(j,g), L%y_nodes(j,g), p)
+                endif
+               !print*,g,j, L%x_nodes(j,g), L%y_nodes(j,g), abs(-mesh%aref + mesh%dy*(g-0.5d0)-L%x_nodes(j,g))
             end do
+            !print*,'---------------------------------------------------'
         end do
 
-
+!stop
         ! Compute stencils
         do g = 1, nghost
            do j = j0-g, jend+g

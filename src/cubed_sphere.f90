@@ -59,12 +59,14 @@ use sphgeo, only: &
     equidistant_gnomonic_map, &
     norm, &
     inverse_equiangular_gnomonic_map, &
+    inverse_equiedge_gnomonic_map, &
     sph2cart, &
     cart2sph, &
     tangent_ll_lat, &
     tangent_ll_lon, &
     derivative_ydir_equiangular_gnomonic_map, &
-    derivative_xdir_equiangular_gnomonic_map
+    derivative_xdir_equiangular_gnomonic_map, &
+    get_cubedsphere_panel
 
 implicit none
 
@@ -135,7 +137,7 @@ subroutine meshbuild(mesh)
         !Generate mesh
         !------------------------------------------------
         select case(trim(mesh%kind))
-        case("equiangular") !Equiangular grid
+        case("equiangular", "equiedge") !Equiangular grid
             call equiangular_cubedsphere_generation(mesh)
 
             ! Compute tangent vectors
@@ -281,12 +283,20 @@ subroutine equiangular_cubedsphere_generation(mesh)
     call r8_1darray_allocation(tanx, n0, nend+1)
     call r8_1darray_allocation(tany, n0, nend+1)
 
+    if(mesh%kind=='equiangular') then
+       mesh%aref = pio4
+       mesh%Rref = 1.d0
+    else if(mesh%kind=='equiedge')then
+       mesh%aref = dasin(1.d0/dsqrt(3.d0))
+       mesh%Rref = dsqrt(2.d0)
+    endif
+
     ! Local coordinates grid size
-    mesh%dx = pio2/mesh%n
-    mesh%dy = pio2/mesh%n
+    mesh%dx = 2.d0*mesh%aref/mesh%n
+    mesh%dy = 2.d0*mesh%aref/mesh%n
 
     ! Init local coordinates grid
-    x(n0) = -pio4 - mesh%halosize*mesh%dx
+    x(n0) = -mesh%aref - mesh%halosize*mesh%dx
     do i = n0+1, nend+1
         x(i) = x(i-1) + mesh%dx
     end do
@@ -300,7 +310,7 @@ subroutine equiangular_cubedsphere_generation(mesh)
     do panel = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend+1
-                call equidistant_gnomonic_map(acube*tanx(i), acube*tany(j), mesh%po(i,j,panel)%p, panel)
+                call equidistant_gnomonic_map(mesh%Rref*tanx(i), mesh%Rref*tany(j), mesh%po(i,j,panel)%p, panel)
             end do
         end do
     end do
@@ -317,7 +327,7 @@ subroutine equiangular_cubedsphere_generation(mesh)
     call r8_1darray_allocation(tany, n0, nend)
 
     ! Init local coordinates grid
-    x(n0) = -pio4 - mesh%halosize*mesh%dx
+    x(n0) = -mesh%aref - mesh%halosize*mesh%dx
     do i = n0+1, nend+1
         x(i) = x(i-1) + mesh%dx
     end do
@@ -331,7 +341,7 @@ subroutine equiangular_cubedsphere_generation(mesh)
     do panel = 1, nbfaces
         do i = n0, nend+1
             do j = n0, nend
-                call equidistant_gnomonic_map(acube*tanx(i), acube*tany(j), mesh%pu(i,j,panel)%p, panel)
+                call equidistant_gnomonic_map(mesh%Rref*tanx(i), mesh%Rref*tany(j), mesh%pu(i,j,panel)%p, panel)
             end do
         end do
     end do
@@ -340,7 +350,7 @@ subroutine equiangular_cubedsphere_generation(mesh)
     do panel = 1, nbfaces
         do i = n0, nend
             do j = n0, nend+1
-                call equidistant_gnomonic_map(acube*tany(i), acube*tanx(j), mesh%pv(i,j,panel)%p, panel)
+                call equidistant_gnomonic_map(mesh%Rref*tany(i), mesh%Rref*tanx(j), mesh%pv(i,j,panel)%p, panel)
             end do
         end do
     end do
@@ -349,7 +359,7 @@ subroutine equiangular_cubedsphere_generation(mesh)
     do panel = 1, nbfaces
         do i = n0, nend
             do j = n0, nend
-                call equidistant_gnomonic_map(acube*tany(i), acube*tany(j), mesh%pc(i,j,panel)%p , panel)
+                call equidistant_gnomonic_map(mesh%Rref*tany(i), mesh%Rref*tany(j), mesh%pc(i,j,panel)%p , panel)
             end do
         end do
     end do
@@ -447,7 +457,7 @@ subroutine compute_tgvectors(mesh)
     call r8_1darray_allocation(y, n0, nend+1)
 
     ! Init local coordinates grid
-    x(n0) = -pio4 - mesh%halosize*mesh%dx
+    x(n0) = -mesh%aref - mesh%halosize*mesh%dx
     do i = n0+1, nend+1
         x(i) = x(i-1) + mesh%dx
     end do
@@ -474,7 +484,7 @@ subroutine compute_tgvectors(mesh)
 
 
     ! Init local coordinates grid
-    x(n0) = -pio4 - mesh%halosize*mesh%dx
+    x(n0) = -mesh%aref - mesh%halosize*mesh%dx
     do i = n0+1,nend+1
         x(i) = x(i-1) + mesh%dx
     end do
@@ -554,15 +564,19 @@ subroutine latlon_grid(mesh)
     allocate(xx(1:mesh%n))
     allocate(yy(1:mesh%n))
     do i = 1, mesh%n
-        xx(i) = -pio4 + (i-0.5)*mesh%dx
-        yy(i) = -pio4 + (i-0.5)*mesh%dx
+        xx(i) = -mesh%aref + (i-0.5)*mesh%dx
+        yy(i) = -mesh%aref + (i-0.5)*mesh%dx
     end do
     ! Get nearest neighbor indexes
     do i = 0, mesh%nlon
         do j = 0, mesh%nlat
-            call inverse_equiangular_gnomonic_map(x, y, panel, mesh%ll(i,j)%p, mesh)
-            !ix = floor((x+pio4-mesh%dx*0.d0)/mesh%dx)
-            !jy = floor((y+pio4-mesh%dx*0.d0)/mesh%dy)
+            call get_cubedsphere_panel(mesh%ll(i,j)%p, panel, mesh)
+            if (mesh%kind=='equiangular') then
+               call inverse_equiangular_gnomonic_map(mesh%ll(i,j)%p, x, y, panel)
+            else if(mesh%kind=='equiedge') then
+               call inverse_equiedge_gnomonic_map(mesh%ll(i,j)%p, x, y, panel)
+            endif
+
             ix = minloc(abs(xx(:)-x),DIM=1)
             jy = minloc(abs(yy(:)-y),DIM=1)
             mesh%panels_ll(i,j) = panel

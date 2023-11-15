@@ -206,6 +206,9 @@ type cubedsphere
     ! Local coordinates uniform grid size
     real(kind=8):: dx, dy
 
+    ! local grid parameter
+    real(kind=8):: aref, Rref
+
     ! Latlon grid size (for plotting)
     real(kind=8):: dlon, dlat
 

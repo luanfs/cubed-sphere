@@ -1,4 +1,4 @@
-    module output
+module output
 !===============================================================================================
 !   This module contains all the output routines
 !   Routines based on iModel (https://github.com/pedrospeixoto/iModel)
@@ -101,7 +101,7 @@ subroutine printmesh(mesh)
 
     print*
     select case(trim(mesh%kind))
-        case("equiangular")
+        case("equiangular", "equiedge")
             print'(a)', " Mesh                        : Equiangular cubed-sphere"
         case("read")
             print'(a)', " Mesh                        : Read from file "//trim(mesh%filename)
@@ -604,7 +604,6 @@ subroutine output_adv(mesh)
 
         print '(a22, 1e16.8)','mass change:', advsimul%mass_variation
     end if
-
 
     ! Plot the solution
     if (mod(advsimul%n,advsimul%nplot)==0 .or. advsimul%n==advsimul%nsteps .or. &
