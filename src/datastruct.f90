@@ -288,10 +288,6 @@ type velocity_field
     type(scalar_field) :: ucontra
     type(scalar_field) :: vcontra
 
-    ! Contravariant components from previous time step
-    type(scalar_field) :: ucontra_old
-    type(scalar_field) :: vcontra_old
-
     ! Contravariant time-averaged winds
     type(scalar_field) :: ucontra_time_av
     type(scalar_field) :: vcontra_time_av
@@ -303,10 +299,6 @@ type velocity_field
     ! Covariant components
     type(scalar_field) :: ucovari
     type(scalar_field) :: vcovari
-
-    ! Covariant components from previous time step
-    type(scalar_field) :: ucovari_old
-    type(scalar_field) :: vcovari_old
 
     ! Position of the values relative to a mesh
     !   0 - Centers (pc)

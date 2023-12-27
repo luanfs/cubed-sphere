@@ -169,15 +169,6 @@ subroutine sw_timestep_Dgrid(mesh)
     !====================================================================
 
 
-    !--------------------------------------------------------------------
-    ! Store the wind for the next step
-    wind_pu%vcovari_old%f(:,:,:) = wind_pu%vcovari%f(:,:,:)
-    wind_pv%ucovari_old%f(:,:,:) = wind_pv%ucovari%f(:,:,:) 
-    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
-    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
-    wind_po%ucontra_old%f(:,:,:) = wind_po%ucontra%f(:,:,:)
-    wind_po%vcontra_old%f(:,:,:) = wind_po%vcontra%f(:,:,:)
-    !--------------------------------------------------------------------
 
     !print*, maxval(abs(H%f(i0:iend,j0:jend,:)))
     !print*, maxval(abs(wind_pv%ucovari%f(i0:iend,j0:jend+1,:)))*erad

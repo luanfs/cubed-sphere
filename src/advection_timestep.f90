@@ -109,12 +109,6 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     real(kind=8) :: lat, lon
     real(kind=8) :: ulon, vlat, ucontra, vcontra
 
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(V_pu, V_pv)
-    V_pu%ucontra_old%f(:,:,:) = V_pu%ucontra%f(:,:,:)
-    V_pv%vcontra_old%f(:,:,:) = V_pv%vcontra%f(:,:,:)
-    !$OMP END PARALLEL WORKSHARE
-
     !$OMP PARALLEL DO &
     !$OMP DEFAULT(NONE) & 
     !$OMP SHARED(V_pu, mesh) & 

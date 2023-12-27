@@ -339,14 +339,12 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 vcovari = mesh%ll2covari_pc(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pc(i,j,p)%M(2,2)*vlat
                 ! debug 
                 error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
-                V_pc%ucontra_old%f(i,j,p) = ucontra
-                V_pc%vcontra_old%f(i,j,p) = vcontra
+                V_pc%ucontra%f(i,j,p) = ucontra
+                V_pc%vcontra%f(i,j,p) = vcontra
 
-                V_pc%ucovari_old%f(i,j,p) = ucovari
-                V_pc%vcovari_old%f(i,j,p) = vcovari
+                V_pc%ucovari%f(i,j,p) = ucovari
+                V_pc%vcovari%f(i,j,p) = vcovari
 
-                !V_pc%ucontra_old%f(i,j,p) = ulon
-                !V_pc%vcontra_old%f(i,j,p) = vlat
                 error = max(error, error1)
             end do
         end do
@@ -369,11 +367,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 ucovari = mesh%ll2covari_pu(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(1,2)*vlat
                 vcovari = mesh%ll2covari_pu(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(2,2)*vlat
 
-                V_pu%ucontra_old%f(i,j,p) = ucontra
-                V_pu%vcontra_old%f(i,j,p) = vcontra
+                V_pu%ucontra%f(i,j,p) = ucontra
+                V_pu%vcontra%f(i,j,p) = vcontra
 
-                V_pu%ucovari_old%f(i,j,p) = ucovari
-                V_pu%vcovari_old%f(i,j,p) = vcovari
+                V_pu%ucovari%f(i,j,p) = ucovari
+                V_pu%vcovari%f(i,j,p) = vcovari
 
                 ! debug 
                 !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
@@ -386,11 +384,6 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
     end do
 
 
-    V_pu%ucontra%f(i0:iend+1,j0:jend,:) = V_pu%ucontra_old%f(i0:iend+1,j0:jend,:)
-    V_pu%vcontra%f(i0:iend+1,j0:jend,:) = V_pu%vcontra_old%f(i0:iend+1,j0:jend,:)
-    V_pu%ucovari%f(i0:iend+1,j0:jend,:) = V_pu%ucovari_old%f(i0:iend+1,j0:jend,:)
-    V_pu%vcovari%f(i0:iend+1,j0:jend,:) = V_pu%vcovari_old%f(i0:iend+1,j0:jend,:)
- 
     ! Vector field at pv
     do p = 1 , nbfaces
         do i = n0, nend
@@ -409,11 +402,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 ucovari = mesh%ll2covari_pv(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(1,2)*vlat
                 vcovari = mesh%ll2covari_pv(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(2,2)*vlat
 
-                V_pv%ucontra_old%f(i,j,p) = ucontra
-                V_pv%vcontra_old%f(i,j,p) = vcontra
+                V_pv%ucontra%f(i,j,p) = ucontra
+                V_pv%vcontra%f(i,j,p) = vcontra
 
-                V_pv%ucovari_old%f(i,j,p) = ucovari
-                V_pv%vcovari_old%f(i,j,p) = vcovari
+                V_pv%ucovari%f(i,j,p) = ucovari
+                V_pv%vcovari%f(i,j,p) = vcovari
 
                 ! debug 
                 !error1 = abs( (ulon**2+vlat**2) -(ucontra*ucovari + vcontra*vcovari) ) 
@@ -424,11 +417,6 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
             end do
         end do
     end do
-
-    V_pv%ucontra%f(i0:iend,j0:jend+1,:) = V_pv%ucontra_old%f(i0:iend,j0:jend+1,:)
-    V_pv%vcontra%f(i0:iend,j0:jend+1,:) = V_pv%vcontra_old%f(i0:iend,j0:jend+1,:)
-    V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
-    V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
 
  
     ! Vector field at po
@@ -450,11 +438,11 @@ subroutine compute_ic_adv(Q, V_pu, V_pv, V_pc, V_po, mesh, advsimul)
                 vcovari = mesh%ll2covari_po(i,j,p)%M(2,1)*ulon + mesh%ll2covari_po(i,j,p)%M(2,2)*vlat
 
 
-                V_po%ucontra_old%f(i,j,p) = ucontra
-                V_po%vcontra_old%f(i,j,p) = vcontra
+                V_po%ucontra%f(i,j,p) = ucontra
+                V_po%vcontra%f(i,j,p) = vcontra
 
-                V_po%ucovari_old%f(i,j,p) = ucovari
-                V_po%vcovari_old%f(i,j,p) = vcovari
+                V_po%ucovari%f(i,j,p) = ucovari
+                V_po%vcovari%f(i,j,p) = vcovari
 
                 ! LL2contra
                 !ull = mesh%contra2ll_po(i,j,p)%M(1,1)*ucontra + mesh%contra2ll_po(i,j,p)%M(1,2)*vcontra

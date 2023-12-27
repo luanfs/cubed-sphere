@@ -265,10 +265,10 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 ucovari = mesh%ll2covari_pc(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pc(i,j,p)%M(1,2)*vlat
                 vcovari = mesh%ll2covari_pc(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pc(i,j,p)%M(2,2)*vlat
 
-                V_pc%ucontra_old%f(i,j,p) = ucontra
-                V_pc%vcontra_old%f(i,j,p) = vcontra
-                V_pc%ucovari_old%f(i,j,p) = ucovari
-                V_pc%vcovari_old%f(i,j,p) = vcovari
+                V_pc%ucontra%f(i,j,p) = ucontra
+                V_pc%vcontra%f(i,j,p) = vcontra
+                V_pc%ucovari%f(i,j,p) = ucovari
+                V_pc%vcovari%f(i,j,p) = vcovari
 
             end do
         end do
@@ -293,17 +293,15 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 ucovari = mesh%ll2covari_pu(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(1,2)*vlat
                 vcovari = mesh%ll2covari_pu(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pu(i,j,p)%M(2,2)*vlat
 
-                V_pu%ucontra_old%f(i,j,p) = ucontra
-                V_pu%vcontra_old%f(i,j,p) = vcontra
-                V_pu%ucovari_old%f(i,j,p) = ucovari
-                V_pu%vcovari_old%f(i,j,p) = vcovari
+                V_pu%ucontra%f(i,j,p) = ucontra
+                V_pu%vcontra%f(i,j,p) = vcontra
+                V_pu%ucovari%f(i,j,p) = ucovari
+                V_pu%vcovari%f(i,j,p) = vcovari
                 vcovari_pu_exact%f(i,j,p) = vcovari
             end do
         end do
     end do
 
-    V_pu%vcovari%f(i0:iend+1,j0:jend,:) = V_pu%vcovari_old%f(i0:iend+1,j0:jend,:)
-    V_pu%ucovari%f(i0:iend+1,j0:jend,:) = V_pu%ucovari_old%f(i0:iend+1,j0:jend,:)
  
     ! Vector field at pv
     do p = 1 , nbfaces
@@ -324,17 +322,14 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                 ucovari = mesh%ll2covari_pv(i,j,p)%M(1,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(1,2)*vlat
                 vcovari = mesh%ll2covari_pv(i,j,p)%M(2,1)*ulon + mesh%ll2covari_pv(i,j,p)%M(2,2)*vlat
 
-                V_pv%ucontra_old%f(i,j,p) = ucontra
-                V_pv%vcontra_old%f(i,j,p) = vcontra
-                V_pv%ucovari_old%f(i,j,p) = ucovari
-                V_pv%vcovari_old%f(i,j,p) = vcovari
+                V_pv%ucontra%f(i,j,p) = ucontra
+                V_pv%vcontra%f(i,j,p) = vcontra
+                V_pv%ucovari%f(i,j,p) = ucovari
+                V_pv%vcovari%f(i,j,p) = vcovari
                 ucovari_pv_exact%f(i,j,p) = ucovari
             end do
         end do
     end do
-
-    V_pv%vcovari%f(i0:iend,j0:jend+1,:) = V_pv%vcovari_old%f(i0:iend,j0:jend+1,:)
-    V_pv%ucovari%f(i0:iend,j0:jend+1,:) = V_pv%ucovari_old%f(i0:iend,j0:jend+1,:)
 
     ! vars to check consistency
     if (swm_simul%ic==0)then
@@ -391,7 +386,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                     av_pu = rv_pu + f_pu 
 
                     ! absolute vorticity flux at pu
-                    abs_vort_flux_exact_pu%f(i,j,p) = av_pu*V_pu%ucontra_old%f(i,j,p)
+                    abs_vort_flux_exact_pu%f(i,j,p) = av_pu*V_pu%ucontra%f(i,j,p)
                     abs_vort_flux_exact_pu%f(i,j,p) = abs_vort_flux_exact_pu%f(i,j,p)*mesh%mt_pu(i,j,p)
 
                 end do
@@ -418,7 +413,7 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                     av_pv = rv_pv + f_pv
 
                     ! absolute vorticity flux at pv
-                    abs_vort_flux_exact_pv%f(i,j,p) = av_pv*V_pv%vcontra_old%f(i,j,p)
+                    abs_vort_flux_exact_pv%f(i,j,p) = av_pv*V_pv%vcontra%f(i,j,p)
                     abs_vort_flux_exact_pv%f(i,j,p) = abs_vort_flux_exact_pv%f(i,j,p)*mesh%mt_pv(i,j,p)
 
                 end do
@@ -444,11 +439,11 @@ subroutine compute_ic_swm(H, V_pu, V_pv, V_pc, mesh, swm_simul, L_pc)
                     vcovari = mesh%ll2covari_po(i,j,p)%M(2,1)*ulon + mesh%ll2covari_po(i,j,p)%M(2,2)*vlat
 
 
-                    wind_po%ucontra_old%f(i,j,p) = ucontra
-                    wind_po%vcontra_old%f(i,j,p) = vcontra
+                    wind_po%ucontra%f(i,j,p) = ucontra
+                    wind_po%vcontra%f(i,j,p) = vcontra
 
-                    wind_po%ucovari_old%f(i,j,p) = ucovari
-                    wind_po%vcovari_old%f(i,j,p) = vcovari
+                    wind_po%ucovari%f(i,j,p) = ucovari
+                    wind_po%vcovari%f(i,j,p) = vcovari
 
                     Ku_po_exact%f(i,j,p) = ucontra*ucovari
                     Kv_po_exact%f(i,j,p) = vcontra*vcovari

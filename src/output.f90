@@ -811,20 +811,20 @@ swm_simul%linf_error_ucovari_pv>100000000.d0 .or. swm_simul%linf_error_vcovari_p
         maxval(abs(H_po_exact%f(i0:iend+1,j0:jend+1,:)))
 
         ! error of ppm recontruction for the covariant component u
-        swm_simul%linf_error_ucovari_po = &
-        maxval(abs(Ku_px%q_L(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0-1:iend+1,j0:jend+1,:)))
-        swm_simul%linf_error_ucovari_po = max(swm_simul%linf_error_ucovari_po, &
-        maxval(abs(Ku_px%q_R(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:))))
-        swm_simul%linf_error_ucovari_po = swm_simul%linf_error_ucovari_po/&
-        maxval(abs(wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:)))
+        !swm_simul%linf_error_ucovari_po = &
+        !maxval(abs(Ku_px%q_L(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0-1:iend+1,j0:jend+1,:)))
+        !swm_simul%linf_error_ucovari_po = max(swm_simul%linf_error_ucovari_po, &
+        !maxval(abs(Ku_px%q_R(i0-1:iend+1,j0:jend+1,:)-wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:))))
+        !swm_simul%linf_error_ucovari_po = swm_simul%linf_error_ucovari_po/&
+        !maxval(abs(wind_po%ucovari_old%f(i0:iend+2,j0:jend+1,:)))
 
         ! error of ppm recontruction for the covariant component v
-        swm_simul%linf_error_vcovari_po = &
-        maxval(abs(Kv_py%q_L(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0-1:jend+1,:)))
-        swm_simul%linf_error_vcovari_po = max(swm_simul%linf_error_vcovari_po, &
-        maxval(abs(Kv_py%q_R(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:))))
-        swm_simul%linf_error_vcovari_po = swm_simul%linf_error_vcovari_po/&
-        maxval(abs(wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:)))
+        !swm_simul%linf_error_vcovari_po = &
+        !maxval(abs(Kv_py%q_L(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0-1:jend+1,:)))
+        !swm_simul%linf_error_vcovari_po = max(swm_simul%linf_error_vcovari_po, &
+        !maxval(abs(Kv_py%q_R(i0:iend+1,j0-1:jend+1,:)-wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:))))
+        !swm_simul%linf_error_vcovari_po = swm_simul%linf_error_vcovari_po/&
+        !maxval(abs(wind_po%vcovari_old%f(i0:iend+1,j0:jend+2,:)))
 
         ! error of kinetic energy flux at B grid
         swm_simul%linf_error_Ku_po = maxval(abs(Ku_px%f_upw(i0:iend+1,j0:jend+1,:)) - &

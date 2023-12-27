@@ -201,19 +201,19 @@ subroutine interpolation_test(mesh)
     ! then we interpolate from A grid to the C grid inner cells
     call interp_A2Cgrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f, advsimul%avd)
 
-    error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
-    error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
-    error_ucontra = max(error_ucontra, error_vcontra)
+    !error_ucontra = maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucontra_old%f(i0-1:iend+2,n0:nend,:)))
+    !error_vcontra = maxval(abs(wind_pv%vcontra%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcontra_old%f(n0:nend,j0-1:jend+2,:)))
+    !error_ucontra = max(error_ucontra, error_vcontra)
 
     ! interpolate from C to B grid
-    call interp_windC2Bgrid(wind_po%ucontra%f, wind_po%vcontra%f, &
-    wind_pu%ucontra%f, wind_pv%vcontra%f, advsimul%avd)
+    !call interp_windC2Bgrid(wind_po%ucontra%f, wind_po%vcontra%f, &
+    !wind_pu%ucontra%f, wind_pv%vcontra%f, advsimul%avd)
 
     ! error at po
-    error_ucontra_po = maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend,:)))
-    error_vcontra_po = maxval(abs(wind_po%vcontra%f(i0:iend,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend,j0-1:jend+2,:)))
-    error_ucontra_po = max(error_ucontra_po, error_vcontra_po)
-    error_ucontra = max(error_ucontra, error_ucontra_po)
+    !error_ucontra_po = maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend,:)))
+    !error_vcontra_po = maxval(abs(wind_po%vcontra%f(i0:iend,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend,j0-1:jend+2,:)))
+    !error_ucontra_po = max(error_ucontra_po, error_vcontra_po)
+    !error_ucontra = max(error_ucontra, error_ucontra_po)
 
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a D grid
@@ -233,9 +233,9 @@ subroutine interpolation_test(mesh)
     ! then we interpolate from A grid to the D grid inner cell
     call interp_A2Cgrid(wind_pu%ucovari%f, wind_pv%vcovari%f, wind_pc%ucovari%f, wind_pc%vcovari%f, advsimul%avd)
 
-    error_ucovari = maxval(abs(wind_pu%ucovari%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucovari_old%f(i0-1:iend+2,n0:nend,:)))
-    error_vcovari = maxval(abs(wind_pv%vcovari%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcovari_old%f(n0:nend,j0-1:jend+2,:)))
-    error_ucovari = max(error_ucovari, error_vcovari)
+    !error_ucovari = maxval(abs(wind_pu%ucovari%f(i0-1:iend+2,n0:nend,:)-wind_pu%ucovari_old%f(i0-1:iend+2,n0:nend,:)))
+    !error_vcovari = maxval(abs(wind_pv%vcovari%f(n0:nend,j0-1:jend+2,:)-wind_pv%vcovari_old%f(n0:nend,j0-1:jend+2,:)))
+    !error_ucovari = max(error_ucovari, error_vcovari)
 
     print*
     print '(a22, 3e16.8)','(q, u, v) errors:', error_q, error_ucontra, error_ucovari
@@ -337,8 +337,6 @@ subroutine adv_test(mesh)
     ! now we fill the ghost cell C grid
     call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, &
     wind_pv%vcontra%f, wind_pc%ucontra%f, wind_pc%vcontra%f)
-    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
-    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
 
     ! Temporal loop
     advsimul%t = 0.d0
@@ -389,17 +387,6 @@ subroutine swm_test(mesh)
 
     ! Initialize velocity at ghost cells
     call sw_wind_interpolation(mesh)
-    !print*, maxval(abs(wind_pc%ucovari%f(:,:,:)-wind_pc%ucovari_old%f(:,:,:)))
-    !print*, maxval(abs(wind_pc%vcovari%f(:,:,:)-wind_pc%vcovari_old%f(:,:,:)))
-    !print*, maxval(abs(wind_pc%ucontra%f(:,:,:)-wind_pc%ucontra_old%f(:,:,:)))
-    !print*, maxval(abs(wind_pc%vcontra%f(:,:,:)-wind_pc%vcontra_old%f(:,:,:)))
-    !print*, maxval(abs(wind_pu%ucontra%f(i0-1:iend+2,:,:)-wind_pu%ucontra_old%f(i0-1:iend+2,:,:)))
-    !print*, maxval(abs(wind_pv%vcontra%f(:,j0-1:jend+2,:)-wind_pv%vcontra_old%f(:,j0-1:jend+2,:)))
-    !print*, maxval(abs(wind_pu%vcovari%f(i0-1:iend+2,:,:)-wind_pu%vcovari_old%f(i0-1:iend+2,:,:)))
-    !print*, maxval(abs(wind_pv%ucovari%f(:,j0-1:jend+2,:)-wind_pv%ucovari_old%f(:,j0-1:jend+2,:)))
-    !print*, maxval(abs(wind_po%ucontra%f(i0-1:iend+2,j0:jend+1,:)-wind_po%ucontra_old%f(i0-1:iend+2,j0:jend+1,:)))
-    !print*, maxval(abs(wind_po%vcontra%f(i0:iend+1,j0-1:jend+2,:)-wind_po%vcontra_old%f(i0:iend+1,j0-1:jend+2,:)))
-    !stop
 
 
     ! CFL number
@@ -412,13 +399,6 @@ subroutine swm_test(mesh)
 
     ! Initial output
     call output_swm(mesh)
-    wind_pu%ucontra_old%f(:,:,:) = wind_pu%ucontra%f(:,:,:)
-    wind_pv%vcontra_old%f(:,:,:) = wind_pv%vcontra%f(:,:,:)
-    wind_po%ucontra_old%f(:,:,:) = wind_po%ucontra%f(:,:,:)
-    wind_po%vcontra_old%f(:,:,:) = wind_po%vcontra%f(:,:,:)
- 
-    wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
-    wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
 
     ! Temporal loop
     swm_simul%t = 0.d0

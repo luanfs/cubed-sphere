@@ -432,16 +432,12 @@ subroutine velocity_field_allocation(V, mesh, pos)
     call scalar_field_allocation(V%v, mesh, pos) 
     call scalar_field_allocation(V%ucontra, mesh, pos) 
     call scalar_field_allocation(V%vcontra, mesh, pos) 
-    call scalar_field_allocation(V%ucontra_old, mesh, pos) 
-    call scalar_field_allocation(V%vcontra_old, mesh, pos)  
     call scalar_field_allocation(V%ucontra_time_av, mesh, pos) 
     call scalar_field_allocation(V%vcontra_time_av, mesh, pos) 
     call scalar_field_allocation(V%ucontra_time_centered, mesh, pos) 
     call scalar_field_allocation(V%vcontra_time_centered, mesh, pos) 
     call scalar_field_allocation(V%ucovari, mesh, pos) 
     call scalar_field_allocation(V%vcovari, mesh, pos) 
-    call scalar_field_allocation(V%ucovari_old, mesh, pos) 
-    call scalar_field_allocation(V%vcovari_old, mesh, pos)  
      
     ! Store the position
     V%pos = pos

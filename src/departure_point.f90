@@ -162,13 +162,6 @@ subroutine swm_time_averaged_wind(wind_pu, wind_pv, dp, dto2, dx, mesh)
     real(kind=8) :: a, a1, a2, u1, u2
     integer(i4) :: i, j, p
 
-    ! time extrapolation to obtaind the wind centered at time
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(wind_pu, wind_pv)
-    wind_pu%ucontra_time_centered%f = 1.5d0*wind_pu%ucontra%f-0.5d0*wind_pu%ucontra_old%f
-    wind_pv%vcontra_time_centered%f = 1.5d0*wind_pv%vcontra%f-0.5d0*wind_pv%vcontra_old%f
-    !$OMP END PARALLEL WORKSHARE
-
     select case (dp)
         case ('rk1')
             ! RK1
