@@ -574,6 +574,7 @@ subroutine allocate_adv_vars(mesh)
 
     ! Allocate variables
     call scalar_field_allocation(Q, mesh, 0)
+    call scalar_field_allocation(gQ, mesh, 0)
     call scalar_field_allocation(Q_exact, mesh, 0)
     call scalar_field_allocation(Q_error, mesh, 0)
     call velocity_field_allocation(wind_pc, mesh, 0)

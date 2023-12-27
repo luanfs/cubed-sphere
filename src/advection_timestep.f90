@@ -75,7 +75,7 @@ subroutine adv_timestep(mesh)
     end if
 
     ! Discrete divergence
-    call divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
+    call divergence(div_ugq, Q, gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
                       px, py, Qx, Qy, advsimul, mesh, L_pc)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &

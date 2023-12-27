@@ -22,6 +22,7 @@ type(lagrange_poly_cs) :: L_pc
 
 ! Scalar fields
 type(scalar_field) :: Q       ! average values of the advected scalar field
+type(scalar_field) :: gQ      ! metrictensor*Q
 type(scalar_field) :: Q_exact ! exact solution
 type(scalar_field) :: Q_error ! error
 

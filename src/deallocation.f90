@@ -87,6 +87,7 @@ subroutine adv_deallocation()
     !--------------------------------------------------
 
     deallocate(Q%f)
+    deallocate(gQ%f)
     deallocate(Q_exact%f)
     deallocate(div_ugq%f)
     deallocate(div_ugq_exact%f)

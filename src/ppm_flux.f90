@@ -167,25 +167,7 @@ subroutine numerical_flux_ppm_pu(Q, px, V_pu_av, cx_pu, mesh)
     type(scalar_field), intent(in) :: cx_pu   ! CFL number of V_pu_av
     integer(i4) :: i, j, p
 
-    select case(px%mt)
-        case('mt0')
-            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(px, Q, mesh, i0, iend)
-            px%q_L(i0-1:iend+1,:,:) = px%q_L(i0-1:iend+1,:,:)*mesh%mt_pu(i0-1:iend+1,:,:)
-            px%q_R(i0-1:iend+1,:,:) = px%q_R(i0-1:iend+1,:,:)*mesh%mt_pu(i0:iend+2,:,:)
-            px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)*mesh%mt_pc(i0-1:iend+1,:,:)
-            !$OMP END PARALLEL WORKSHARE
-
-        case('pl07', 'plane')
-            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(px, Q, i0, iend)
-            px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)
-            !$OMP END PARALLEL WORKSHARE
-
-        case default
-            print*, 'ERROR on numerical_flux_ppm_pu: invalid 1D metric tensor method: ', px%mt
-            stop
-    end select
+    px%Q%f(i0-1:iend+1,:,:) = Q%f(i0-1:iend+1,:,:)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(px, i0, iend)
@@ -249,25 +231,7 @@ subroutine numerical_flux_ppm_pv(Q, py, V_pv_av, cy_pv, mesh)
     type(scalar_field), intent(in) :: cy_pv   ! CFL number of V_pv_av
     integer(i4) :: i, j, p
 
-    select case(py%mt)
-        case('mt0')
-            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(py, Q, mesh, j0, jend)
-            py%q_L(:,j0-1:jend+1,:) = py%q_L(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0-1:jend+1,:)
-            py%q_R(:,j0-1:jend+1,:) = py%q_R(:,j0-1:jend+1,:)*mesh%mt_pv(:,j0:jend+2,:)
-            py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)*mesh%mt_pc(:,j0-1:jend+1,:)
-            !$OMP END PARALLEL WORKSHARE
-
-        case('pl07', 'plane') 
-            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(py, Q, j0, jend)
-            py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
-            !$OMP END PARALLEL WORKSHARE
-
-        case default
-            print*, 'ERROR on numerical_flux_ppm_pv: invalid 1D metric tensor method: ', py%mt
-            stop
-    end select
+    py%Q%f(:,j0-1:jend+1,:) = Q%f(:,j0-1:jend+1,:)
 
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(py, j0, jend)

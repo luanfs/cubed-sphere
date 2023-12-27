@@ -83,8 +83,8 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------------------------
     ! Discrete divergence
     !--------------------------------------------------------------------
-    call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
-                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
+    !call divergence(div_ugH, H, wind_pu, wind_pv, cx_pu, cy_pv, &
+    !                  px, py, Qx, Qy, swm_simul, mesh, L_pc)
 
     !--------------------------------------------------------------------
     ! interpolate div to po points (need to compute gradients)

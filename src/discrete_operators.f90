@@ -129,6 +129,7 @@ subroutine inner_f_operator(Q, wind_pu, cx_pu, px, mesh, dt, sp)
         call ppm_flux_pu(Q, px, wind_pu%ucontra_time_av, cx_pu, mesh)
     end if
 
+
     ! F operator
     !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
     !$OMP SHARED(px, mesh, i0, iend, dt)
@@ -201,7 +202,7 @@ subroutine inner_g_operator(Q, wind_pv, cy_pv, py, mesh, dt, sp)
 end subroutine inner_g_operator
 
 
-subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
+subroutine divergence(div_ugq, Q, gQ, wind_pu, wind_pv, cx_pu, cy_pv, &
                       px, py, Qx, Qy, advsimul, mesh, L_pc)
     !---------------------------------------------------
     !
@@ -215,6 +216,7 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
     type(scalar_field), intent(inout) :: cx_pu
     type(scalar_field), intent(inout) :: cy_pv
     type(scalar_field), intent(inout) :: Q
+    type(scalar_field), intent(inout) :: gQ
     type(scalar_field), intent(inout) :: div_ugq
     type(ppm_parabola), intent(inout) :: px ! ppm in x direction
     type(ppm_parabola), intent(inout) :: py ! ppm in y direction
@@ -226,26 +228,48 @@ subroutine divergence(div_ugq, Q, wind_pu, wind_pv, cx_pu, cy_pv, &
         ! Interpolate scalar field to ghost cells
         call dg_interp(Q%f, L_pc)
 
+        ! Apply metric tensor if needed
+        select case(px%mt)
+           case('mt0')
+               !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+               !$OMP SHARED(Q, gQ, mesh)
+               gQ%f = Q%f*mesh%mt_pc
+               !$OMP END PARALLEL WORKSHARE
+
+           case('pl07', 'plane')
+               !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+               !$OMP SHARED(Q, gQ, mesh)
+               gQ%f = Q%f
+               !$OMP END PARALLEL WORKSHARE
+
+           case default
+               print*, 'ERROR on divergence: invalid 1D metric tensor method: ', px%mt
+               stop
+        end select
+
+
         ! Dimension splitting operators
-        call inner_f_operator(Q, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
-        call inner_g_operator(Q, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
+        call inner_f_operator(gQ, wind_pu, cx_pu, px, mesh, advsimul%dt, advsimul%opsplit)
+        call inner_g_operator(gQ, wind_pv, cy_pv, py, mesh, advsimul%dt, advsimul%opsplit)
 
         ! Compute next splitting input
         ! Metric tensor scheme
         select case (advsimul%mt)
         case ('mt0')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(Qx, Qy, px, py, mesh)
-            Qx%f = px%Q%f + 0.5d0*px%df
-            Qy%f = py%Q%f + 0.5d0*py%df
-            Qx%f = Qx%f/mesh%mt_pc
-            Qy%f = Qy%f/mesh%mt_pc
+            !$OMP SHARED(Qx, Qy, gQ, px, py, mesh)
+            Qx%f = gQ%f + 0.5d0*px%df
+            Qy%f = gQ%f + 0.5d0*py%df
+            !Qx%f = Qx%f/mesh%mt_pc
+            !Qy%f = Qy%f/mesh%mt_pc
             !$OMP END PARALLEL WORKSHARE
         case ('pl07')
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(Qx, Qy, px, py, mesh)
-            Qx%f = px%Q%f + 0.5d0*px%df
-            Qy%f = py%Q%f + 0.5d0*py%df
+            !$OMP SHARED(Qx, Qy, gQ, px, py, mesh)
+            Qx%f = gQ%f + 0.5d0*px%df
+            Qy%f = gQ%f + 0.5d0*py%df
+            !Qx%f = Qx%f/mesh%mt_pc
+            !Qy%f = Qy%f/mesh%mt_pc
             !$OMP END PARALLEL WORKSHARE
         case default
             print*, 'ERROR in divergence: invalid metric tensor formulation,  ', advsimul%mt
