@@ -155,7 +155,7 @@ subroutine interpolation_test(mesh)
 
     !File name for output
     character (len=256):: filename
-
+    integer(i4) :: j
     !Errors
     real(kind=8) :: error_q
     real(kind=8) :: error_ucontra   , error_vcontra
@@ -176,8 +176,13 @@ subroutine interpolation_test(mesh)
     call dg_interp(Q%f, L_pc)
 
     ! Compute the error
-    error_q = maxval(abs(Q_exact%f(:,:,:)-Q%f(:,:,:)))
-
+    error_q = maxval(abs(Q_exact%f(i0-1:iend+1,j0-1:jend+1,:)-Q%f(i0-1:iend+1,j0-1:jend+1,:)))
+    !do j = n0+1, nend-1
+      !print*, j, abs(Q%f(iend+1:iend+4,j,1)-Q_exact%f(iend+1:iend+4,j,1))
+      !print*, j, abs(Q%f(j,iend+1:iend+4,1)-Q_exact%f(j,iend+1:iend+4,1))
+      !print*, j, abs(Q%f(i0-4:i0-1,j,1)-Q_exact%f(i0-4:i0-1,j,1))
+      !print*, j, abs(Q%f(j,i0-4:i0-1,1)-Q_exact%f(j,i0-4:i0-1,1))
+    !enddo
 
     !-----------------------------------------------------------------------------
     ! Duogrid interpolation of the vector field on a C grid to its ghost cell values
@@ -260,7 +265,6 @@ subroutine div_test(mesh)
     call getadvparameters(advsimul)
 
     ! Initialize the variables (allocation, initial condition,...)
-    advsimul%ic = 1
     advsimul%n = 1
     call init_adv_vars(mesh)
 
@@ -338,6 +342,7 @@ subroutine adv_test(mesh)
 
     ! Temporal loop
     advsimul%t = 0.d0
+
     do n = 1, advsimul%nsteps
         ! Update time
         advsimul%t = advsimul%t + advsimul%dt
@@ -348,7 +353,6 @@ subroutine adv_test(mesh)
 
         ! Output
         call output_adv(mesh)
-
         ! Update the velocity field for the next time step - only for variable velocity
         if(advsimul%vf>=2)then
             call adv_update(wind_pu, wind_pv, mesh, advsimul%vf, advsimul%t)
@@ -413,8 +417,8 @@ subroutine swm_test(mesh)
     wind_po%ucontra_old%f(:,:,:) = wind_po%ucontra%f(:,:,:)
     wind_po%vcontra_old%f(:,:,:) = wind_po%vcontra%f(:,:,:)
  
-    !wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
-    !wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
+    wind_pu%ucontra%f(:,:,:) = wind_pu%ucontra_old%f(:,:,:)
+    wind_pv%vcontra%f(:,:,:) = wind_pv%vcontra_old%f(:,:,:)
 
     ! Temporal loop
     swm_simul%t = 0.d0

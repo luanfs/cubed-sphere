@@ -710,7 +710,6 @@ subroutine compute_conversion_matrices(mesh)
 
                 call tangent_ll_lon(lon, elon)
                 call tangent_ll_lat(lon, lat, elat)
-
                 a11 = dot_product(ex, elon)  
                 a12 = dot_product(ey, elon)  
                 a21 = dot_product(ex, elat)  
@@ -742,7 +741,6 @@ subroutine compute_conversion_matrices(mesh)
 
                 lat = mesh%pv(i,j,p)%lat
                 lon = mesh%pv(i,j,p)%lon
-
                 call tangent_ll_lon(lon, elon)
                 call tangent_ll_lat(lon, lat, elat)
 
@@ -803,7 +801,6 @@ subroutine compute_conversion_matrices(mesh)
         end do
     end do
 
-
     ! Compute at po
     do p = 1, nbfaces
         do i = n0, nend+1
@@ -816,7 +813,6 @@ subroutine compute_conversion_matrices(mesh)
 
                 call tangent_ll_lon(lon, elon)
                 call tangent_ll_lat(lon, lat, elat)
-
                 a11 = dot_product(ex, elon)
                 a12 = dot_product(ey, elon)
                 a21 = dot_product(ex, elat)

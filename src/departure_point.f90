@@ -49,31 +49,26 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
 
     ! Interpolation of the wind at ghost cells
     ! first we interpolate to the A grid ghost cells
-    call interp_C2Aduogrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%u%f, wind_pc%v%f, &
-    wind_pc%ucontra%f, wind_pc%vcontra%f, L_pc, mesh%contra2ll_pc, mesh%ll2contra_pc)
+    !call interp_C2Aduogrid(wind_pu%ucontra%f, wind_pv%vcontra%f, wind_pc%u%f, wind_pc%v%f, &
+    !wind_pc%ucontra%f, wind_pc%vcontra%f, L_pc, mesh%contra2ll_pc, mesh%ll2contra_pc)
 
     ! now we fill the ghost cell C grid
-    call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, wind_pv%vcontra%f, &
-    wind_pc%ucontra%f, wind_pc%vcontra%f)
+    !call interp_A2Cduogrid(wind_pu%ucontra%f, wind_pu%vcontra%f, wind_pv%ucontra%f, wind_pv%vcontra%f, &
+    !wind_pc%ucontra%f, wind_pc%vcontra%f)
 
     select case (dp)
         case ('rk1')
             ! RK1
             !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
             !$OMP SHARED(wind_pu, wind_pv)
-            wind_pu%ucontra_time_av%f = wind_pu%ucontra_old%f
-            wind_pv%vcontra_time_av%f = wind_pv%vcontra_old%f
+            wind_pu%ucontra_time_av%f = wind_pu%ucontra_time_centered%f
+            wind_pv%vcontra_time_av%f = wind_pv%vcontra_time_centered%f
+            wind_pu%ucontra_time_av%f = wind_pu%ucontra%f
+            wind_pv%vcontra_time_av%f = wind_pv%vcontra%f
+ 
             !$OMP END PARALLEL WORKSHARE
         case ('rk2')
             ! RK2
-
-            ! time extrapolation to obtaind the wind centered at time
-            !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-            !$OMP SHARED(wind_pu, wind_pv)
-            wind_pu%ucontra_time_centered%f = 1.5d0*wind_pu%ucontra%f-0.5d0*wind_pu%ucontra_old%f
-            wind_pv%vcontra_time_centered%f = 1.5d0*wind_pv%vcontra%f-0.5d0*wind_pv%vcontra_old%f
-            !$OMP END PARALLEL WORKSHARE
-
             ! wind for dp in x direction
             !$OMP PARALLEL DO &
             !$OMP DEFAULT(NONE) & 
@@ -82,12 +77,12 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
             !$OMP SHARED(n0, nend, i0, iend, nbfaces) &
             !$OMP PRIVATE(i, j, p) &
             !$OMP SCHEDULE(static)
+            !do j = n0, nend
             do j = n0, nend
                 do i = i0, iend+1
                     do p = 1, nbfaces
                         ! Linear interpolation weight
                         a = wind_pu%ucontra%f(i,j,p)*dto2/dx
-
                         ! Upwind linear interpolation
                         if (wind_pu%ucontra%f(i,j,p)>0.d0) then
                             u1 = wind_pu%ucontra_time_centered%f(i-1,j,p)
@@ -101,8 +96,10 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
                             a2 = -a
                         end if
                         wind_pu%ucontra_time_av%f(i,j,p) = a1*u1 + a2*u2
+                        !if(p==1) print*, j, i,  wind_pu%ucontra_time_av%f(i,j,p)*dto2*2.d0/dx
                     end do
                 end do
+                !print*
             end do
             !$OMP END PARALLEL DO
 
@@ -133,10 +130,13 @@ subroutine adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, dp, dto2, dx, mesh,
                             a2 = -a
                         end if
                         wind_pv%vcontra_time_av%f(i,j,p) = a1*u1 + a2*u2
+                        !if(p==1) print*, i, j, wind_pv%vcontra_time_av%f(i,j,p)*dto2*2.d0/dx
                     end do
                 end do
+                !print*
             end do
             !$OMP END PARALLEL DO
+            !stop
 
         case default
             print*, 'ERROR in adv_time_averaged_wind: invalid operator splitting,  ', dp

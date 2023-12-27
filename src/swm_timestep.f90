@@ -91,25 +91,25 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------------------------
     if(swm_simul%et=='duogrid') then
         ! ghost cell interpolation 
-        call dg_interp(div_ugH%f, L_pc)
+        !call dg_interp(div_ugH%f, L_pc)
 
         ! A to C grid interpolation of divuh
-        call interp_A2Cgrid(div_ugH_pu%f, div_ugH_pv%f, div_ugH%f, div_ugH%f, swm_simul%avd)
+        !call interp_A2Cgrid(div_ugH_pu%f, div_ugH_pv%f, div_ugH%f, div_ugH%f, swm_simul%avd)
         ! A to C grid interpolation of divuh
-        call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
+        !call interp_C2Bgrid(div_ugH_po%f, div_ugH_pu%f, div_ugH_pv%f, swm_simul%avd)
     end if
 
     !--------------------------------------------------------------------
     ! Compute the gradient of div(uh)
     !--------------------------------------------------------------------
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(dy_div_ugh_pu, dx_div_ugh_pv, div_ugh_po, mesh) &
-    !$OMP SHARED(i0, j0, iend, jend)
-    dx_div_ugh_pv%f(i0:iend,j0:jend+1,:) = (div_ugh_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    div_ugh_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
-    dy_div_ugh_pu%f(i0:iend+1,j0:jend,:) = (div_ugh_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    div_ugh_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
-    !$OMP END PARALLEL WORKSHARE
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(dy_div_ugh_pu, dx_div_ugh_pv, div_ugh_po, mesh) &
+    !!$OMP SHARED(i0, j0, iend, jend)
+    !dx_div_ugh_pv%f(i0:iend,j0:jend+1,:) = (div_ugh_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    !div_ugh_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
+    !dy_div_ugh_pu%f(i0:iend+1,j0:jend,:) = (div_ugh_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    !div_ugh_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
+    !!$OMP END PARALLEL WORKSHARE
     !--------------------------------------------------------------------
     !====================================================================
 
@@ -126,46 +126,46 @@ subroutine sw_timestep_Dgrid(mesh)
     !--------------------------------------------------------------------
     ! Compute the gradient of h
     !--------------------------------------------------------------------
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(dy_H_pu, dx_H_pv, H_po, mesh) &
-    !$OMP SHARED(i0, j0, iend, jend)
-    dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    H_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
-    dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    H_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
-    !$OMP END PARALLEL WORKSHARE
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(dy_H_pu, dx_H_pv, H_po, mesh) &
+    !!$OMP SHARED(i0, j0, iend, jend)
+    !dx_H_pv%f(i0:iend,j0:jend+1,:) = (H_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    !H_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
+    !dy_H_pu%f(i0:iend+1,j0:jend,:) = (H_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    !H_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
+    !!$OMP END PARALLEL WORKSHARE
     !====================================================================
 
 
     !====================================================================
     !--------------------------------------------------------------------
     ! Compute the vorticity fluxes
-    call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
-                          rel_vort, abs_vort, fcoriolis_pc,&
-                          wind_pu, wind_pv, cx_pu, cy_pv, &
-                          px, py, Qx, Qy, swm_simul, mesh, L_pc)
+    !call vorticity_fluxes(div_abs_vort, abs_vort_flux_pu, abs_vort_flux_pv, &
+    !                      rel_vort, abs_vort, fcoriolis_pc,&
+    !                      wind_pu, wind_pv, cx_pu, cy_pv, &
+    !                      px, py, Qx, Qy, swm_simul, mesh, L_pc)
     !--------------------------------------------------------------------
     !====================================================================
 
     !====================================================================
     !--------------------------------------------------------------------
     ! Compute the kinetic energy fluxes
-    call ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
-                   Ku_px, Kv_py, K_po, swm_simul, mesh)
+    !call ke_fluxes(wind_pu, wind_pv, wind_po, cx_po, cy_po, &
+    !               Ku_px, Kv_py, K_po, swm_simul, mesh)
     !--------------------------------------------------------------------
     !====================================================================
 
     !--------------------------------------------------------------------
     ! Compute the gradient of kinetic energy
     !--------------------------------------------------------------------
-    !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
-    !$OMP SHARED(dy_K_pu, dx_K_pv, K_po, mesh) &
-    !$OMP SHARED(i0, j0, iend, jend)
-    dx_K_pv%f(i0:iend,j0:jend+1,:) = (K_po%f(i0+1:iend+1,j0:jend+1,:) -&
-    K_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
-    dy_K_pu%f(i0:iend+1,j0:jend,:) = (K_po%f(i0:iend+1,j0+1:jend+1,:) -&
-    K_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
-    !$OMP END PARALLEL WORKSHARE
+    !!$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+    !!$OMP SHARED(dy_K_pu, dx_K_pv, K_po, mesh) &
+    !!$OMP SHARED(i0, j0, iend, jend)
+    !dx_K_pv%f(i0:iend,j0:jend+1,:) = (K_po%f(i0+1:iend+1,j0:jend+1,:) -&
+    !K_po%f(i0:iend,j0:jend+1,:))/mesh%dx/erad
+    !dy_K_pu%f(i0:iend+1,j0:jend,:) = (K_po%f(i0:iend+1,j0+1:jend+1,:) -&
+    !K_po%f(i0:iend+1,j0:jend,:))/mesh%dy/erad
+    !!$OMP END PARALLEL WORKSHARE
     !====================================================================
 
 
@@ -200,17 +200,17 @@ subroutine sw_timestep_Dgrid(mesh)
         !$OMP SHARED(abs_vort_flux_pu, abs_vort_flux_pv) &
         !$OMP SHARED(dx_div_ugh_pv, dy_div_ugh_pu) &
         !$OMP SHARED(i0, iend, j0, jend)
-        wind_pv%ucovari%f(i0:iend,j0:jend+1,:) = wind_pv%ucovari%f(i0:iend,j0:jend+1,:) - swm_simul%dt*&
-        (abs_vort_flux_pv%f(i0:iend,j0:jend+1,:) &
-        +dx_H_pv%f(i0:iend,j0:jend+1,:)*grav &
-        +dx_K_pv%f(i0:iend,j0:jend+1,:)&!)/erad/erad! &
-        +dx_div_ugh_pv%f(i0:iend,j0:jend+1,:)*grav*swm_simul%dt)/erad/erad
+        !wind_pv%ucovari%f(i0:iend,j0:jend+1,:) = wind_pv%ucovari%f(i0:iend,j0:jend+1,:) - swm_simul%dt*&
+        !(abs_vort_flux_pv%f(i0:iend,j0:jend+1,:) &
+        !+dx_H_pv%f(i0:iend,j0:jend+1,:)*grav &
+        !+dx_K_pv%f(i0:iend,j0:jend+1,:)&!)/erad/erad! &
+        !+dx_div_ugh_pv%f(i0:iend,j0:jend+1,:)*grav*swm_simul%dt)/erad/erad
 
-        wind_pu%vcovari%f(i0:iend+1,j0:jend,:) = wind_pu%vcovari%f(i0:iend+1,j0:jend,:) - swm_simul%dt*&
-        (-abs_vort_flux_pu%f(i0:iend+1,j0:jend,:) &
-         +dy_H_pu%f(i0:iend+1,j0:jend,:)*grav&
-         +dy_K_pu%f(i0:iend+1,j0:jend,:)&!)/erad/erad! &
-         +dy_div_ugh_pu%f(i0:iend+1,j0:jend,:)*grav*swm_simul%dt)/erad/erad
+        !wind_pu%vcovari%f(i0:iend+1,j0:jend,:) = wind_pu%vcovari%f(i0:iend+1,j0:jend,:) - swm_simul%dt*&
+        !(-abs_vort_flux_pu%f(i0:iend+1,j0:jend,:) &
+        ! +dy_H_pu%f(i0:iend+1,j0:jend,:)*grav&
+        ! +dy_K_pu%f(i0:iend+1,j0:jend,:)&!)/erad/erad! &
+        ! +dy_div_ugh_pu%f(i0:iend+1,j0:jend,:)*grav*swm_simul%dt)/erad/erad
         !$OMP END PARALLEL WORKSHARE
     end if
 end subroutine sw_timestep_Dgrid
@@ -225,15 +225,15 @@ subroutine sw_timestep_Cgrid(mesh)
     type(cubedsphere), intent(inout) :: mesh
 
     ! interpolation of wind
-    call sw_wind_interpolation(mesh)
+    !call sw_wind_interpolation(mesh)
 
     ! Compute time-averaged wind at C grid
     call swm_time_averaged_wind(wind_pu, wind_pv, swm_simul%dp, &
         swm_simul%dto2, mesh%dx, mesh)
 
     ! Compute time-averaged wind at B grid
-    call swm_time_averaged_wind(wind_po, wind_po, swm_simul%dp, &
-        swm_simul%dto2, mesh%dx, mesh)
+    !call swm_time_averaged_wind(wind_po, wind_po, swm_simul%dp, &
+    !    swm_simul%dto2, mesh%dx, mesh)
 
     ! CFL number - C grid
     call cfl_x(mesh, wind_pu%ucontra_time_av, cx_pu, swm_simul%dt)

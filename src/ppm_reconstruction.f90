@@ -23,7 +23,8 @@ module ppm_reconstruction
 use constants, only: &
     i4, &
     i0, iend, &
-    j0, jend
+    j0, jend, &
+    n0, nend
 
 !Data structures
 use datastruct, only: &
@@ -47,6 +48,8 @@ subroutine ppm_reconstruction_x(Q, px)
 
     !aux
     real(kind=8) :: a1, a2, a3, a4, a5
+
+    integer(i4) :: i, j
 
     select case(px%recon)
         case('ppm') ! PPM from CW84 paper

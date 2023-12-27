@@ -121,9 +121,9 @@ subroutine printmesh(mesh)
     !    mesh%minarea/1e6, mesh%maxarea/1e6, mesh%meanarea/1e6
     !else
         print '(a33, 3e16.8)', " Min Max Mean distances (km) : ",  &
-        mesh%mindist*erad/1e3, mesh%maxdist*erad/1e3, mesh%meandist*erad/1e3
+        mesh%mindist/1e3, mesh%maxdist/1e3, mesh%meandist/1e3
         print '(a33, 3e16.8)', " Min Max Mean areas (km^2)     : ",  &
-        mesh%minarea*erad**2/1e6, mesh%maxarea*erad**2/1e6, mesh%meanarea*erad**2/1e6
+        mesh%minarea/1e6, mesh%maxarea/1e6, mesh%meanarea/1e6
     !end if
     print*
     print*

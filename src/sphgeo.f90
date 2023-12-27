@@ -21,6 +21,7 @@ use constants, only: &
      r8, &
      rad2deg, &
      acube, &
+     erad, &
      nbfaces
 
 !Data structures
@@ -175,6 +176,7 @@ subroutine derivative_xdir_equidistant_gnomonic_map(x, y, p, panel)
         case default
         print*, 'error on derivative_xdir_equidistant_gnomonic_map: invalid panel, ', panel
         end select
+        p = p*erad
     return
 end subroutine derivative_xdir_equidistant_gnomonic_map
 
@@ -241,6 +243,7 @@ subroutine derivative_ydir_equidistant_gnomonic_map(x, y, p, panel)
         case default
             print*, 'error on derivative_ydir_equidistant_gnomonic_map: invalid panel, ', panel
     end select
+        p = p*erad
     return
 end subroutine derivative_ydir_equidistant_gnomonic_map
 
@@ -252,18 +255,18 @@ subroutine derivative_xdir_equiangular_gnomonic_map(x, y, p, panel)
     real(r8), intent(in) :: x ! angular coordinates
     real(r8), intent(in) :: y ! angular coordinates
     real(r8), intent(out) :: p(1:3) ! tangent vector
-    real(r8) :: a, cos2x, cos2y, tanx, tany
+    real(r8) :: a, cos2x, cos2y, atanx, atany
 
     ! panel
     integer(i4), intent(in) :: panel
 
     a = acube
-    tanx = a*dtan(x)
-    tany = a*dtan(y)
+    atanx = a*dtan(x)
+    atany = a*dtan(y)
     cos2x = dcos(x)**2
     cos2y = dcos(y)**2
 
-    call derivative_xdir_equidistant_gnomonic_map(tanx, tany, p, panel)
+    call derivative_xdir_equidistant_gnomonic_map(atanx, atany, p, panel)
 
     p = p/cos2x
     !p = p/cos2y
@@ -279,18 +282,18 @@ subroutine derivative_ydir_equiangular_gnomonic_map(x, y, p, panel)
     real(r8), intent(in) :: x ! angular coordinates
     real(r8), intent(in) :: y ! angular coordinates
     real(r8), intent(out) :: p(1:3) ! tangent vector
-    real(r8) :: a, cos2x, cos2y, tanx, tany
+    real(r8) :: a, cos2x, cos2y, atanx, atany
 
     ! panel
     integer(i4), intent(in) :: panel
 
     a = acube
-    tanx = a*dtan(x)
-    tany = a*dtan(y)
+    atanx = a*dtan(x)
+    atany = a*dtan(y)
     cos2x = dcos(x)**2
     cos2y = dcos(y)**2
 
-    call derivative_ydir_equidistant_gnomonic_map(tanx, tany, p, panel)
+    call derivative_ydir_equidistant_gnomonic_map(atanx, atany, p, panel)
 
     !p = p/cos2x
     p = p/cos2y

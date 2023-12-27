@@ -118,7 +118,6 @@ subroutine init_swm_vars(mesh)
     ! Lagrange polynomial at centers
     L_pc%degree =  swm_simul%id
     L_pc%order =  L_pc%degree+1
-    L_pc%pos = 1
 
     ! Allocate the variables
     call allocate_swm_vars(mesh)

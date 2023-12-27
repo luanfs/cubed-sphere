@@ -36,7 +36,9 @@ use datastruct, only: &
 ! CS mapping
 use sphgeo, only: &
     inverse_equiangular_gnomonic_map, &
-    inverse_equiedge_gnomonic_map
+    inverse_equiedge_gnomonic_map, &
+    inverse_equidistant_gnomonic_map, &
+    equidistant_gnomonic_map
 
 implicit none
 
@@ -208,10 +210,106 @@ subroutine dg_interp(Q, L)
     !--------------------------------------------------
     real(kind=8), allocatable, intent(inout) :: Q(:,:,:)
     type(lagrange_poly_cs), intent(inout):: L
+    real(kind=8) :: interp_buff(1:L%ng), interp_buff2(1:L%ng)
     integer(i4) :: i, j, p, g, d, g2, h
+    integer(i4) :: is, ie, js, je
+
+    is = L%is
+    js = L%js
+    ie = L%ie
+    je = L%je
 
     ! Fill ghost cell centers
     call gethalodata(Q, L)
+
+    ! corners - cubic interpolation
+    do p = 1, nbfaces
+      !---------------------------------------------------------------------------------------------------------------------------
+      ! SE corner
+      do g = 1, nghost+1
+         interp_buff(g) = 0.d0
+         do d = 1, 4
+            interp_buff(g) = interp_buff(g) + L%halodata_east(d,js,p)*L%p_corner1(g,d)
+         enddo
+      enddo
+      ! now we are ready to fill the east/south corner points
+      do g = 1, nghost
+         interp_buff2(1:3) = L%halodata_south(ie-2:ie,nghost+1-g,p)
+         interp_buff2(4)   = interp_buff(g)
+         Q(ie+g, js-g, p) = 0.d0
+         do d = 1, 4
+            Q(ie+g, js-g, p) = Q(ie+g, js-g, p) + interp_buff2(d)*L%p_corner2(g,d)
+         enddo
+      enddo
+
+      !---------------------------------------------------------------------------------------------------------------------------
+      ! NE corner
+      ! First we fill the north points that will be used to interpolate the corner points
+      do g = 1, nghost+1
+         interp_buff(g) = 0.d0
+         do d = 1, 4
+           interp_buff(g) = interp_buff(g) + L%halodata_east(d,je,p)*L%p_corner1(g,d)
+         enddo
+      enddo
+
+      ! now we are ready to fill the east/north corner points
+      do g = 1, nghost
+         interp_buff2(1:3) = L%halodata_north(ie-2:ie,g,p)
+         interp_buff2(4)   = interp_buff(g)
+         Q(ie+g, je+g, p) = 0.d0
+         do d = 1, 4
+            Q(ie+g, je+g, p) = Q(ie+g, je+g, p) + interp_buff2(d)*L%p_corner2(g,d)
+         enddo
+      enddo
+
+
+      !---------------------------------------------------------------------------------------------------------------------------
+      ! NW corner
+      ! First we fill the north points that will be used to interpolate the corner points
+      do g = 1, nghost+1
+         interp_buff(g) = 0.d0
+         do d = 1, 4
+            interp_buff(g) = interp_buff(g) + L%halodata_west(nghost+1-d,je,p)*L%p_corner1(g,d)
+         enddo
+      enddo
+
+      ! now we are ready to fill the west/north corner points
+      do g = 1, nghost
+         interp_buff2(1) = L%halodata_north(is+2,g,p)
+         interp_buff2(2) = L%halodata_north(is+1,g,p)
+         interp_buff2(3) = L%halodata_north(is  ,g,p)
+         interp_buff2(4) = interp_buff(g)
+         Q(is-g,je+g,p) = 0.d0
+         do d = 1, 4
+            Q(is-g,je+g,p) = Q(is-g,je+g,p) + interp_buff2(d)*L%p_corner2(g,d)
+         enddo
+      enddo
+
+
+      !---------------------------------------------------------------------------------------------------------------------------
+      ! SW corner
+      ! First we fill the south points that will be used to interpolate the corner points
+      do g = 1, nghost+1
+         interp_buff(g) = 0.d0
+         do d = 1, 4
+            interp_buff(g) = interp_buff(g) + L%halodata_west(nghost+1-d,js,p)*L%p_corner1(g,d)
+         enddo
+      enddo
+
+      ! now we are ready to fill the west/south corner points
+      do g = 1, nghost
+         interp_buff2(1) = L%halodata_south(is+2,nghost+1-g,p)
+         interp_buff2(2) = L%halodata_south(is+1,nghost+1-g,p)
+         interp_buff2(3) = L%halodata_south(is  ,nghost+1-g,p)
+         interp_buff2(4) = interp_buff(g)
+         Q(is-g,js-g,p) = 0.d0
+         do d = 1, 4
+            Q(is-g,js-g,p) = Q(is-g,js-g,p) + interp_buff2(d)*L%p_corner2(g,d)
+         enddo
+      enddo
+    enddo
+
+
     do p = 1, nbfaces
         !--------------------------------------------------------------------------
         ! East panel interpolation
@@ -284,118 +382,6 @@ subroutine dg_interp(Q, L)
  
         !--------------------------------------------------------------------------
     end do
-
-    ! Get corners values
-    call gethalodata(Q, L)
-
-    ! Interpolate reiaming values at corner
-    do p = 1, nbfaces
-        !--------------------------------------------------------------------------
-        ! East/North panel corner interpolation
-        ! East
-        do g = 1, nghost
-            j = jend+g
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
-            ! Does the interpolation
-            Q(iend+g,j,p) = 0.d0
-            do d = 1, L%order
-                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
-            end do
-        end do
-
-        ! North
-        do g = 1, nghost
-            j = jend+g
-            ! North
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(j,g,:) = L%halodata_north(L%k0(j,g):L%kend(j,g), g, p)
-            ! Does the interpolation
-            do d = 1, L%order
-                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
-            end do
-        end do
-        !--------------------------------------------------------------------------
-
-        !--------------------------------------------------------------------------
-        ! East/South panel corner interpolation
-        ! East
-        do g = 1, nghost
-            j = j0-g
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(j,g,:) = L%halodata_east(g, L%k0(j,g):L%kend(j,g), p)
-            ! Does the interpolation
-            Q(iend+g,j,p) = 0.d0
-            do d = 1, L%order
-                Q(iend+g,j,p) = Q(iend+g,j,p) + 0.5d0*L%f_nodes(j,g,d)*L%p_nodes(j,g,d)
-            end do
-        end do
-
-        ! North
-        do g = 1, nghost
-            g2 = nghost-g+1
-            i = iend+g2
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
-            do d = 1, L%order
-                Q(i,j0-g2,p) = Q(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
-            end do
-        end do
-
-        !--------------------------------------------------------------------------
-        ! West/North panel corner interpolation
-        ! West
-        do g = 1, nghost
-            g2 = nghost-g+1
-            j = jend+g2
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            Q(i0-g2,j,p) = 0.d0
-            do d = 1, L%order
-                Q(i0-g2,j,p) = Q(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
-            end do
-        end do
-
-        ! North
-        do g = 1, nghost
-            i = i0-g
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(i,g,:) = L%halodata_north(L%k0(i,g):L%kend(i,g), g, p)
-            ! Does the interpolation
-            do d = 1, L%order
-                Q(i,jend+g,p) = Q(i,jend+g,p) + 0.5d0*L%f_nodes(i,g,d)*L%p_nodes(i,g,d)
-            end do
-        end do
-        !--------------------------------------------------------------------------
-
-        !--------------------------------------------------------------------------
-        ! West/South panel corner interpolation
-        ! West
-        do g = 1, nghost
-            g2 = nghost-g+1
-            j = i0-g2
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(j,g2,:)= L%halodata_west(g, L%k0(j,g2):L%kend(j,g2), p)
-            Q(i0-g2,j,p) = 0.d0
-            do d = 1, L%order
-                Q(i0-g2,j,p) = Q(i0-g2,j,p) + 0.5d0*L%f_nodes(j,g2,d)*L%p_nodes(j,g2,d)
-            end do
-        end do
-
-        ! South
-        ! Does the interpolation
-        do g = 1, nghost
-            g2 = nghost-g+1
-            i = i0-g2
-            ! Store in f the support points used in Lagrange interpolation
-            L%f_nodes(i,g2,:)= L%halodata_south(L%k0(i,g2):L%kend(i,g2), g, p)
-            do d = 1, L%order
-                Q(i,j0-g2,p) = Q(i,j0-g2,p) + 0.5d0*L%f_nodes(i,g2,d)*L%p_nodes(i,g2,d)
-            end do
-        end do
-        !--------------------------------------------------------------------------
-    end do
-
 end subroutine dg_interp
 
 
@@ -1103,6 +1089,12 @@ subroutine compute_lagrange_cs(L, mesh)
     type(cubedsphere), intent(inout):: mesh
     type(lagrange_poly_cs), intent(inout):: L
     integer(i4) ::  i, j, p, g, d, k, h, jnearest
+    real(kind=8) :: pa(1:3), tanx, tany
+    real(kind=8) :: x_given_p2, y_given_p2
+    real(kind=8) :: x_given_p6, y_given_p6
+    real(kind=8) :: x_target
+    real(kind=8) :: support_points_corner1(1:4)
+    real(kind=8) :: support_points_corner2(1:4)
 
     if(mesh%kind .ne. 'equiangular' .and. mesh%kind .ne. 'equiedge') then
         print*, 'ERROR in compute_lagrange_cs: invalid mesh kind, ', mesh%kind
@@ -1111,107 +1103,132 @@ subroutine compute_lagrange_cs(L, mesh)
 
     L%offset = ceiling(L%order*0.5d0)
 
-    if(L%pos==1) then
-        ! Compute the nodes
-        ! Init local coordinates grid
-        L%y_support(n0) = -mesh%aref - (mesh%halosize-0.5d0)*mesh%dx
-        do j = n0+1, nend
-            L%y_support(j) = L%y_support(j-1) + mesh%dx
+    ! Compute the nodes
+    ! Init local coordinates grid
+    do j = L%jsd, L%jed
+        L%y_support(j) = -mesh%aref + (j-0.5d0)*mesh%dx
+    end do
+
+    ! Invert node points using the cs mapping from panel 2
+    do g = 1, L%ng
+        tanx = dtan(L%y_support(L%je+g))
+        do j = L%jsd, L%jed
+            tany = dtan(L%y_support(j))
+            ! invert it
+            call equidistant_gnomonic_map(tanx, tany, pa, 1)
+            call inverse_equiangular_gnomonic_map(pa, L%x_nodes(j,g), L%y_nodes(j,g), 2)
         end do
+    end do
 
-        ! Invert node points using the cs mapping from panel 2
-        p = 2
-        do g = 1, nghost
-            do j = n0, nend
-                ! invert it
-                if( mesh%kind=='equiangular')then
-                  call inverse_equiangular_gnomonic_map(mesh%pc(iend+g,j,1)%p, L%x_nodes(j,g), L%y_nodes(j,g), p)
-                else if( mesh%kind=='equiedge')then
-                  call inverse_equiedge_gnomonic_map(mesh%pc(iend+g,j,1)%p, L%x_nodes(j,g), L%y_nodes(j,g), p)
-                endif
-               !print*,g,j, L%x_nodes(j,g), L%y_nodes(j,g), abs(-mesh%aref + mesh%dy*(g-0.5d0)-L%x_nodes(j,g))
-            end do
-            !print*,'---------------------------------------------------'
-        end do
+    ! Compute stencils
+    do g = 1, L%ng
+       do j = j0-g, jend+g
+          do i = L%jsd, L%jed-1
+             if( (L%y_support(i) <= L%y_nodes(j,g)) .and. (L%y_nodes(j,g) <= L%y_support(i+1) )) then
+                exit
+             end if
+          enddo
 
-!stop
-        ! Compute stencils
-        do g = 1, nghost
-           do j = j0-g, jend+g
-              do i = n0, nend-1
-                 if( (L%y_support(i) <= L%y_nodes(j,g)) .and. (L%y_nodes(j,g) <= L%y_support(i+1) )) then
-                    exit
-                 end if
-              enddo
+          ! not corner points
+          if(j>j0-g .and. j<jend+g) then
+             L%kend(j,g)   = i + L%offset
+             L%k0(j,g) = L%kend(j,g) - L%order + 1
 
-              ! not corner points
-              if(j>j0-g .and. j<jend+g) then
-                 L%kend(j,g)   = i + L%offset
-                 L%k0(j,g) = L%kend(j,g) - L%order + 1
+             if(L%k0(j,g)<j0)then 
+                L%k0(j,g) = j0
+                L%kend(j,g) = L%k0(j,g) + L%order - 1
+             else if(L%kend(j,g)>jend)then 
+                L%kend(j,g) = jend
+                L%k0(j,g) = L%kend(j,g) - L%order + 1
+             end if
 
-                 if(L%k0(j,g)<j0)then 
-                    L%k0(j,g) = j0
-                    L%kend(j,g) = L%k0(j,g) + L%order - 1
-                 else if(L%kend(j,g)>jend)then 
-                    L%kend(j,g) = jend
-                    L%k0(j,g) = L%kend(j,g) - L%order + 1
-                 end if
+          ! corner points
+          else if (j==jend+g) then
+             L%kend(j,g) = min(nend, jend + L%offset)
+             L%k0(j,g) = L%kend(j,g) - L%order + 1
+          else
+             L%k0(j,g) = max(n0, j0 - L%offset)
+             L%kend(j,g) = L%k0(j,g) + L%order - 1
+          end if
+       enddo
+    enddo
 
-              ! corner points
-              else if (j==jend+g) then
-                 L%kend(j,g) = min(nend, jend + L%offset)
-                 L%k0(j,g) = L%kend(j,g) - L%order + 1
-              else
-                 L%k0(j,g) = max(n0, j0 - L%offset)
-                 L%kend(j,g) = L%k0(j,g) + L%order - 1
-              end if
-           enddo
-        enddo
+    ! Debug
+    do g = 1, L%ng
+        do i = i0-g, iend+g
+            if(L%kend(i,g)-L%k0(i,g) .ne. L%degree)then
+                print*, 'ERROR in compute_lagrange_polynomials: stencil size is not correct.'
+                stop
+            end if
 
-        ! Debug
-        do g = 1, nghost
-            do i = i0-g, iend+g
-                if(L%kend(i,g)-L%k0(i,g) .ne. L%degree)then
-                    print*, 'ERROR in compute_lagrange_polynomials: stencil size is not correct.'
-                    stop
-                end if
+            if(L%kend(i,g)<i0 .or. L%k0(i,g)>iend)then
+                print*, 'ERROR in compute_lagrange_polynomials: stencil bounds are not correct.'
+                stop
+            end if
 
-                if(L%kend(i,g)<i0 .or. L%k0(i,g)>iend)then
-                    print*, 'ERROR in compute_lagrange_polynomials: stencil bounds are not correct.'
-                    stop
-                end if
+            if(L%y_support(L%k0(i,g))>L%y_nodes(i,g))then
+                print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. >'
+                stop
+            end if
 
-                if(L%y_support(L%k0(i,g))>L%y_nodes(i,g))then
-                    print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. >'
-                    stop
-                end if
-
-                if(L%y_support(L%kend(i,g))<L%y_nodes(i,g))then
-                    print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. <'
-                    stop
-                end if
+            if(L%y_support(L%kend(i,g))<L%y_nodes(i,g))then
+                print*, 'ERROR in compute_lagrange_polynomials: error in neighboring points. <'
+                stop
+            end if
  
-            end do
-            !read(*,*)
-        end do  
+        end do
+        !read(*,*)
+    end do  
 
-        ! Store in f the nearest support points used in Lagrange interpolation
-        do g = 1, nghost
-            do j = j0-g, jend+g
-                L%f_nodes(j,g,:) = L%y_support(L%k0(j,g):L%kend(j,g))
+    ! Store in f the nearest support points used in Lagrange interpolation
+    do g = 1, L%ng
+        do j = j0-g, jend+g
+            L%f_nodes(j,g,:) = L%y_support(L%k0(j,g):L%kend(j,g))
+        end do
+    end do
+
+    ! Compute the Lagrange nodes at halo region
+    do g = 1, L%ng
+        do j = j0-g, jend+g
+            do d = 1, L%order
+                call lagrange_basis(L%y_nodes(j,g), L%f_nodes(j,g,:), L%degree, d, L%p_nodes(j,g,d))
             end do
         end do
+    end do
 
-        ! Compute the Lagrange nodes at halo region
-        do g = 1, nghost
-            do j = j0-g, jend+g
-                do d = 1, L%order
-                    call lagrange_basis(L%y_nodes(j,g), L%f_nodes(j,g,:), L%degree, d, L%p_nodes(j,g,d))
-                end do
-            end do
-        end do
+    ! extra polynomials for corner points
+    support_points_corner1(1:4) = L%y_support(L%js:L%js+3)
+    do g = 1, L%ng
+       x_given_p6 = dtan(L%y_support(L%je+1))
+       y_given_p6 = dtan(L%y_support(L%je-g+1))
 
-    end if
+       ! project target point using panel 6 mapping
+       call equidistant_gnomonic_map(x_given_p6, y_given_p6, pa, 6)
+
+       ! invert the target point using panel 2 mapping to get its (x,y) coordinates in panel 2 system
+       call inverse_equidistant_gnomonic_map(pa, x_given_p2, y_given_p2, 2)
+
+       x_given_p2 = datan(x_given_p2)
+       y_given_p2 = datan(y_given_p2)
+ 
+       do d = 1, 4 ! cubic polynomials will be used here
+         call lagrange_basis(x_given_p2, support_points_corner1(:), 3, d, L%p_corner1(g,d))
+       enddo
+    enddo
+
+    support_points_corner2(1:3) = L%y_support(L%je-2:L%je)
+    x_target = mesh%aref
+    do g = 1, L%ng-1
+       x_given_p6 = dtan(L%y_support(L%je+1))
+       y_given_p6 = dtan(L%y_support(L%je-g))
+       x_given_p2 = L%y_support(L%je+1)
+       support_points_corner2(4) = x_given_p2
+
+       do d = 1, 4 ! cubic polynomials will be used here
+          call lagrange_basis(x_target, support_points_corner2(:), 3, d, L%p_corner2(g,d))
+       enddo
+    enddo
+ 
 end subroutine compute_lagrange_cs
 
 

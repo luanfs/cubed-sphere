@@ -62,6 +62,9 @@ subroutine adv_timestep(mesh)
 
     ! Time averaged wind - when vf==1, we only need to compute for n=1
     if(advsimul%vf>=2 .or. advsimul%n==1)then
+        ! Compute time centered wind
+        call adv_centered_wind(wind_pu, wind_pv, mesh)
+        
         ! Compute time-averaged wind
         call adv_time_averaged_wind(wind_pu, wind_pv, wind_pc, advsimul%dp, &
         advsimul%dto2, mesh%dx, mesh, L_pc)
@@ -116,11 +119,12 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     !$OMP DEFAULT(NONE) & 
     !$OMP SHARED(V_pu, mesh) & 
     !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf, t) &
+    !$OMP SHARED(n0, nend) &
     !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
     !$OMP SCHEDULE(static) 
     ! Vector field at pu
-    do i = i0, iend+1
-        do j = j0, jend
+    do i = n0, nend+1
+        do j = n0, nend
             do p = 1, nbfaces
                 lat  = mesh%pu(i,j,p)%lat
                 lon  = mesh%pu(i,j,p)%lon
@@ -143,10 +147,11 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     !$OMP DEFAULT(NONE) & 
     !$OMP SHARED(V_pv, mesh) & 
     !$OMP SHARED(i0, iend, j0, jend, nbfaces, vf, t) &
+    !$OMP SHARED(n0, nend) &
     !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
     !$OMP SCHEDULE(static) 
-    do i = i0, iend
-        do j = j0, jend+1
+    do i = n0, nend
+        do j = n0, nend+1
             do p = 1, nbfaces
                 lat  = mesh%pv(i,j,p)%lat
                 lon  = mesh%pv(i,j,p)%lon
@@ -165,5 +170,92 @@ subroutine adv_update(V_pu, V_pv, mesh, vf, t)
     end do
     !$OMP END PARALLEL DO
 end subroutine adv_update
+
+
+subroutine adv_centered_wind(V_pu, V_pv, mesh)
+    !--------------------------------------------------
+    ! Compute the velocity update needed in a timestep 
+    ! for the advection problem on the sphere
+    !
+    !
+    ! Q - scalar field average values on cells
+    ! V_pu - velocity at pu
+    ! V_pv - velocity at pv
+    !
+    !--------------------------------------------------
+    type(cubedsphere), intent(in) :: mesh
+    type(velocity_field), intent(inout) :: V_pu, V_pv
+
+    ! aux
+    integer(i4) :: i, j, p
+
+    !aux
+    real(kind=8) :: lat, lon
+    real(kind=8) :: ulon, vlat, ucontra, vcontra
+
+    if(advsimul%vf==1)then
+       !$OMP PARALLEL WORKSHARE DEFAULT(NONE) &
+       !$OMP SHARED(V_pu, V_pv)
+       V_pu%ucontra_time_centered%f(:,:,:) = V_pu%ucontra%f(:,:,:)
+       V_pv%vcontra_time_centered%f(:,:,:) = V_pv%vcontra%f(:,:,:)
+       !$OMP END PARALLEL WORKSHARE
+    else
+       !$OMP PARALLEL DO &
+       !$OMP DEFAULT(NONE) & 
+       !$OMP SHARED(V_pu, mesh, advsimul) & 
+       !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
+       !$OMP SHARED(n0, nend) &
+       !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+       !$OMP SCHEDULE(static) 
+       ! Vector field at pu
+       do i = n0, nend+1
+           do j = n0, nend
+               do p = 1, nbfaces
+                   lat  = mesh%pu(i,j,p)%lat
+                   lon  = mesh%pu(i,j,p)%lon
+
+                   ! Update velocity
+                   call velocity_adv(ulon, vlat, lat, lon, advsimul%t-advsimul%dto2, advsimul%vf)
+
+                   ! LL2contra
+                   ucontra = mesh%ll2contra_pu(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(1,2)*vlat
+                   vcontra = mesh%ll2contra_pu(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pu(i,j,p)%M(2,2)*vlat
+                   V_pu%ucontra_time_centered%f(i,j,p) = ucontra
+                   V_pu%vcontra_time_centered%f(i,j,p) = vcontra
+               end do
+           end do
+       end do    
+       !$OMP END PARALLEL DO
+
+       ! Vector field at pv
+       !$OMP PARALLEL DO &
+       !$OMP DEFAULT(NONE) & 
+       !$OMP SHARED(V_pv, mesh, advsimul) & 
+       !$OMP SHARED(i0, iend, j0, jend, nbfaces) &
+       !$OMP SHARED(n0, nend) &
+       !$OMP PRIVATE(i, j, p, ulon, vlat, ucontra, vcontra, lat, lon) &
+       !$OMP SCHEDULE(static) 
+       do i = n0, nend
+           do j = n0, nend+1
+               do p = 1, nbfaces
+                   lat  = mesh%pv(i,j,p)%lat
+                   lon  = mesh%pv(i,j,p)%lon
+
+                   ! Update velocity
+                   call velocity_adv(ulon, vlat, lat, lon, advsimul%t-advsimul%dto2, advsimul%vf)
+
+                   ! LL2contra
+                   ucontra = mesh%ll2contra_pv(i,j,p)%M(1,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(1,2)*vlat
+                   vcontra = mesh%ll2contra_pv(i,j,p)%M(2,1)*ulon + mesh%ll2contra_pv(i,j,p)%M(2,2)*vlat
+
+                   V_pv%ucontra_time_centered%f(i,j,p) = ucontra
+                   V_pv%vcontra_time_centered%f(i,j,p) = vcontra
+               end do
+           end do
+       end do
+       !$OMP END PARALLEL DO
+    endif
+end subroutine adv_centered_wind
+
 
 end module advection_timestep

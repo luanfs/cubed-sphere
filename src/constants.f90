@@ -32,9 +32,6 @@ real(kind=8), parameter :: pio2 = pi/2.d0
 real(kind=8), parameter :: piby2 = pi*0.5d0
 real(kind=8), parameter :: pio4 = pi*0.25d0
 
-! Half length of cube edge
-real(kind=8), parameter :: acube = 1.d0/dsqrt(3.d0)
-
 !Degrees to radians coversion (multiply to obtain conversion)
 real(kind=8), parameter :: deg2rad = pi / 180.d0
 
@@ -53,20 +50,23 @@ real(kind=8), parameter :: eps2 = epsilon(pi)
 !---------------------------------------------------
 
 ! Earth mean radius (meters)
-real(kind=8), parameter :: erad     = 6.37122d0*10.d0**6
-real(kind=8), parameter :: rearth     = 6.37122d0*10.d0**6
+real(kind=8), parameter :: erad     = 6371200.d0
+real(kind=8), parameter :: rearth   = 6371200.d0
 real(kind=8), parameter :: eradi    = 1.d0/erad
 real(kind=8), parameter :: unitspharea    = 4.d0*pi
 
+! Half length of cube edge
+real(kind=8), parameter :: acube = erad/dsqrt(3.d0)
+
 !Gravitational accerlaration of the Earth (m/s^2)
-real(kind=8), parameter  :: grav    = 9.80616d0
-real(kind=8), parameter  :: gravity = 9.80616d0
-real(kind=8), parameter  :: gravi   = 1.d0/9.80616d0
+real(kind=8), parameter  :: grav    = 9.8066499999999994d0
+real(kind=8), parameter  :: gravity = grav
+real(kind=8), parameter  :: gravi   = 1.d0/grav
 real(kind=8), parameter  :: gravo2   = grav*0.5d0
 
 ! Angular velocity of the Earth (rot/s)
-real (kind=8), parameter :: omega   = 7.292d0*10.d0**(-5)
-real (kind=8), parameter :: rotatn   = 7.292d0*10.d0**(-5)
+real (kind=8), parameter :: omega   = 7.2921d0*10.d0**(-5)
+real (kind=8), parameter :: rotatn   = 7.2921d0*10.d0**(-5)
 
 !Days to seconds
 real (kind=8), parameter :: day2sec = 86400.d0

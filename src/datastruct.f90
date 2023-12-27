@@ -471,6 +471,8 @@ type lagrange_poly_cs
     real (kind=8), allocatable  :: halodata_west(:,:,:) ! var to store the needed halo data
     real (kind=8), allocatable  :: halodata_north(:,:,:) ! var to store the needed halo data
     real (kind=8), allocatable  :: halodata_south(:,:,:) ! var to store the needed halo data
+    real (kind=8), allocatable  :: p_corner1(:,:)
+    real (kind=8), allocatable  :: p_corner2(:,:)
 
     ! stencil
     integer(i4), allocatable :: k0(:,:), kend(:,:)
@@ -482,8 +484,16 @@ type lagrange_poly_cs
     ! order
     integer (i4) :: order
 
-    ! position 1-center, 2-edges
-    integer (i4) :: pos
+    ! halo size
+    integer :: ng
+    integer :: ng_scalar
+    integer :: ng_wind
+
+    ! indexes
+    integer :: jsd, jed
+    integer :: isd, ied
+    integer :: js , je
+    integer :: is , ie
 
 end type lagrange_poly_cs
  

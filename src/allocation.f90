@@ -15,7 +15,7 @@ use constants, only: &
   nbfaces, &
   n_lat, n_lon, &
   n0, nend, &
-  n0, nend, &
+  j0, jend, &
   nghost
 
 !Data structures
@@ -530,54 +530,38 @@ subroutine lagrange_poly_allocation(L, mesh)
     !---------------------------------------------------
     !   LAGRANGE_POLY_ALLOCATION
     !
-    ! This routines allocates the scalar field Q
-    ! at position 'pos', including ghost cells.
-    !
-    ! mesh must be already allocated.
-    !
-    ! Direction of the values relative to a mesh
-    !   1 - x direction
-    !   2 - y direction 
-    !
     !--------------------------------------------------
     type(cubedsphere), intent(in):: mesh
     type(lagrange_poly_cs), intent(inout) :: L
-   
-    select case(L%pos)
-        case(1) ! centers
-            call r8_1darray_allocation(L%y_support, n0, nend)
-            call r8_2darray_allocation(L%f_support, n0, nend, 1, nghost)
-            call r8_2darray_allocation(L%x_nodes  , n0, nend, 1, nghost)
-            call r8_2darray_allocation(L%y_nodes  , n0, nend, 1, nghost)
-            call r8_3darray_allocation(L%p_nodes  , n0, nend, 1, nghost, 1, L%order)
-            call r8_3darray_allocation(L%f_nodes  , n0, nend, 1, nghost, 1, L%order)
-            call r8_3darray_allocation(L%halodata_east , 1, nghost, n0, nend, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_west , 1, nghost, n0, nend, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_north, n0, nend, 1, nghost, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_south, n0, nend, 1, nghost, 1, nbfaces)
-            call i4_2darray_allocation(L%k0       , n0, nend, 1, nghost)
-            call i4_2darray_allocation(L%kend     , n0, nend, 1, nghost)
+  
+    L%js  = j0
+    L%je  = jend
+    L%is  = L%js
+    L%ie  = L%je
+ 
+    L%jsd = n0-1
+    L%jed = nend+1
+    L%isd = L%jsd
+    L%ied = L%jed
+ 
+    L%ng  = nghost+1
 
-        case(2) ! edges
+    call r8_1darray_allocation(L%y_support, L%jsd, L%jed)
+    call r8_2darray_allocation(L%f_support, L%jsd, L%jed, 1, L%ng)
+    call r8_2darray_allocation(L%x_nodes  , L%jsd, L%jed, 1, L%ng)
+    call r8_2darray_allocation(L%y_nodes  , L%jsd, L%jed, 1, L%ng)
+    call r8_2darray_allocation(L%p_corner1, 1, L%ng, 1, 4)
+    call r8_2darray_allocation(L%p_corner2, 1, L%ng, 1, 4)
 
-            call r8_1darray_allocation(L%y_support, n0, nend)
-            call r8_2darray_allocation(L%f_support, n0, nend, 1, nghost)
-            call r8_2darray_allocation(L%x_nodes  , n0, nend, 1, nghost)
-            call r8_2darray_allocation(L%y_nodes  , n0, nend, 1, nghost)
-            call r8_3darray_allocation(L%p_nodes  , n0, nend, 1, nghost, 1, L%order)
-            call r8_3darray_allocation(L%f_nodes  , n0, nend, 1, nghost, 1, L%order)
-            call r8_3darray_allocation(L%halodata_east , 1, nghost, n0, nend, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_west , 1, nghost, n0, nend, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_north, n0, nend, 1, nghost, 1, nbfaces)
-            call r8_3darray_allocation(L%halodata_south, n0, nend, 1, nghost, 1, nbfaces)
-            call i4_2darray_allocation(L%k0       , n0, nend, 1, nghost)
-            call i4_2darray_allocation(L%kend     , n0, nend, 1, nghost)
+    call r8_3darray_allocation(L%p_nodes  , L%jsd, L%jed, 1, L%ng, 1, L%order)
+    call r8_3darray_allocation(L%f_nodes  , L%jsd, L%jed, 1, L%ng, 1, L%order)
+    call r8_3darray_allocation(L%halodata_east , 1, L%ng, L%jsd, L%jed, 1, nbfaces)
+    call r8_3darray_allocation(L%halodata_west , 1, L%ng, L%jsd, L%jed, 1, nbfaces)
+    call r8_3darray_allocation(L%halodata_north, L%jsd, L%jed, 1, L%ng, 1, nbfaces)
+    call r8_3darray_allocation(L%halodata_south, L%jsd, L%jed, 1, L%ng, 1, nbfaces)
 
-        case default
-            print*, 'ERROR on lagrange_poly_allocation: invalid position', L%pos
-            stop
-
-    end select
+    call i4_2darray_allocation(L%k0       , L%jsd, L%jed, 1, L%ng)
+    call i4_2darray_allocation(L%kend     , L%jsd, L%jed, 1, L%ng)
 
     return
 end subroutine lagrange_poly_allocation 
