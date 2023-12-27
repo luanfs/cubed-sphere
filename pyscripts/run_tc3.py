@@ -22,22 +22,24 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128, 256, ) # Values of N
-reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
-splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
-mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
-dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
-mfixers      = ('none' ,  'gpr'  , 'af'  , 'gpr') # mass fixers 
-edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
+N = (48, ) # Values of N
+reconmethods = ('ppm', ) # reconstruction methods
+splitmethods = ('avlt', ) # splitting
+mtmethods    = ('mt0', ) # metric tensor formulation
+dpmethods    = ('rk1'  ,  'rk1' ) # departure point formulation
+mfixers      = ('none' ,  'none') # mass fixers 
+edgetreat    = ('duogrid', 'duogrid') # edge treatments
 
 
 # Program to be run
 program = "./main"
 run = True # Run the simulation?
+#run = False # Run the simulation?
 
 # Plotting parameters
 colormap = 'seismic'
 map_projection = 'mercator'
+#map_projection = 'sphere'
 
 def main():
     # Get the parameters
@@ -49,6 +51,8 @@ def main():
     # Define velocity
     vf = '1'
     replace_line(pardir+'advection.par', vf, 5)
+    ic = '1'
+    replace_line(pardir+'advection.par', ic, 3)
 
     # remove output on screen
     replace_line(pardir+'mesh.par', '0', 9)
@@ -62,18 +66,16 @@ def main():
     replace_line(pardir+'advection.par', interpd, 23)
 
     # Get adv parameters
-    ic, _, recon = get_adv_parameters()
+    _, _, recon = get_adv_parameters()
 
     # time steps
     dt = np.zeros(len(N))
 
     # Initial time step
     if vf=='1':
-        dt[0] = 0.025
-    elif vf=='2'or vf=='4':
-        dt[0] = 0.0125
-    elif vf=='3':
-        dt[0] = 0.00625
+        dt[0] = 3600
+    if vf=='2':
+        dt[0] = 2400
     else:
         print('Error - invalid vf')
         exit()
@@ -130,7 +132,7 @@ def main():
             grid_name = gridname(n, kind)
 
             # Div error name
-            div_name = "div_ic1_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+\
+            div_name = "div_ic"+str(ic)+"_vf"+vf+"_"+opsplit+"_"+recon+"_mt"+mt+"_"+dp+\
             "_mf"+mf+"_et"+et+"_id"+interpd
 
             # File to be opened
@@ -165,7 +167,7 @@ def main():
             qabs_max = np.amax(abs(data))
             qmin, qmax = -qabs_max, qabs_max
             title = 'N = '+str(n)+', CFL = '+str(cfl)+', ic = '+str(ic)+', vf = '+str(vf)\
-            +'\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
+            +', sp = '+str(opsplit)+'\n recon = '+ str(recon)+', dp = '+str(dp)+', mt = '\
             +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
             ', mass variation = '+massvar+'\n \n'
 
@@ -187,7 +189,7 @@ def main():
     error_list = [error_linf, error_l1, error_l2]
     norm_list  = ['linf','l1','l2']
     norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
-
+    scheme_names = ['PL07', 'PL07-PR', 'AVLT-AF', 'AVLT-PR']
     e = 0
     for error in error_list:
         emin, emax = np.amin(error[:]), np.amax(error[:])
@@ -206,7 +208,8 @@ def main():
             dp = dpmethods[k]
             mf = mfixers[k]
             et = edgetreat[k]
-            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
+            #name.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
+            fname.append(scheme_names[k])
 
         title = 'Divergence error, vf='+ str(vf)+', norm='+norm_title[e]
         filename = graphdir+'cs_div_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'

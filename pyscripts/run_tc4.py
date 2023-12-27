@@ -19,19 +19,22 @@ from errors             import plot_errors_loglog, plot_convergence_rate
 import subprocess
 
 # Parameters
-#N = (16, )
-N = (16, 32, 64, 128) # Values of N
-reconmethods = ('hyppm', 'hyppm', 'hyppm', 'hyppm') # reconstruction methods
-splitmethods = ('pl07' ,  'pl07', 'avlt', 'avlt' ) # splitting
-mtmethods    = ('pl07' ,  'pl07', 'mt0' , 'mt0') # metric tensor formulation
-dpmethods    = ('rk1'  ,  'rk1' , 'rk2' , 'rk2') # departure point formulation
-mfixers      = ('none' ,  'gpr'  , 'af'  , 'gpr') # mass fixers 
-edgetreat    = ('pl07' , 'duogrid', 'duogrid', 'duogrid') # edge treatments
+N = (48,96,192,384) # Values of N
+#N=(48,)
+reconmethods = ('ppm', ) # reconstruction methods
+splitmethods = ('avlt', ) # splitting
+mtmethods    = ('mt0', ) # metric tensor formulation
+dpmethods    = ('rk2', ) # departure point formulation
+mfixers      = ('af',) # mass fixers 
+edgetreat    = ('duogrid',) # edge treatments
 
+# number of threads
+subprocess.run('export OMP_NUM_THREADS=10', shell=True)
 
 # Program to be run
 program = "./main"
 run = True # Run the simulation?
+#run = False # Run the simulation?
 
 # Plotting parameters
 #map_projection = 'sphere'
@@ -48,11 +51,11 @@ def main():
     replace_line(pardir+'mesh.par', '0', 9)
 
     # Define ic
-    ic = '3'
+    ic = '4'
     replace_line(pardir+'advection.par', ic, 3)
 
     # Define velocity
-    vf = '3'
+    vf = '1'
     replace_line(pardir+'advection.par', vf, 5)
 
     # interpolation degree
@@ -70,22 +73,26 @@ def main():
 
     # Initial time step
     if vf=='1':
-        dt[0] = 0.025
-    elif vf=='2'or vf=='4':
-        dt[0] = 0.0125
+        dt[0] = 3600
+    elif vf=='2':
+        dt[0] = 1800
     elif vf=='3':
-        dt[0] = 0.00625
+        dt[0] = 1800
     else:
         print('Error - invalid vf')
         exit()
 
     # min/max in plot
-    if ic=='1' or ic=='2' or ic=='3' or ic=='4':
+    if ic=='1' or ic=='2' or ic=='3':
        qmin, qmax = -0.2, 1.2
+    elif ic=='4':
+       qmin, qmax = 800, 3400
     else:
         print('Error - invalid ic')
         exit()
 
+    if vf=='3':
+        qmin, qmax = -0.2, 3.5
 
     for k in range(1, len(N)):
         dt[k] = 0.5*dt[k-1]
@@ -183,7 +190,8 @@ def main():
                 +str(mt)+', mf = '+str(mf) +', et = '+str(et)+\
                 '\n min = '+dmin+', max = '+dmax+', mass variation = '+massvar+'\n \n'
 
-                plot_scalar_field(data, lats, lons, \
+                if ic != 1:
+                   plot_scalar_field(data, lats, lons, \
                              colormap, map_projection, fname, title, qmin, qmax)
 
                 # plot the error
@@ -211,7 +219,7 @@ def main():
     error_list = [error_linf, error_l1, error_l2]
     norm_list  = ['linf','l1','l2']
     norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
-
+    scheme_names = ['PL07', 'PL07-PR', 'AVLT-AF', 'AVLT-PR']
     e = 0
     for error in error_list:
         emin, emax = np.amin(error[:]), np.amax(error[:])
@@ -230,7 +238,8 @@ def main():
             dp = dpmethods[k]
             mf = mfixers[k]
             et = edgetreat[k]
-            fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
+            #fname.append(opsplit+'/'+recon+'/'+mt+'/'+dp+'/'+mf+'/'+et)
+            fname.append(scheme_names[k])
 
         title = 'Advection error, ic = '+str(ic)+', vf = '+ str(vf)+', norm='+norm_title[e]
         filename = graphdir+'cs_adv_ic'+str(ic)+'_vf'+str(vf)+'_norm'+norm_list[e]+'_parabola_errors.pdf'

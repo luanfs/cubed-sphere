@@ -1,14 +1,14 @@
 #Advection test case parameters 
 #Initial condition field 
-3
+4
 #Vector field
-2
+1
 #Time step
-0.00078125
+450.0
 #Number of plots
 2
 #1D reconstruction (ppm or hyppm)
-hyppm
+ppm
 #2D operator splitting (avlt or pl07)
 avlt
 #Metric tensor treatment (pl07 or mt0)
@@ -16,7 +16,7 @@ mt0
 #Departure point scheme (rk1 or rk2)
 rk2
 #Mass fixer (none, af, gpr, lpr) - only for duogrid
-gpr
+af
 #Edge treatment (pl07 or duogrid)
 duogrid
 #Ghost cells interpolation degree

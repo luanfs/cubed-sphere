@@ -21,7 +21,7 @@ import subprocess
 
 # Parameters
 #N = (16, )
-N = (16, 32, 64, 128, 256, 512) # Values of N
+N = (16, 32, 64, 128, 256,) # Values of N
 degrees = (1, 2, 3, 4,) # interpolation degrees
 
 # Program to be run

@@ -43,8 +43,11 @@ run = True# Run the simulation?
 #run = False# Run the simulation?
 
 # Plotting parameters
-#map_projection = 'sphere'
-map_projection = 'mercator'
+map_projection = 'sphere'
+#map_projection = 'mercator'
+
+# number of threads
+#subprocess.run('export OMP_NUM_THREADS=10', shell=True)
 
 def main():
     # Get the parameters
@@ -271,8 +274,8 @@ def main():
                         title = 'Error - N = '+str(n)+', Time = '+time+', CFL = '+str(cfl)+', ic = '+str(ic)+\
                         '\n sp = '+str(opsplit)+', recon = '+ str(recon)+', dp = '+str(dp)+\
                         ', mt = '+str(mt)+', mf = '+str(mf)+', et = '+str(et)+'\n \n'
-                        #plot_scalar_field(data, lats, lons, \
-                        #        colormap, map_projection, fname, title, dmin, dmax)
+                        plot_scalar_field(data, lats, lons, \
+                                colormap, map_projection, fname, title, dmin, dmax)
 
                 if ic=='0':
                     # plot the error
@@ -305,14 +308,14 @@ def main():
             #--------------------------------------------------------
 
     # plot errors for different all schemes in  different norms
-    if ic == '1':
-        error_list = [error_linf_h,]# error_l1_h, error_l2_h]
-        norm_list  = ['linf','l1','l2']
-        norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
-    else: 
-        error_list = [error_linf_h, error_linf_u, error_linf_v]
-        norm_list  = ['linf_h','linf_u','linf_v']
-        norm_title  = [r'$L_{\infty}$, $h$ error', r'$L_{\infty}$, $u$ error' ,r'$L_{\infty}$, $v$ error']
+    #if ic == '1' or ic == '2':
+    error_list = [error_linf_h,]# error_l1_h, error_l2_h]
+    norm_list  = ['linf','l1','l2']
+    norm_title  = [r'$L_{\infty}$',r'$L_1$',r'$L_2$']
+    #else: 
+    #    error_list = [error_linf_h, error_linf_u, error_linf_v]
+    #    norm_list  = ['linf_h','linf_u','linf_v']
+    #    norm_title  = [r'$L_{\infty}$, $h$ error', r'$L_{\infty}$, $u$ error' ,r'$L_{\infty}$, $v$ error']
 
     e = 0 
     for error in error_list:
