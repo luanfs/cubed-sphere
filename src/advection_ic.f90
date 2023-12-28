@@ -77,7 +77,7 @@ function q0_adv(lat, lon, ic)
 
     select case(ic)
         case(1) ! constant scalar field
-            q0_adv = 10.d0
+            q0_adv = 1000.d0
 
         case(2) ! one Gaussian hill
             call sph2cart(lon, lat, x, y, z)
