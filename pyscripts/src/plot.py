@@ -38,8 +38,8 @@ def plot_grid(vert_lat, vert_lon, centers_lat, centers_lon, \
     ax.stock_img()
 
     # Plot vertices
-    i0, iend = 4, N+4
-    j0, jend = 4, N+4
+    i0, iend = 4, N+3
+    j0, jend = 4, N+3
     for p in range(0, nbfaces):
         for i in range(i0, iend+1):
             for j in range(j0, jend+1):

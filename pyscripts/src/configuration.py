@@ -94,8 +94,9 @@ def loadgrid(filename, N):
     ng = 4
     # Open the vertices file
     f = open(griddir+filename+"_po.dat",'rb')
-    grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+ng+1, N+ng+1,2))
+    grid = np.loadtxt(f)
+    grid = np.reshape(grid,(nbfaces, N+2*ng+1, N+2*ng+1,2))
+
     vert_lat = grid[:,:,:,0]*rad2deg
     vert_lon = grid[:,:,:,1]*rad2deg
     #print(np.amin(vert_lat), np.amax(vert_lat))
@@ -103,22 +104,22 @@ def loadgrid(filename, N):
 
     # Open the centers file
     f = open(griddir+filename+"_pc.dat",'rb')
-    grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+ng, N+ng, 2))
+    grid = np.loadtxt(f)
+    grid = np.reshape(grid,(nbfaces, N+2*ng, N+2*ng, 2))
     center_lat = grid[:,:,:,0]*rad2deg
     center_lon = grid[:,:,:,1]*rad2deg
 
     # Open the midu file
     f = open(griddir+filename+"_pu.dat",'rb')
-    grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+ng+1, N+ng, 2))
+    grid = np.loadtxt(f)
+    grid = np.reshape(grid,(nbfaces, N+2*ng+1, N+2*ng, 2))
     midu_lat = grid[:,:,:,0]*rad2deg
     midu_lon = grid[:,:,:,1]*rad2deg
 
     # Open the midv file
     f = open(griddir+filename+"_pv.dat",'rb')
-    grid = np.fromfile(f, dtype=np.float64)
-    grid = np.reshape(grid,(nbfaces, N+ng, N+ng+1, 2))
+    grid = np.loadtxt(f)
+    grid = np.reshape(grid,(nbfaces, N+2*ng, N+2*ng+1, 2))
     midv_lat = grid[:,:,:,0]*rad2deg
     midv_lon = grid[:,:,:,1]*rad2deg
 
